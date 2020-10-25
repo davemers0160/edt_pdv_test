@@ -17,10 +17,11 @@
 #include <algorithm>
 #include <thread>
 
-#include "edtinc.h"
+//#include "edtinc.h"
+//
+//#include "so_cam_commands.h"
 
-#include "so_cam_commands.h"
-
+#include "edt_test.h"
 
 // ----------------------------------------------------------------------------------------
 int main(int argc, char** argv)
@@ -34,7 +35,13 @@ int main(int argc, char** argv)
     auto stop_time = std::chrono::system_clock::now();
     auto elapsed_time = std::chrono::duration_cast<d_sec>(stop_time - start_time);
     
-    
+    std::string cfg_file = "../config/generic12cl.cfg";
+
+    Edtinfo edtinfo;
+
+    Dependent *dd_p;
+
+
     so_camera vinden;
 
     std::cout << vinden << std::endl;
@@ -45,5 +52,24 @@ int main(int argc, char** argv)
 
 
     auto t = vinden.lens.set_zoom_index(255).to_array();
+
+
+    // test the reading in of a config file
+    if ((dd_p = pdv_alloc_dependent()) == NULL)
+    {
+        std::cout << "alloc_dependent FAILED... exiting!" << std::endl;
+        exit(1);
+    }
+    int result = pdv_readcfg(cfg_file.c_str(), dd_p, &edtinfo);
+    
+    
+    PdvDev* pdv_p = pdv_open_channel(EDT_INTERFACE, EDT_UNIT_0, VINDEN);
+    if (pdv_p == NULL)
+    {
+        std::cout << "Failed to connect... exiting!" << std::endl;
+        exit(1);
+    }
+
+    return 0;
     
 }   // end of main
