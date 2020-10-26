@@ -1,6 +1,8 @@
 
 #if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
+
 #else
+
 #endif
 
 // C/C++ includes

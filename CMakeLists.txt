@@ -73,6 +73,10 @@ include(${COMMON_ROOT}/cmake_utils/find_edtpdv.cmake)
 if(EDTPDV_FOUND)
     set(project_includes ${project_includes} ${EDTPDV_INCLUDE_DIRS})
     set(project_libs ${project_libs} ${EDTPDV_LIBS})
+    
+    if(UNIX AND NOT APPLE)
+        set(project_libs ${project_libs} dl pthread)
+    endif()
 endif()
 
 message(" ")
@@ -91,8 +95,17 @@ foreach(S ${project_includes})
     message("  " ${S})
 endforeach()
 message("--------------------------------------------------------------------------------")
+
 message(" ")
 
+message("--------------------------------------------------------------------------------")
+message("Project Libraries: ")
+foreach(S ${project_libs})
+    message("  " ${S})
+endforeach()
+message("--------------------------------------------------------------------------------")
+
+message(" ")
 
 include_directories(${project_includes})
 add_executable(${exe_name} ${SOURCES})
