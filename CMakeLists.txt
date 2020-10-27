@@ -76,6 +76,7 @@ if(EDTPDV_FOUND)
     
     if(UNIX AND NOT APPLE)
         set(project_libs ${project_libs} dl pthread)
+        add_compile_options("-lm")
     endif()
 endif()
 
