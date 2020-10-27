@@ -72,6 +72,13 @@ int main(int argc, char** argv)
         exit(1);
     }
 
+    std::cout << "edt_devname: " << std::string(pdv_p->edt_devname) << std::endl;
+    
+    // close the device
+    result = pdv_close(pdv_p);
+    
+    std::cout << "close: " << result << std::endl;
+   
     return 0;
     
 }   // end of main
