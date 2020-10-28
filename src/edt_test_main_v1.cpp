@@ -44,7 +44,7 @@ int main(int argc, char** argv)
     Dependent *dd_p;
 
 
-    so_camera vinden;
+    SO::camera vinden;
 
     std::cout << vinden << std::endl;
 
