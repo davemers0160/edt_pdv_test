@@ -69,6 +69,13 @@ set(project_includes
     )
     
 message(" ")
+include(${COMMON_ROOT}/cmake_utils/find_ftdi.cmake)
+if(FTDI_FOUND)
+    set(project_includes ${project_includes} ${FTDI_INCLUDE_DIRS})
+    set(project_libs ${project_libs} ${FTDI_LIBS})
+endif()
+
+message(" ")
 include(${COMMON_ROOT}/cmake_utils/find_edtpdv.cmake)
 if(EDTPDV_FOUND)
     set(project_includes ${project_includes} ${EDTPDV_INCLUDE_DIRS})
