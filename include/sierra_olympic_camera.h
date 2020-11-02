@@ -188,7 +188,7 @@ namespace SO
 
         This function builds a fip protocol packet to determine if the camera lens is ready.
 
-        @param[out] fip_protocol that contains the structure to retrieve the lens status.
+        @return fip_protocol that contains the structure to retrieve the lens status.
 
         @note The returned status will be 0 when the lens is busy and unable to accept new commands, and while autofocus is running.  Otherwise the statua will be set to 1.
 
@@ -208,7 +208,7 @@ namespace SO
 
         This function builds a fip protocol packet to set the camera to go to the specified zoom index.
 
-        @param[in] Zoom Index : (0-Max Zoom Index)
+        @param[in] value Zoom Index : (0-Max Zoom Index)
         @return fip_protocol that contains the structure to set the zoom index.
 
         @note The command will return immediately, even while the lens is moving to the sent index.

@@ -6,7 +6,7 @@
 //-----------------------------------------------------------------------------
 /** @brief FIP Protocol Class
 
-This class builds FIP packets.
+This class builds a FIP packet structure according to the Sierra-Olympic WIND Firmware Communication Guide.
 */
 class fip_protocol
 {
@@ -73,7 +73,7 @@ public:
 
     //-----------------------------------------------------------------------------
     /**
-    @brief to_array.
+    @brief to_vector.
 
     This function converts the wind_protocol class to a uint8_t vector
 

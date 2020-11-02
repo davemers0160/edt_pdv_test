@@ -6,7 +6,7 @@
 //-----------------------------------------------------------------------------
 /** @brief WIND Protocol Class
 
-This class builds WIND packets.
+This class build a WIND packet structure according to the Sierra-Olympic Protocol Reference Manual.
 */
 class wind_protocol
 {
@@ -114,7 +114,7 @@ public:
     
     //-----------------------------------------------------------------------------
     /**
-    @brief to_array.
+    @brief to_vector.
 
     This function converts the wind_protocol class to a uint8_t vector
 
