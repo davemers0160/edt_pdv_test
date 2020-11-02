@@ -19,7 +19,7 @@
 #include "ftd2xx_functions.h"
 
 // include lfor the Sierra-Olympic Camera code
-#include "so_cam_commands.h"
+#include "sierra_olympic_camera.h"
 
 // ----------------------------------------------------------------------------
 constexpr auto EDT_UNIT_0 = 0;                      /* PCI interface for the EDT Crad */
@@ -32,7 +32,7 @@ bool recieve_serial_packet(FT_HANDLE driver, fip_protocol& packet)
 	bool status = true;
 	uint32_t count = 3;
 
-	uint8_t h0, h1, l0, l1, length;
+	uint8_t h0=0, h1=0, l0=0, l1=0, length=0;
 
 	std::vector<uint8_t> rx_data;
 
@@ -45,7 +45,7 @@ bool recieve_serial_packet(FT_HANDLE driver, fip_protocol& packet)
 	std::vector<uint8_t> p = { h0, h1, l0 };
 
 	// check the length to fit the fip protocol format
-	if (l1 > 127)
+	if (l0 > 127)
 	{
 		status &= receive_data(driver, l1);
 		length = (l1 << 7) | (l0 & ~0x80);

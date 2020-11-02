@@ -22,9 +22,8 @@
 #include <algorithm>
 #include <thread>
 
-// FTDI Driver Includes
+// Project Includes
 #include "edt_test.h"
-//#include "ftd2xx_functions.h"
 
 
 // ----------------------------------------------------------------------------
@@ -40,6 +39,7 @@ int main(int argc, char** argv)
     auto stop_time = std::chrono::system_clock::now();
     auto elapsed_time = std::chrono::duration_cast<d_sec>(stop_time - start_time);
 
+    // generic config file for a 12-bit monochrome camera
     std::string cfg_file = "../config/generic12cl.cfg";
 
     // EDT PDV specific variable
@@ -63,7 +63,7 @@ int main(int argc, char** argv)
     // display the information about a specific camera
     std::cout << vinden << std::endl;
 
-    auto t = vinden.lens.set_zoom_index(255).to_array();
+    auto t = vinden.lens.set_zoom_index(255).to_vector();
 
     try
     {
