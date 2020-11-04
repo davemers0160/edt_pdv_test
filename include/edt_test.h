@@ -15,8 +15,10 @@
 // include for the EDT PCI interface card
 #include "edtinc.h"
 
+#if defined(USE_FTDI)
 // FTDI helper functions
 #include "ftd2xx_functions.h"
+#endif	// USE_FTDI
 
 // include lfor the Sierra-Olympic Camera code
 #include "sierra_olympic_camera.h"
@@ -27,6 +29,7 @@ constexpr auto VINDEN = 0;                          /* Channel that the Vinden C
 constexpr auto VENTUS = 0;                          /* Channel that the Ventus Camera is connected to */
 
 // ----------------------------------------------------------------------------
+#if defined(USE_FTDI)
 bool recieve_serial_packet(FT_HANDLE driver, fip_protocol& packet)
 {
 	bool status = true;
@@ -67,10 +70,7 @@ bool recieve_serial_packet(FT_HANDLE driver, fip_protocol& packet)
 	return status;
 }
 
-
-
-
-
+#endif	//USE_FTDI
 
 
 #endif  // _EDT_TEST_H_
