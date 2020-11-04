@@ -68,7 +68,8 @@ set(project_includes
     )
     
 message(" ")
-include(cmake_utils/find_ftdi.cmake)
+# temp: commented out because there is a conflict between typedefs between FTDI WinTypes.h and EDT
+#include(cmake_utils/find_ftdi.cmake)
 if(FTDI_FOUND)
     set(project_includes ${project_includes} ${FTDI_INCLUDE_DIRS})
     set(project_libs ${project_libs} ${FTDI_LIBS})

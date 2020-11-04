@@ -49,16 +49,18 @@ int main(int argc, char** argv)
 
     // Sierra-Olympic specific variables
     SO::camera vinden;
-    uint32_t ftdi_device_count = 0;
-    ftdiDeviceDetails driver_details;
-    std::vector<ftdiDeviceDetails> ftdi_devices;
-    FT_HANDLE ctrl_handle = NULL;
     uint32_t driver_device_num = 0;
     uint32_t connect_count = 0;
     uint32_t read_timeout = 30000;
     uint32_t write_timeout = 1000;
     uint32_t baud_rate = 115200;
-
+    
+#if defined(USE_FTDI)
+    uint32_t ftdi_device_count = 0;
+    ftdiDeviceDetails driver_details;
+    std::vector<ftdiDeviceDetails> ftdi_devices;
+    FT_HANDLE ctrl_handle = NULL;
+#endif  // USE_FTDI
 
     // display the information about a specific camera
     std::cout << vinden << std::endl;
@@ -68,7 +70,7 @@ int main(int argc, char** argv)
     try
     {
         // test the reading in of a config file
-        std::cout << "Reading in config file..." << std::endl;
+        std::cout << std::endl << "Reading in config file..." << std::endl;
         if ((dd_p = pdv_alloc_dependent()) == NULL)
         {
             std::cout << "alloc_dependent FAILED... exiting!" << std::endl;
@@ -77,7 +79,7 @@ int main(int argc, char** argv)
         int result = pdv_readcfg(cfg_file.c_str(), dd_p, &edtinfo);
 
         // open a specifc board and channel
-        std::cout << "Opening: " << EDT_INTERFACE << ", Unit: " << EDT_UNIT_0 << ", Channel: " << VINDEN << std::endl;
+        std::cout << std::endl << "Opening: " << EDT_INTERFACE << ", Unit: " << EDT_UNIT_0 << ", Channel: " << VINDEN << std::endl;
         PdvDev* pdv_p = pdv_open_channel(EDT_INTERFACE, EDT_UNIT_0, VINDEN);
         if (pdv_p == NULL)
         {
@@ -90,19 +92,19 @@ int main(int argc, char** argv)
         std::cout << "edt_devname: " << std::string(pdv_p->edt_devname) << std::endl;
 
         // start the image capture process
-        std::cout << "Starting the image capture process.." << std::endl;
+        std::cout << std::endl << "Starting the image capture process..." << std::endl;
         pdv_start_image(pdv_p);
 
         // get the image and place into a unsigned char pointer
         // no clue how the packing is going to for int16_t ot uint16_t images
-        std::cout << "Grabbing the image..." << std::endl;
+        std::cout << std::endl << "Grabbing the image..." << std::endl;
         image_p = pdv_wait_image(pdv_p);
 
         // close the device
-        std::cout << "Closing the pdv device..." << std::endl;
+        std::cout << std::endl << "Closing the pdv device..." << std::endl;
         result = pdv_close(pdv_p);
 
-        std::cout << "close: " << result << std::endl;
+        std::cout << "close result: " << result << std::endl;
 
 #if defined(USE_FTDI)
 
