@@ -15,24 +15,35 @@ public:
 
     uint8_t length;             // length includes type (1-byte), data (N-bytes) and checksum (1-byte)
     uint8_t type;
-    uint8_t port;
+    //uint8_t port;
     
     std::vector<uint8_t> data;
 
     fip_protocol() = default;
     
-    fip_protocol(uint8_t t_, uint8_t p_ = 12) : type(t_), port(p_)
+    fip_protocol(uint8_t t_/*, uint8_t p_ = 12*/) : type(t_)/*, port(p_)*/
     {
         data.clear();
         length = 3;
         checksum = calc_checksum();
     }
 
-    fip_protocol(uint8_t t_, std::vector<uint8_t> d_, uint8_t p_ = 12) : type(t_), port(p_)
+    fip_protocol(uint8_t t_, std::vector<uint8_t> d_/*, uint8_t p_ = 12*/) : type(t_)/*, port(p_)*/
     {
         data = d_;
-        length = (uint8_t)(3 + data.size());
+        length = (uint8_t)(2 + data.size());
         checksum = calc_checksum();        
+    }
+
+    // use this version to create the pass through fip protocol
+    fip_protocol(uint8_t t_, uint8_t port_, std::vector<uint8_t> d_) : type(t_)
+    {
+        data.clear();
+        data = d_;
+        data.insert(data.begin(), port_);
+
+        length = (uint8_t)(2 + data.size());
+        checksum = calc_checksum();
     }
     
     fip_protocol(std::vector<uint8_t> d_)
@@ -52,7 +63,7 @@ public:
                 index = 3;
             }
             
-            type = d_[index];
+            type = d_[index++];
             
             for(idx=index; idx<d_.size()-1; ++idx)
             {
@@ -98,13 +109,31 @@ public:
 
         d.push_back(type);
 
-        d.push_back(port);
+        //d.push_back(port);
         
         d.insert(d.end(), data.begin(), data.end());
 
         d.push_back(checksum);
 
         return d;
+    }
+
+    inline friend std::ostream& operator<< (
+        std::ostream& out,
+        const fip_protocol& item
+        )
+    {
+        out << "fip_protocol:" << std::endl;
+        out << "  length:  " << (uint32_t)item.length << std::endl;
+        out << "  type:    " << (uint32_t)item.type << std::endl;
+        out << "  data:    ";
+        for (int idx = 0; idx < item.data .size(); ++idx)
+        {
+            out << (uint32_t)item.data[idx] << " ";
+        }
+        out << std::endl;
+        out << "  checksum: " << (uint32_t)item.checksum << std::endl;
+        return out;
     }
     
 private:
@@ -142,7 +171,7 @@ private:
         crc = crc8_table[crc^type];
         
         // calc checksum on port
-        crc = crc8_table[crc ^ port];
+        //crc = crc8_table[crc ^ port];
 
         for(uint32_t idx=0; idx<data.size(); ++idx)
         {

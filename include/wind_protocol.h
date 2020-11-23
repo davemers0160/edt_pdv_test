@@ -23,7 +23,7 @@ public:
     {
         size = 0;
         payload.clear();
-        calc_checksum();
+        checksum = calc_checksum();
         checksum_valid = true;
     }
     
@@ -31,7 +31,7 @@ public:
     {
         payload = data;
         size = (uint8_t)payload.size();
-        calc_checksum();
+        checksum = calc_checksum();
         checksum_valid = true;
     }
     
@@ -39,7 +39,7 @@ public:
     {
         int32_t idx = 0;
         
-        if(data[0] == header && data.size() < 3)
+        if(data[0] == header && data.size() > 3)
         {
             id = data[1];
             size = data[2];
@@ -73,7 +73,7 @@ public:
         payload.push_back((uint8_t)(value & 0x00FF));
 
         size = (uint8_t)payload.size();
-        calc_checksum();
+        checksum = calc_checksum();
     }
 
     /**
@@ -90,7 +90,7 @@ public:
         payload.push_back((uint8_t)((value >> 8) & 0x00FF));
         
         size = (uint8_t)payload.size();
-        calc_checksum();        
+        checksum = calc_checksum();
     }
     
     /**
@@ -109,7 +109,7 @@ public:
         payload.push_back((uint8_t)((value >> 24) & 0x00FF));
         
         size = (uint8_t)payload.size();
-        calc_checksum();
+        checksum = calc_checksum();
     }    
     
     //-----------------------------------------------------------------------------
@@ -127,7 +127,7 @@ public:
 
         d.insert(d.end(), payload.begin(), payload.end());
 
-        d.push_back(header);
+        d.push_back(checksum);
         
         return d;
     }
@@ -151,7 +151,7 @@ private:
             checksum += payload[idx];
         }
         
-        return ~checksum;
+        return (uint8_t)(~checksum & 0x00FF);
     }
     
     //-----------------------------------------------------------------------------
