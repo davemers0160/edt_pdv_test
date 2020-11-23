@@ -11,6 +11,29 @@
 Contains the classes to interface to a camera.
 */
 
+/**
+Helper to read 4 bytes into a uint32_t
+ */
+inline uint32_t read4(const uint8_t* ptr)
+{
+    return (uint32_t)(ptr[0] | (ptr[1] << 8) | (ptr[2] << 16) | (ptr[3] << 24));
+}
+
+/**
+Helper to read 3 bytes into a uint32_t
+ */
+inline uint32_t read3(const uint8_t* ptr)
+{
+    return (uint32_t)(ptr[0] | (ptr[1] << 8) | (ptr[2] << 16));
+}
+
+/**
+Helper to read 2 bytes into a uint16_t
+ */
+inline uint16_t read2(const uint8_t* ptr)
+{
+    return (uint16_t)(ptr[0] | (ptr[1] << 8));
+}
 
 namespace SO
 {
@@ -28,6 +51,8 @@ namespace SO
         GET_CAMERA_VER = 0x01,       /**< Camera version command ID */
 
         END_CAMERA_CTRL = 0x02,       /**< End camera control command ID */
+
+        GET_CAMERA_SN = 0x05        /**< Camera serial number command ID */
 
     };
 
@@ -163,6 +188,18 @@ namespace SO
         }
 
         //-----------------------------------------------------------------------------
+        void set_version(wind_protocol ver)
+        {
+            if (ver.payload.size() >= 8)
+            {
+                fw_maj_rev = read2(&ver.payload[0]);
+                fw_min_rev = read2(&ver.payload[2]);
+                sw_maj_rev = read2(&ver.payload[4]);
+                sw_min_rev = read2(&ver.payload[6]);
+            }
+        }
+
+        //-----------------------------------------------------------------------------
         /**
         @brief Get the lens version.
 
@@ -179,7 +216,7 @@ namespace SO
             wind_protocol lens_packet(LENS_VERSION);
 
             // build a fip packet
-            return fip_protocol(0x3D, lens_packet.to_vector());
+            return fip_protocol(0x3D, port, lens_packet.to_vector());
         }
 
         //-----------------------------------------------------------------------------
@@ -199,7 +236,7 @@ namespace SO
             wind_protocol lens_packet(LENS_READY);
 
             // build a fip packet
-            return fip_protocol(0x3D, lens_packet.to_vector());
+            return fip_protocol(0x3D, port, lens_packet.to_vector());
         }
 
         //-----------------------------------------------------------------------------
@@ -225,7 +262,7 @@ namespace SO
             lens_packet.update_payload(value);
 
             // build a fip packet
-            return fip_protocol(0x3D, lens_packet.to_vector());
+            return fip_protocol(0x3D, port, lens_packet.to_vector());
         }
 
         //-----------------------------------------------------------------------------
@@ -245,7 +282,7 @@ namespace SO
             wind_protocol lens_packet(GET_ZOOM_INDEX);
 
             // build a fip packet
-            return fip_protocol(0x3D, lens_packet.to_vector());
+            return fip_protocol(0x3D, port, lens_packet.to_vector());
         }
 
         //-----------------------------------------------------------------------------
@@ -265,7 +302,7 @@ namespace SO
             wind_protocol lens_packet(GET_ZOOM_MTR_POS);
 
             // build a fip packet
-            return fip_protocol(0x3D, lens_packet.to_vector());
+            return fip_protocol(0x3D, port, lens_packet.to_vector());
         }
 
         //-----------------------------------------------------------------------------
@@ -285,7 +322,7 @@ namespace SO
             lens_packet.update_payload(value);
 
             // build a fip packet
-            return fip_protocol(0x3D, lens_packet.to_vector());
+            return fip_protocol(0x3D, port, lens_packet.to_vector());
         }
 
         //-----------------------------------------------------------------------------
@@ -305,7 +342,7 @@ namespace SO
             wind_protocol lens_packet(GET_FOCUS_POS);
 
             // build a fip packet
-            return fip_protocol(0x3D, lens_packet.to_vector());
+            return fip_protocol(0x3D, port, lens_packet.to_vector());
         }
 
         //-----------------------------------------------------------------------------
@@ -323,7 +360,7 @@ namespace SO
             wind_protocol lens_packet(SET_INF_FOCUS);
 
             // build a fip packet
-            return fip_protocol(0x3D, lens_packet.to_vector());
+            return fip_protocol(0x3D, port, lens_packet.to_vector());
         }
 
         //-----------------------------------------------------------------------------
@@ -347,7 +384,7 @@ namespace SO
             lens_packet.update_payload(value);
 
             // build a fip packet
-            return fip_protocol(0x3D, lens_packet.to_vector());
+            return fip_protocol(0x3D, port, lens_packet.to_vector());
         }
 
         //-----------------------------------------------------------------------------
@@ -365,7 +402,7 @@ namespace SO
             wind_protocol lens_packet(STOP_AUTOFOCUS);
 
             // build a fip packet
-            return fip_protocol(0x3D, lens_packet.to_vector());
+            return fip_protocol(0x3D, port, lens_packet.to_vector());
         }
 
         //-----------------------------------------------------------------------------
@@ -385,7 +422,7 @@ namespace SO
             lens_packet.update_payload(value);
 
             // build a fip packet
-            return fip_protocol(0x3D, lens_packet.to_vector());
+            return fip_protocol(0x3D, port, lens_packet.to_vector());
         }
 
         //-----------------------------------------------------------------------------
@@ -403,7 +440,7 @@ namespace SO
             wind_protocol lens_packet(GET_ZOOM_INDEX);
 
             // build a fip packet
-            return fip_protocol(0x3D, lens_packet.to_vector());
+            return fip_protocol(0x3D, port, lens_packet.to_vector());
         }
 
         //-----------------------------------------------------------------------------
@@ -423,7 +460,7 @@ namespace SO
             lens_packet.update_payload(value);
 
             // build a fip packet
-            return fip_protocol(0x3D, lens_packet.to_vector());
+            return fip_protocol(0x3D, port, lens_packet.to_vector());
         }
 
         //-----------------------------------------------------------------------------
@@ -441,7 +478,7 @@ namespace SO
             wind_protocol lens_packet(GET_ZOOM_INDEX);
 
             // build a fip packet
-            return fip_protocol(0x3D, lens_packet.to_vector());
+            return fip_protocol(0x3D, port, lens_packet.to_vector());
         }
 
         //-----------------------------------------------------------------------------
@@ -463,7 +500,7 @@ namespace SO
             lens_packet.update_payload(value);
 
             // build a fip packet
-            return fip_protocol(0x3D, lens_packet.to_vector());
+            return fip_protocol(0x3D, port, lens_packet.to_vector());
         }
 
         //-----------------------------------------------------------------------------
@@ -483,7 +520,7 @@ namespace SO
             lens_packet.update_payload(value);
 
             // build a fip packet
-            return fip_protocol(0x3D, lens_packet.to_vector());
+            return fip_protocol(0x3D, port, lens_packet.to_vector());
         }
 
         //-----------------------------------------------------------------------------
@@ -503,7 +540,7 @@ namespace SO
             lens_packet.update_payload(value);
 
             // build a fip packet
-            return fip_protocol(0x3D, lens_packet.to_vector());
+            return fip_protocol(0x3D, port, lens_packet.to_vector());
         }
 
         //-----------------------------------------------------------------------------
@@ -512,8 +549,9 @@ namespace SO
             const lens_class& item
             )
         {
-            out << "  Firmware Version: " << (uint32_t)item.fw_maj_rev << "." << (uint32_t)item.fw_min_rev << std::endl;
-            out << "  Software Version: " << (uint32_t)item.sw_maj_rev << "." << (uint32_t)item.sw_min_rev << std::endl;
+            out << "  Firmware Version: " << (uint32_t)item.fw_maj_rev << "." << (uint32_t)item.fw_min_rev;
+            //out << "  Software Version: " << (uint32_t)item.sw_maj_rev << "." << (uint32_t)item.sw_min_rev << std::endl;
+            out << "." << (uint32_t)item.sw_maj_rev << "." << (uint32_t)item.sw_min_rev << std::endl;
             out << "  Zoom Index:       " << (uint32_t)item.zoom_index << std::endl;
             out << "  Zoom Position:    " << (uint32_t)item.zoom_position << std::endl;
             out << "  Zoom Speed:       " << (uint32_t)item.zoom_speed << std::endl;
@@ -523,6 +561,7 @@ namespace SO
         }
 
     private:
+        uint8_t port = 12;
 
     };  // end lens_class
 
@@ -542,7 +581,6 @@ namespace SO
 
         uint16_t ffc_period;
         uint8_t ffc_mode;
-
 
         sensor_class() = default;
 
@@ -564,6 +602,18 @@ namespace SO
         }
 
         //-----------------------------------------------------------------------------
+        void set_version(wind_protocol ver)
+        {
+            if (ver.payload.size() >= 8)
+            {
+                fw_maj_rev = read2(&ver.payload[0]);
+                fw_min_rev = read2(&ver.payload[2]);
+                sw_maj_rev = read2(&ver.payload[4]);
+                sw_min_rev = read2(&ver.payload[6]);
+            }
+        }
+
+        //-----------------------------------------------------------------------------
         /**
         @brief Get the sensor version.
 
@@ -580,7 +630,7 @@ namespace SO
             wind_protocol lens_packet(SENSOR_VERSION);
 
             // build a fip packet
-            return fip_protocol(0x3D, lens_packet.to_vector());
+            return fip_protocol(0x3D, port, lens_packet.to_vector());
         }
 
         //-----------------------------------------------------------------------------
@@ -604,7 +654,7 @@ namespace SO
             lens_packet.update_payload(value);
 
             // build a fip packet
-            return fip_protocol(0x3D, lens_packet.to_vector());
+            return fip_protocol(0x3D, port, lens_packet.to_vector());
         }
 
         //-----------------------------------------------------------------------------
@@ -624,7 +674,7 @@ namespace SO
             lens_packet.update_payload(value);
 
             // build a fip packet
-            return fip_protocol(0x3D, lens_packet.to_vector());
+            return fip_protocol(0x3D, port, lens_packet.to_vector());
         }
 
         //-----------------------------------------------------------------------------
@@ -642,7 +692,7 @@ namespace SO
             wind_protocol lens_packet(GET_AUOT_FFC_PER);
 
             // build a fip packet
-            return fip_protocol(0x3D, lens_packet.to_vector());
+            return fip_protocol(0x3D, port, lens_packet.to_vector());
         }
 
         //-----------------------------------------------------------------------------
@@ -662,7 +712,7 @@ namespace SO
             lens_packet.update_payload(value);
 
             // build a fip packet
-            return fip_protocol(0x3D, lens_packet.to_vector());
+            return fip_protocol(0x3D, port, lens_packet.to_vector());
         }
 
         //-----------------------------------------------------------------------------
@@ -677,10 +727,10 @@ namespace SO
         */
         fip_protocol get_auto_ffc_mode(void)
         {
-            wind_protocol lens_packet(LENS_VERSION);
+            wind_protocol lens_packet(GET_AUTO_FFC_MODE);
 
             // build a fip packet
-            return fip_protocol(0x3D, lens_packet.to_vector());
+            return fip_protocol(0x3D, port, lens_packet.to_vector());
         }
 
         //-----------------------------------------------------------------------------
@@ -702,7 +752,7 @@ namespace SO
             lens_packet.update_payload(value);
 
             // build a fip packet
-            return fip_protocol(0x3D, lens_packet.to_vector());
+            return fip_protocol(0x3D, port, lens_packet.to_vector());
         }
 
         //-----------------------------------------------------------------------------   
@@ -720,7 +770,7 @@ namespace SO
             wind_protocol lens_packet(GET_SENSOR_READY);
 
             // build a fip packet
-            return fip_protocol(0x3D, lens_packet.to_vector());
+            return fip_protocol(0x3D, port, lens_packet.to_vector());
         }
 
         //-----------------------------------------------------------------------------
@@ -740,7 +790,7 @@ namespace SO
             lens_packet.update_payload(value);
 
             // build a fip packet
-            return fip_protocol(0x3D, lens_packet.to_vector());
+            return fip_protocol(0x3D, port, lens_packet.to_vector());
         }
 
         //-----------------------------------------------------------------------------
@@ -758,7 +808,7 @@ namespace SO
             wind_protocol lens_packet(GET_NUC_TABLE);
 
             // build a fip packet
-            return fip_protocol(0x3D, lens_packet.to_vector());
+            return fip_protocol(0x3D, port, lens_packet.to_vector());
         }
 
         //-----------------------------------------------------------------------------    
@@ -767,12 +817,16 @@ namespace SO
             const sensor_class& item
             )
         {
-            out << "  Firmware Version: " << (uint32_t)item.fw_maj_rev << "." << (uint32_t)item.fw_min_rev << std::endl;
-            out << "  Software Version: " << (uint32_t)item.sw_maj_rev << "." << (uint32_t)item.sw_min_rev << std::endl;
+            out << "  Firmware Version: " << (uint32_t)item.fw_maj_rev << "." << (uint32_t)item.fw_min_rev;
+            out << "." << (uint32_t)item.sw_maj_rev << "." << (uint32_t)item.sw_min_rev << std::endl;
+            //out << "  Software Version: " << (uint32_t)item.sw_maj_rev << "." << (uint32_t)item.sw_min_rev << std::endl;
             out << "  FFC Period:       " << (uint32_t)item.ffc_period << std::endl;
             out << "  FFC Mode:         " << (uint32_t)item.ffc_mode << std::endl;
             return out;
         }
+
+    private:
+        uint8_t port = 12;
 
     };  // end sensor class
 
@@ -792,6 +846,8 @@ namespace SO
         lens_class lens;
         sensor_class sensor;
 
+        uint16_t height;
+        uint16_t width;
 
         camera() = default;
 
@@ -799,6 +855,72 @@ namespace SO
         {
             lens = lens_class();
             sensor = sensor_class();
+
+            height = 0;
+            width = 0;
+        }
+
+        //-----------------------------------------------------------------------------
+        void set_image_size(uint16_t h, uint16_t w)
+        {
+            height = h;
+            width = w;
+        }
+
+        //-----------------------------------------------------------------------------
+        void set_version(uint8_t maj_rev_, uint8_t min_rev_, uint16_t bn, uint16_t ct)
+        {
+            maj_rev = maj_rev_;
+            min_rev = min_rev_;
+            build_num = bn;
+            camera_type = ct;
+        }
+
+        //-----------------------------------------------------------------------------
+        void set_version(wind_protocol ver)
+        {
+            if (ver.payload.size() >= 6)
+            {
+                maj_rev = ver.payload[0];
+                min_rev = ver.payload[1];
+                build_num = read2(&ver.payload[2]);
+                camera_type = read2(&ver.payload[4]);
+            }
+        }
+
+        //-----------------------------------------------------------------------------
+        fip_protocol get_sla_board_version(void)
+        {
+            // build a fip packet
+            return fip_protocol(0x28, { 0 });
+        }
+
+        //-----------------------------------------------------------------------------
+        fip_protocol get_sla_image_size(void)
+        {
+            // build a fip packet
+            return fip_protocol(0x31, { 0 });
+        }
+
+        //-----------------------------------------------------------------------------
+        void set_sn(wind_protocol ser_num)
+        {
+            sn = "";
+
+            for(uint32_t idx = 0; idx<ser_num.payload.size(); ++idx)
+            {
+                char c = (char)(ser_num.payload[idx]);
+                sn = sn + c;
+            }
+        }
+
+        //-----------------------------------------------------------------------------
+        fip_protocol get_serial_number(void)
+        {
+            wind_protocol lens_packet(GET_CAMERA_SN);
+
+            // build a fip packet
+            return fip_protocol(0x3D, port, lens_packet.to_vector());
         }
 
         //-----------------------------------------------------------------------------
@@ -818,7 +940,7 @@ namespace SO
             wind_protocol lens_packet(GET_CAMERA_VER);
 
             // build a fip packet
-            return fip_protocol(0x3D, lens_packet.to_vector());
+            return fip_protocol(0x3D, port, lens_packet.to_vector());
         }
 
         //-----------------------------------------------------------------------------
@@ -836,7 +958,7 @@ namespace SO
             wind_protocol lens_packet(END_CAMERA_CTRL);
 
             // build a fip packet
-            return fip_protocol(0x3D, lens_packet.to_vector());
+            return fip_protocol(0x3D, port, lens_packet.to_vector());
         }
 
         //-----------------------------------------------------------------------------    
@@ -846,7 +968,8 @@ namespace SO
             )
         {
             out << "Camera:" << std::endl;
-            out << "  Firmware Version: " << (uint32_t)item.maj_rev << "." << (uint32_t)item.min_rev << (uint32_t)item.build_num << (uint32_t)item.camera_type << std::endl;
+            out << "  Serial Number:    " << item.sn << std::endl;
+            out << "  Firmware Version: " << (uint32_t)item.maj_rev << "." << (uint32_t)item.min_rev << "." << (uint32_t)item.build_num << "." << (uint32_t)item.camera_type << std::endl;
             out << "Lens:" << std::endl;
             out << item.lens;
             out << "Sensor:" << std::endl;
@@ -855,6 +978,10 @@ namespace SO
         }
 
     private:
+
+        uint8_t port = 12;
+
+        std::string sn;
 
     };  // end camera class
 
