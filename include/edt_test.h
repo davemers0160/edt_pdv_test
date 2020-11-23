@@ -7,10 +7,13 @@
 #include <vector>
 
 #if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
-
+//#include "win_network_fcns.h"
 #else
-
+//#include "linux_network_fcns.h"
+//typedef int32_t SOCKET;
 #endif
+
+#include "udp_network_functions.h"
 
 // include for the EDT PCI interface card
 #include "edtinc.h"
@@ -27,6 +30,39 @@
 constexpr auto EDT_UNIT_0 = 0;                      /* PCI interface for the EDT Crad */
 constexpr auto VINDEN = 0;                          /* Channel that the Vinden Camera is connected to */
 constexpr auto VENTUS = 0;                          /* Channel that the Ventus Camera is connected to */
+
+// ----------------------------------------------------------------------------
+//int32_t init_ip_camera(std::string camera_ip, uint16_t read_port, SOCKET &read_socket, uint16_t write_port, SOCKET &write_socket)
+int32_t init_ip_camera(udp_info &udp_camera_info, std::string ip_address)
+{
+
+	int32_t rx_result, tx_result;
+
+	std::string error_msg;
+
+#if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
+
+#else
+	results = init_udp_socket(rx_port, rx_socket, error_msg);
+#endif	
+
+	// init the read portion of the UDP socket
+	rx_result = init_udp_socket(udp_camera_info, error_msg);
+
+	// init the write portion of the UDP socket
+	udp_camera_info.ip_address = ip_address;
+	udp_camera_info.read_addr_obj.sin_addr.s_addr = inet_addr(udp_camera_info.ip_address.c_str());
+
+	udp_camera_info.write_addr_obj.sin_addr.s_addr = inet_addr(udp_camera_info.ip_address.c_str());
+	udp_camera_info.write_addr_obj.sin_port = htons(udp_camera_info.write_port);
+	udp_camera_info.write_addr_obj.sin_family = AF_INET;
+
+
+	return 0;
+
+
+}	// end of init_ip_camera
+
 
 // ----------------------------------------------------------------------------
 #if defined(USE_FTDI)

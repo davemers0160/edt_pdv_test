@@ -1,7 +1,5 @@
 #define _CRT_SECURE_NO_WARNINGS
 
-
-
 #if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
 
 #else
@@ -24,6 +22,7 @@
 
 // Project Includes
 #include "edt_test.h"
+
 
 
 // ----------------------------------------------------------------------------
@@ -55,20 +54,19 @@ int main(int argc, char** argv)
     uint32_t write_timeout = 1000;
     uint32_t baud_rate = 115200;
     
-#if defined(USE_FTDI)
-    uint32_t ftdi_device_count = 0;
-    ftdiDeviceDetails driver_details;
-    std::vector<ftdiDeviceDetails> ftdi_devices;
-    FT_HANDLE ctrl_handle = NULL;
-#endif  // USE_FTDI
+    // IP based comms
+    int32_t result = 0;
+    std::string ip_address = "10.127.1.10";
+    uint16_t read_port = 14002;
+    uint16_t write_port = 14001;
+    udp_info udp_camera_info(write_port, read_port);
+    std::string error_msg;
+    int32_t read_result, write_result;
 
-    // display the information about a specific camera
-    std::cout << vinden << std::endl;
-
-    auto t = vinden.lens.set_zoom_index(255).to_vector();
 
     try
     {
+        /*
         // test the reading in of a config file
         std::cout << std::endl << "Reading in config file..." << std::endl;
         if ((dd_p = pdv_alloc_dependent()) == NULL)
@@ -105,6 +103,98 @@ int main(int argc, char** argv)
         result = pdv_close(pdv_p);
 
         std::cout << "close result: " << result << std::endl;
+        */
+
+        std::vector<uint8_t> rx_data;
+
+        result = init_ip_camera(udp_camera_info, ip_address);
+
+        write_result = send_udp_data(udp_camera_info, vinden.get_sla_board_version().to_vector());
+        read_result = receive_udp_data(udp_camera_info, rx_data);
+
+        fip_protocol sla_board_version = fip_protocol(rx_data);
+        std::cout << sla_board_version << std::endl;
+
+        write_result = send_udp_data(udp_camera_info, vinden.get_sla_image_size().to_vector());
+        read_result = receive_udp_data(udp_camera_info, rx_data);
+
+        fip_protocol sla_image_size = fip_protocol(rx_data);
+        std::cout << sla_image_size << std::endl;
+
+        vinden.set_image_size(read2(&sla_image_size.data[2]), read2(&sla_image_size.data[0]));
+
+        // get the camera wind version number
+        write_result = send_udp_data(udp_camera_info, vinden.get_version().to_vector());
+        read_result = receive_udp_data(udp_camera_info, rx_data);
+        wind_protocol wind_data = wind_protocol(rx_data);
+        vinden.set_version(wind_data);
+
+        // get the camera serial number
+        write_result = send_udp_data(udp_camera_info, vinden.get_serial_number().to_vector());
+        read_result = receive_udp_data(udp_camera_info, rx_data);
+        wind_data = wind_protocol(rx_data);
+        vinden.set_sn(wind_data);
+
+        // get the camera lens version
+        write_result = send_udp_data(udp_camera_info, vinden.lens.get_version().to_vector());
+        read_result = receive_udp_data(udp_camera_info, rx_data);
+        wind_data = wind_protocol(rx_data);
+        vinden.lens.set_version(wind_data);
+
+        // ----------------------------------------------------------------------------
+        // get the camera lens zoom index
+        write_result = send_udp_data(udp_camera_info, vinden.lens.get_zoom_index().to_vector());
+        read_result = receive_udp_data(udp_camera_info, rx_data);
+        wind_data = wind_protocol(rx_data);
+        vinden.lens.zoom_index = read2(&wind_data.payload[0]);
+
+        // get the camera lens zoom position
+        write_result = send_udp_data(udp_camera_info, vinden.lens.get_zoom_position().to_vector());
+        read_result = receive_udp_data(udp_camera_info, rx_data);
+        wind_data = wind_protocol(rx_data);
+        vinden.lens.zoom_position = read2(&wind_data.payload[0]);
+
+        // get the camera lens zoom speed
+        write_result = send_udp_data(udp_camera_info, vinden.lens.get_zoom_speed().to_vector());
+        read_result = receive_udp_data(udp_camera_info, rx_data);
+        wind_data = wind_protocol(rx_data);
+        vinden.lens.zoom_speed = (wind_data.payload[0]);
+
+        // get the camera lens focus position
+        write_result = send_udp_data(udp_camera_info, vinden.lens.get_focus_position().to_vector());
+        read_result = receive_udp_data(udp_camera_info, rx_data);
+        wind_data = wind_protocol(rx_data);
+        vinden.lens.focus_position = read2(&wind_data.payload[0]);
+
+        // get the camera lens focus speed
+        write_result = send_udp_data(udp_camera_info, vinden.lens.get_focus_speed().to_vector());
+        read_result = receive_udp_data(udp_camera_info, rx_data);
+        wind_data = wind_protocol(rx_data);
+        vinden.lens.focus_speed = (wind_data.payload[0]);
+
+        // ----------------------------------------------------------------------------
+        // get the sensor version number
+        write_result = send_udp_data(udp_camera_info, vinden.sensor.get_version().to_vector());
+        read_result = receive_udp_data(udp_camera_info, rx_data);
+        wind_data = wind_protocol(rx_data);
+        vinden.sensor.set_version(wind_data);
+
+        // get the FFC period
+        write_result = send_udp_data(udp_camera_info, vinden.sensor.get_auto_ffc_period().to_vector());
+        read_result = receive_udp_data(udp_camera_info, rx_data);
+        wind_data = wind_protocol(rx_data);
+        vinden.sensor.ffc_period = read2(&wind_data.payload[0]);
+
+        // get the FFC mode
+        write_result = send_udp_data(udp_camera_info, vinden.sensor.get_auto_ffc_mode().to_vector());
+        read_result = receive_udp_data(udp_camera_info, rx_data);
+        wind_data = wind_protocol(rx_data);
+        vinden.sensor.ffc_mode = wind_data.payload[0];
+
+        // display the information about a specific camera
+        std::cout << vinden << std::endl;
+
+        int bp = 0;
 
 #if defined(USE_FTDI)
 
@@ -153,6 +243,7 @@ int main(int argc, char** argv)
         std::cout << "error: " << e.what() << std::endl;
     }
 
+    result = close_connection(udp_camera_info.udp_sock, error_msg);
 
     return 0;
     
