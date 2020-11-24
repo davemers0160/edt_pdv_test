@@ -139,6 +139,9 @@ namespace SO
         "Autofocus running"
     };
 
+    const uint16_t STREAM_ON = 1;
+    const uint16_t STREAM_OFF = 256;
+
     //-----------------------------------------------------------------------------
     /** @brief Sierra Olympic Lens Class
 
@@ -868,6 +871,7 @@ namespace SO
         }
 
         //-----------------------------------------------------------------------------
+
         void set_version(uint8_t maj_rev_, uint8_t min_rev_, uint16_t bn, uint16_t ct)
         {
             maj_rev = maj_rev_;
@@ -877,6 +881,15 @@ namespace SO
         }
 
         //-----------------------------------------------------------------------------
+        /**
+        @brief Set the camera wind version.
+
+        This function takes a wind_protocol from the get_version function to set the wind protocol version variables in the class.
+
+        @param[in] ver : a wind_protocol packet from the get_version function.
+
+        @sa wind_protocol, get_version
+        */
         void set_version(wind_protocol ver)
         {
             if (ver.payload.size() >= 6)
@@ -889,6 +902,17 @@ namespace SO
         }
 
         //-----------------------------------------------------------------------------
+        /**
+        @brief Get the SLA board version.
+
+        This function builds a fip protocol packet to get the SLA board version.
+
+        @return fip_protocol that contains the request to get the SLA board version.
+
+        @note A fip_protocol packet is returned with the SLA board version.
+
+        @sa fip_protocol
+        */
         fip_protocol get_sla_board_version(void)
         {
             // build a fip packet
@@ -896,6 +920,17 @@ namespace SO
         }
 
         //-----------------------------------------------------------------------------
+        /**
+        @brief Get the image size from the camera.
+
+        This function builds a fip protocol packet to get the image size from the SLA board.
+
+        @return fip_protocol that contains the request to get the camera image size.
+
+        @note A fip_protocol packet is returned with the camera image size.
+
+        @sa fip_protocol
+        */
         fip_protocol get_sla_image_size(void)
         {
             // build a fip packet
@@ -903,6 +938,15 @@ namespace SO
         }
 
         //-----------------------------------------------------------------------------
+        /**
+        @brief Set the camera serial number.
+
+        This function takes a wind_protocol from the get_serial_number function to set the serial number variable in the class.
+
+        @param[in] ser_num : a wind_protocol packet from the get_serial_number function.
+
+        @sa wind_protocol, get_serial_number
+        */
         void set_sn(wind_protocol ser_num)
         {
             sn = "";
@@ -915,12 +959,73 @@ namespace SO
         }
 
         //-----------------------------------------------------------------------------
+        /**
+        @brief Get the camera serial number.
+
+        This function builds a fip protocol packet to get the camera serial number.
+
+        @return fip_protocol that contains the structure to get the cmaera serial number.
+
+        @note A wind_protocol packet is returned with the serial number.
+
+        @sa fip_protocol, wind_protocol
+        */
         fip_protocol get_serial_number(void)
         {
             wind_protocol lens_packet(GET_CAMERA_SN);
 
             // build a fip packet
             return fip_protocol(0x3D, port, lens_packet.to_vector());
+        }
+
+        
+        //-----------------------------------------------------------------------------
+        /**
+        @brief Set the Ethernet Display parameter on the SLA board.
+
+        This function builds a fip protocol packet to set the ethernet display parameter.
+
+        @param[in] ip_address : ip address of the receiving device in 32-bit notation use inet_addr to convert string address to 32-bits
+        @param[in] port : port of the receiving device
+        @return fip_protocol that contains the structure to set the ethernet display parameter.
+
+        @note No return data is expected.
+
+        @sa fip_protocol
+        */
+        fip_protocol set_ethernet_display_parameter(uint32_t ip_address, uint16_t port = 15004)
+        {
+            std::vector<uint8_t> value = { 0x03 };
+            value.push_back((uint8_t)(ip_address & 0x00FF));
+            value.push_back((uint8_t)(ip_address>>8 & 0x00FF));
+            value.push_back((uint8_t)(ip_address>>16 & 0x00FF));
+            value.push_back((uint8_t)(ip_address>>24 & 0x00FF));
+            value.push_back((uint8_t)(port & 0x00FF));
+            value.push_back((uint8_t)(port>>8 & 0x00FF));
+            value.push_back((uint8_t)(0x30));
+            value.push_back((uint8_t)(0x00));
+
+            // build a fip packet: 0x51 0xAC 0x0B 0x29 0x03 [0x0A 0x7F 0x01 0x0C] [0x9C 0x3A] 0x30 0x00 0x72
+            return fip_protocol(0x29, value);
+        }
+
+        //-----------------------------------------------------------------------------
+        /**
+        @brief Configure the streaming control on the SLA board.
+
+        This function builds a fip protocol packet to configure the streaming control and set how the video streams from teh SLA board.
+
+        @param[in] value Table Number : (1 -> turn on streaming,  256 -> turn streaming off)
+        @return fip_protocol that contains the structure to set the ethernet display parameter.
+
+        @note No return data is expected.
+
+        @sa fip_protocol
+        */
+        fip_protocol config_streaming_control(uint16_t value)
+        {
+            // build a fip packet: 0x51 0xAC 0x04 0x90 0x01 0x00 0x47
+            return fip_protocol(0x90, { (uint8_t)(value&0x00FF), (uint8_t)((value >> 8)&0x00FF) });
         }
 
         //-----------------------------------------------------------------------------

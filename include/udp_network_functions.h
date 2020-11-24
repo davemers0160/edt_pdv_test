@@ -182,7 +182,7 @@ int32_t send_udp_data(udp_info &info, std::vector<uint8_t> data)
 {
 	int32_t result = 0;
 
-	result = sendto(info.udp_sock, (char *)data.data(), data.size(), 0, (sockaddr*)&info.write_addr_obj, sizeof(struct sockaddr_in));
+	result = sendto(info.udp_sock, (char *)data.data(), (int)data.size(), 0, (sockaddr*)&info.write_addr_obj, sizeof(struct sockaddr_in));
 
 	return result;
 }
