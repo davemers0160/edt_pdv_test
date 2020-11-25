@@ -84,6 +84,59 @@ public:
 
     //-----------------------------------------------------------------------------
     /**
+    @brief Update Data.
+
+    This function adds a single byte to the packet data.
+
+    @param[in] value to be added to the data
+
+    */
+    inline void add_data(uint8_t value)
+    {
+        data.push_back((uint8_t)(value & 0x00FF));
+
+        length = (uint8_t)(2 + data.size());
+        checksum = calc_checksum();
+    }
+
+    /**
+    @brief Update Data.
+
+    This function adds a 16-bit integer to the packet data in LSB -> MSB order.
+
+    @param[in] value to be added to the data
+
+    */
+    inline void add_data(uint16_t value)
+    {
+        data.push_back((uint8_t)(value & 0x00FF));
+        data.push_back((uint8_t)((value >> 8) & 0x00FF));
+
+        length = (uint8_t)(2 + data.size());
+        checksum = calc_checksum();
+    }
+
+    /**
+    @brief Update Data.
+
+    This function adds a 32-bit integer to the packet data in LSB -> MSB order.
+
+    @param[in] value to be added to the data
+
+    */
+    inline void add_data(uint32_t value)
+    {
+        data.push_back((uint8_t)(value & 0x00FF));
+        data.push_back((uint8_t)((value >> 8) & 0x00FF));
+        data.push_back((uint8_t)((value >> 16) & 0x00FF));
+        data.push_back((uint8_t)((value >> 24) & 0x00FF));
+
+        length = (uint8_t)(2 + data.size());
+        checksum = calc_checksum();
+    }
+
+    //-----------------------------------------------------------------------------
+    /**
     @brief to_vector.
 
     This function converts the wind_protocol class to a uint8_t vector
