@@ -20,6 +20,8 @@
 #include <algorithm>
 #include <thread>
 
+#include "ip_helper.h"
+
 // Project Includes
 #include "edt_test.h"
 
@@ -104,6 +106,12 @@ int main(int argc, char** argv)
 
         std::cout << "close result: " << result << std::endl;
         */
+        std::vector<std::string> ip_list;
+
+        //get_ip_address(ip_list, error_msg);
+
+        std::string ip_address;
+        get_local_ip(ip_address, error_msg);
 
         std::vector<uint8_t> rx_data;
 

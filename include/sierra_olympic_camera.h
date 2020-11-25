@@ -977,8 +977,7 @@ namespace SO
             // build a fip packet
             return fip_protocol(0x3D, port, lens_packet.to_vector());
         }
-
-        
+       
         //-----------------------------------------------------------------------------
         /**
         @brief Set the Ethernet Display parameter on the SLA board.
@@ -995,18 +994,23 @@ namespace SO
         */
         fip_protocol set_ethernet_display_parameter(uint32_t ip_address, uint16_t port = 15004)
         {
-            std::vector<uint8_t> value = { 0x03 };
-            value.push_back((uint8_t)(ip_address & 0x00FF));
-            value.push_back((uint8_t)(ip_address>>8 & 0x00FF));
-            value.push_back((uint8_t)(ip_address>>16 & 0x00FF));
-            value.push_back((uint8_t)(ip_address>>24 & 0x00FF));
-            value.push_back((uint8_t)(port & 0x00FF));
-            value.push_back((uint8_t)(port>>8 & 0x00FF));
-            value.push_back((uint8_t)(0x30));
-            value.push_back((uint8_t)(0x00));
+            //std::vector<uint8_t> value = { 0x03 };
+            //value.push_back((uint8_t)(ip_address & 0x00FF));
+            //value.push_back((uint8_t)(ip_address>>8 & 0x00FF));
+            //value.push_back((uint8_t)(ip_address>>16 & 0x00FF));
+            //value.push_back((uint8_t)(ip_address>>24 & 0x00FF));
+            //value.push_back((uint8_t)(port & 0x00FF));
+            //value.push_back((uint8_t)(port>>8 & 0x00FF));
+            //value.push_back((uint8_t)(0x30));
+            //value.push_back((uint8_t)(0x00));
 
-            // build a fip packet: 0x51 0xAC 0x0B 0x29 0x03 [0x0A 0x7F 0x01 0x0C] [0x9C 0x3A] 0x30 0x00 0x72
-            return fip_protocol(0x29, value);
+            // build a fip packet: 0x51 0xAC 0x0B 0x29 0x03 [0x0A 0x7F 0x01 0x0C] [0x9C 0x3A] [0x30 0x00] 0x72
+            fip_protocol fp = fip_protocol(0x29, { 0x03 });
+            fp.add_data(ip_address);
+            fp.add_data(port);
+            fp.add_data((uint16_t)(0x03));
+
+            return fp;
         }
 
         //-----------------------------------------------------------------------------
@@ -1024,8 +1028,10 @@ namespace SO
         */
         fip_protocol config_streaming_control(uint16_t value)
         {
-            // build a fip packet: 0x51 0xAC 0x04 0x90 0x01 0x00 0x47
-            return fip_protocol(0x90, { (uint8_t)(value&0x00FF), (uint8_t)((value >> 8)&0x00FF) });
+            // build a fip packet: 0x51 0xAC 0x04 0x90 [0x01 0x00] 0x47
+            fip_protocol fp = fip_protocol(0x90);
+            fp.add_data(value);
+            return fp;
         }
 
         //-----------------------------------------------------------------------------
@@ -1036,7 +1042,7 @@ namespace SO
 
         @return fip_protocol that contains the structure to retrieve the camera version.
 
-        @note The returned data will contain the Major Revision, Minor Revision, Build Number, Camera Type.
+        @note The returned data will be a wind_protocol packet containing the Major Revision, Minor Revision, Build Number, Camera Type.
 
         @sa fip_protocol, wind_protocol
         */

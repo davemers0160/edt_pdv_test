@@ -187,6 +187,7 @@ int32_t send_udp_data(udp_info &info, std::vector<uint8_t> data)
 	return result;
 }
 
+// ----------------------------------------------------------------------------
 int32_t receive_udp_data(udp_info &info, std::vector<uint8_t> &data)
 {
 	int32_t result;
