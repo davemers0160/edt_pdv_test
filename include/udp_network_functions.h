@@ -199,27 +199,41 @@ int32_t receive_udp_data(udp_info& info, std::vector<uint8_t>& data)
 
 	std::vector<uint8_t> d1(256);
 
-	int32_t addr_length = sizeof(info.read_addr_obj);
+
 
 	data.clear();
+	
+#if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
 
+	int32_t addr_length = sizeof(info.read_addr_obj);
+	
 	// receive up to 256 bytes
 	do {
 		result = recvfrom(info.udp_sock, (char*)d1.data(), 256, 0, (sockaddr*)&info.read_addr_obj, &addr_length);
 		if (result == -1)
 		{
-#if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
+
 			error = WSAGetLastError();
 			if (error != WSAETIMEDOUT) 
 			{
 				std::cout << "recvfrom error = " << error << std::endl;
 			}
-#endif
+
 		}
 
-#if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
 	} while (result <= 0 && error == WSAETIMEDOUT && (--retry_count));
 #else
+
+	uint32_t addr_length = 0;
+	
+	// receive up to 256 bytes
+	do {
+		result = recvfrom(info.udp_sock, (char*)d1.data(), 256, 0, (sockaddr*)&info.read_addr_obj, &addr_length);
+		if (result == -1)
+		{
+		    std::cout << "recvfrom error = " << error << std::endl;
+		}
+
 	} while (result <= 0 && (--retry_count));
 #endif
 
