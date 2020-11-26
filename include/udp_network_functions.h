@@ -29,6 +29,9 @@
 
 typedef int32_t SOCKET;
 
+#define INVALID_SOCKET (-1)
+#define SOCKET_ERROR (-1)
+
 #endif
 
 typedef struct udp_info
@@ -121,13 +124,13 @@ int32_t bind_udp_server(udp_info &info, std::string &error_msg)
 	}
 	else
 	{
-		std::cout << "Socket already bound.  Need to shutdown." << std::endl;
+		error_msg = "Socket already bound.  Need to shutdown.";
 		return -1;
 	}
 
 	if (info.udp_sock == INVALID_SOCKET)
 	{
-		std::cout << "Error at socket(): " << std::endl;
+		error_msg = "Error at socket(): ";
 		return -1;
 	}
 
@@ -142,7 +145,7 @@ int32_t bind_udp_server(udp_info &info, std::string &error_msg)
 	{
 		close_connection(info.udp_sock, error_msg);
 		info.udp_sock = INVALID_SOCKET;
-		std::cout << "SLSockServerBind failed to bind to port " << info.read_port << ", " << result << std::endl;
+		error_msg = "SLSockServerBind failed to bind to port " + std::to_string(info.read_port) + ", " + std::to_string(result);
 		return -1;
 	}
 
@@ -168,7 +171,6 @@ int32_t init_udp_socket(udp_info &info, std::string& error_msg)
 
 #else
 
-
 #endif
 
 	result = bind_udp_server(info, error_msg);
@@ -188,10 +190,10 @@ int32_t send_udp_data(udp_info &info, std::vector<uint8_t> data)
 }
 
 // ----------------------------------------------------------------------------
-int32_t receive_udp_data(udp_info &info, std::vector<uint8_t> &data)
+int32_t receive_udp_data(udp_info& info, std::vector<uint8_t>& data)
 {
 	int32_t result;
-	int32_t error = WSAETIMEDOUT;
+	int32_t error = 10060L;		// WIN32 -> WSAETIMEDOUT
 	int32_t retry_count = 1;
 	int test = 0;
 
@@ -203,16 +205,24 @@ int32_t receive_udp_data(udp_info &info, std::vector<uint8_t> &data)
 
 	// receive up to 256 bytes
 	do {
-		result = recvfrom(info.udp_sock, (char *)d1.data(),256, 0, (sockaddr*)&info.read_addr_obj, &addr_length);
-		if (result == -1) 
+		result = recvfrom(info.udp_sock, (char*)d1.data(), 256, 0, (sockaddr*)&info.read_addr_obj, &addr_length);
+		if (result == -1)
 		{
+#if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
 			error = WSAGetLastError();
-			if (error != WSAETIMEDOUT) {
-				//test = 1;
-				//SLATrace("recvfrom error = %d\n", error);
+			if (error != WSAETIMEDOUT) 
+			{
+				std::cout << "recvfrom error = " << error << std::endl;
 			}
+#endif
 		}
+
+#if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
 	} while (result <= 0 && error == WSAETIMEDOUT && (--retry_count));
+#else
+	} while (result <= 0 && (--retry_count));
+#endif
+
 
 	if (result > 0)
 	{
