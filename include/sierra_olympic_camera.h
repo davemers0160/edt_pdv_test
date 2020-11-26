@@ -994,16 +994,6 @@ namespace SO
         */
         fip_protocol set_ethernet_display_parameter(uint32_t ip_address, uint16_t port = 15004)
         {
-            //std::vector<uint8_t> value = { 0x03 };
-            //value.push_back((uint8_t)(ip_address & 0x00FF));
-            //value.push_back((uint8_t)(ip_address>>8 & 0x00FF));
-            //value.push_back((uint8_t)(ip_address>>16 & 0x00FF));
-            //value.push_back((uint8_t)(ip_address>>24 & 0x00FF));
-            //value.push_back((uint8_t)(port & 0x00FF));
-            //value.push_back((uint8_t)(port>>8 & 0x00FF));
-            //value.push_back((uint8_t)(0x30));
-            //value.push_back((uint8_t)(0x00));
-
             // build a fip packet: 0x51 0xAC 0x0B 0x29 0x03 [0x0A 0x7F 0x01 0x0C] [0x9C 0x3A] [0x30 0x00] 0x72
             fip_protocol fp = fip_protocol(0x29, { 0x03 });
             fp.add_data(ip_address);

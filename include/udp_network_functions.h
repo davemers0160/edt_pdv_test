@@ -131,10 +131,10 @@ int32_t bind_udp_server(udp_info &info, std::string &error_msg)
 		return -1;
 	}
 
-	int rcvBuffSizeOption = 1024 * 1024;  // see MAX_READ_BUFFER_SIZE - jsarao
-	ULONG reuseAddr = 1;
-	setsockopt(info.udp_sock, SOL_SOCKET, SO_RCVBUF, (char*)&rcvBuffSizeOption, sizeof(rcvBuffSizeOption));
-	setsockopt(info.udp_sock, SOL_SOCKET, SO_REUSEADDR, (char*)&reuseAddr, sizeof(reuseAddr));
+	int recieve_buffer_size = 1024 * 1024;  // see MAX_READ_BUFFER_SIZE - jsarao
+	unsigned long reuse_address = 1;
+	setsockopt(info.udp_sock, SOL_SOCKET, SO_RCVBUF, (char*)&recieve_buffer_size, sizeof(recieve_buffer_size));
+	setsockopt(info.udp_sock, SOL_SOCKET, SO_REUSEADDR, (char*)&reuse_address, sizeof(reuse_address));
 
 	result = bind(info.udp_sock, (struct sockaddr*)&info.read_addr_obj, sizeof(struct sockaddr));
 

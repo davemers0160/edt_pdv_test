@@ -67,14 +67,16 @@ set(project_includes
     #"${COMMON_ROOT}/include"
     )
     
-message(" ")
+#message(" ")
 # temp: commented out because there is a conflict between typedefs between FTDI WinTypes.h and EDT
 #include(cmake_utils/find_ftdi.cmake)
-if(FTDI_FOUND)
-    set(project_includes ${project_includes} ${FTDI_INCLUDE_DIRS})
-    set(project_libs ${project_libs} ${FTDI_LIBS})
-endif()
+#if(FTDI_FOUND)
+#    set(project_includes ${project_includes} ${FTDI_INCLUDE_DIRS})
+#    set(project_libs ${project_libs} ${FTDI_LIBS})
+#endif()
 
+
+# look for the EDT PDV library
 message(" ")
 include(cmake_utils/find_edtpdv.cmake)
 if(EDTPDV_FOUND)
@@ -86,6 +88,20 @@ if(EDTPDV_FOUND)
         add_compile_options("-lm")
     endif()
 endif()
+
+# look for opencv
+message(STATUS "--------------------------------------------------------------------------------")
+message(STATUS "Looking for OpenCV installation...")
+find_package(OpenCV REQUIRED)
+if (OpenCV_FOUND)
+	set(project_includes ${project_includes} ${OpenCV_INCLUDE_DIRS})
+	set(project_libs ${project_libs} ${OpenCV_LIBS})
+	message(STATUS "Found OpenCV: " ${OpenCV_DIR})
+else()
+	message("OpenCV not found...")
+endif()
+message(STATUS "--------------------------------------------------------------------------------")
+
 
 message(" ")
 message("--------------------------------------------------------------------------------")

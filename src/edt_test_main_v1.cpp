@@ -25,7 +25,11 @@
 // Project Includes
 #include "edt_test.h"
 
-
+// OpenCV Includes
+#include <opencv2/core.hpp>
+#include <opencv2/imgproc.hpp>
+#include <opencv2/highgui.hpp> 
+#include <opencv2/videoio.hpp>
 
 // ----------------------------------------------------------------------------
 int main(int argc, char** argv)
@@ -58,12 +62,15 @@ int main(int argc, char** argv)
     
     // IP based comms
     int32_t result = 0;
-    std::string ip_address = "10.127.1.10";
+    std::string camera_ip_address = "10.127.1.10";
+    std::string video_cap_address = "udp://10.127.1.10:";
     uint16_t read_port = 14002;
     uint16_t write_port = 14001;
+    uint16_t video_port = 15004;
     udp_info udp_camera_info(write_port, read_port);
     std::string error_msg;
     int32_t read_result, write_result;
+    std::string host_ip_address;
 
 
     try
@@ -110,31 +117,29 @@ int main(int argc, char** argv)
 
         //get_ip_address(ip_list, error_msg);
 
-        std::string ip_address;
-        get_local_ip(ip_address, error_msg);
+        get_local_ip(host_ip_address, error_msg);
 
         std::vector<uint8_t> rx_data;
 
-        result = init_ip_camera(udp_camera_info, ip_address);
+        result = init_ip_camera(udp_camera_info, camera_ip_address);
 
         write_result = send_udp_data(udp_camera_info, vinden.get_sla_board_version().to_vector());
         read_result = receive_udp_data(udp_camera_info, rx_data);
-
         fip_protocol sla_board_version = fip_protocol(rx_data);
-        std::cout << sla_board_version << std::endl;
+        //std::cout << sla_board_version << std::endl;
 
         write_result = send_udp_data(udp_camera_info, vinden.get_sla_image_size().to_vector());
         read_result = receive_udp_data(udp_camera_info, rx_data);
-
         fip_protocol sla_image_size = fip_protocol(rx_data);
-        std::cout << sla_image_size << std::endl;
+        //std::cout << sla_image_size << std::endl;
 
         vinden.set_image_size(read2(&sla_image_size.data[2]), read2(&sla_image_size.data[0]));
 
         // get the camera wind version number
+        wind_protocol wind_data;
         write_result = send_udp_data(udp_camera_info, vinden.get_version().to_vector());
         read_result = receive_udp_data(udp_camera_info, rx_data);
-        wind_protocol wind_data = wind_protocol(rx_data);
+        wind_data = wind_protocol(rx_data);
         vinden.set_version(wind_data);
 
         // get the camera serial number
@@ -202,47 +207,39 @@ int main(int argc, char** argv)
         // display the information about a specific camera
         std::cout << vinden << std::endl;
 
+        // set the video output parameters
+        write_result = send_udp_data(udp_camera_info, vinden.set_ethernet_display_parameter(inet_addr(host_ip_address.c_str()), video_port).to_vector());
+
+        // Turn on video streaming over ethernet
+        write_result = send_udp_data(udp_camera_info, vinden.config_streaming_control(SO::STREAM_ON).to_vector());
+
+        video_cap_address = video_cap_address + std::to_string(video_port);
+        char key = 0;
+
+        cv::VideoCapture cap(video_cap_address, cv::CAP_FFMPEG);
+
+        if (!cap.isOpened())
+        {
+            key = 'q';
+        }
+
+        cv::namedWindow("Video Feed", cv::WINDOW_AUTOSIZE);
+
+        cv::Mat frame;
+
+
+        while (key != 'q')
+        {
+            cap >> frame;
+            cv::imshow("Video Feed", frame);
+
+            key = cv::waitKey(5);
+
+        }
+
+        cv::destroyAllWindows();
+
         int bp = 0;
-
-#if defined(USE_FTDI)
-
-        ftdi_device_count = get_device_list(ftdi_devices);
-        if (ftdi_device_count == 0)
-        {
-            std::cout << "No ftdi devices found... Exiting!" << std::endl;
-            std::cin.ignore();
-            return -1;
-        }
-
-        for (idx = 0; idx < ftdi_devices.size(); ++idx)
-        {
-            std::cout << ftdi_devices[idx];
-        }
-
-        std::cout << "Select Interface Number: ";
-        std::getline(std::cin, console_input);
-        driver_device_num = stoi(console_input);
-
-        std::cout << std::endl << "Connecting to Controller..." << std::endl;
-        ftdi_devices[driver_device_num].baud_rate = baud_rate;
-        ftdi_devices[driver_device_num].stop_bits = FT_STOP_BITS_1;
-
-        while ((ctrl_handle == NULL) && (connect_count < 10))
-        {
-            ctrl_handle = open_com_port(ftdi_devices[driver_device_num], read_timeout, write_timeout);
-            ++connect_count;
-        }
-
-        if (ctrl_handle == NULL)
-        {
-            std::cout << "No Controller found... Exiting!" << std::endl;
-            std::cin.ignore();
-            return -1;
-        }
-
-        flush_port(ctrl_handle);
-
-#endif  // USE_FTDI
 
 
     }
@@ -250,6 +247,8 @@ int main(int argc, char** argv)
     {
         std::cout << "error: " << e.what() << std::endl;
     }
+
+    write_result = send_udp_data(udp_camera_info, vinden.config_streaming_control(SO::STREAM_OFF).to_vector());
 
     result = close_connection(udp_camera_info.udp_sock, error_msg);
 
