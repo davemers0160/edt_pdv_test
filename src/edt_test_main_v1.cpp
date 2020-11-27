@@ -135,9 +135,6 @@ int main(int argc, char** argv)
 
         std::cout << "close result: " << result << std::endl;
         */
-        std::vector<std::string> ip_list;
-
-        //get_ip_address(ip_list, error_msg);
 
         get_local_ip(host_ip_address, error_msg);
 
@@ -145,8 +142,14 @@ int main(int argc, char** argv)
         std::cout << "host IP address: " << host_ip_address << std::endl;
         std::cout << "------------------------------------------------------------------" << std::endl << std::endl;
 
-        result = init_ip_camera(udp_camera_info, camera_ip_address);
-
+        result = init_ip_camera(udp_camera_info, camera_ip_address, error_msg);
+        
+        if(result < 0)
+        {
+            std::cout << "result: " << result << std::endl;
+            std::cout << "error msg: " << error_msg << std::endl;
+        }
+        
         write_result = send_udp_data(udp_camera_info, vinden.get_sla_board_version().to_vector());
         read_result = receive_udp_data(udp_camera_info, rx_data);
         fip_protocol sla_board_version = fip_protocol(rx_data);
@@ -155,8 +158,6 @@ int main(int argc, char** argv)
         write_result = send_udp_data(udp_camera_info, vinden.get_sla_image_size().to_vector());
         read_result = receive_udp_data(udp_camera_info, rx_data);
         fip_protocol sla_image_size = fip_protocol(rx_data);
-        //std::cout << sla_image_size << std::endl;
-
         vinden.set_image_size(read2(&sla_image_size.data[2]), read2(&sla_image_size.data[0]));
 
         std::cout << "Image size (h x w): " << vinden.height << " x " << vinden.width << std::endl;

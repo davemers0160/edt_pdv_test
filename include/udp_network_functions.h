@@ -150,7 +150,7 @@ int32_t bind_udp_server(udp_info &info, std::string &error_msg)
 	{
 		close_connection(info.udp_sock, error_msg);
 		info.udp_sock = INVALID_SOCKET;
-		error_msg = "SLSockServerBind failed to bind to port " + std::to_string(info.read_port) + ", " + std::to_string(result);
+		error_msg = "failed to bind to port " + std::to_string(info.read_port) + ", " + std::to_string(result);
 		return -1;
 	}
 

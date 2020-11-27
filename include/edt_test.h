@@ -32,15 +32,14 @@ constexpr auto VINDEN = 0;                          /* Channel that the Vinden C
 constexpr auto VENTUS = 0;                          /* Channel that the Ventus Camera is connected to */
 
 // ----------------------------------------------------------------------------
-int32_t init_ip_camera(udp_info &udp_camera_info, std::string ip_address)
+int32_t init_ip_camera(udp_info &udp_camera_info, std::string ip_address, std::string &error_msg)
 {
 
-	int32_t rx_result, tx_result;
+	int32_t result;
 
-	std::string error_msg;
 
 	// init the read portion of the UDP socket
-	rx_result = init_udp_socket(udp_camera_info, error_msg);
+	result = init_udp_socket(udp_camera_info, error_msg);
 
 	// init the write portion of the UDP socket
 	udp_camera_info.ip_address = ip_address;
@@ -50,7 +49,7 @@ int32_t init_ip_camera(udp_info &udp_camera_info, std::string ip_address)
 	udp_camera_info.write_addr_obj.sin_port = htons(udp_camera_info.write_port);
 	udp_camera_info.write_addr_obj.sin_family = AF_INET;
 
-	return 0;
+	return result;
 
 }	// end of init_ip_camera
 
