@@ -253,7 +253,7 @@ int main(int argc, char** argv)
             cap >> frame;
             cv::imshow(window_name, frame);
 
-            key = cv::waitKey(5);
+            key = cv::waitKey(1);
         }
 
         cv::destroyAllWindows();
