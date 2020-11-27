@@ -31,6 +31,12 @@
 #include <opencv2/highgui.hpp> 
 #include <opencv2/videoio.hpp>
 
+void print_usage(void)
+{
+    std::cout << "Enter the ip address of the camera to connect:" << std::endl;
+    std::cout << "example: cam_test 192.168.0.10" << std::endl;
+}
+
 // ----------------------------------------------------------------------------
 int main(int argc, char** argv)
 {
@@ -54,6 +60,7 @@ int main(int argc, char** argv)
 
     // Sierra-Olympic specific variables
     SO::camera vinden;
+    wind_protocol wind_data;
     uint32_t driver_device_num = 0;
     uint32_t connect_count = 0;
     uint32_t read_timeout = 30000;
@@ -62,8 +69,8 @@ int main(int argc, char** argv)
     
     // IP based comms
     int32_t result = 0;
-    std::string camera_ip_address = "10.127.1.10";
-    std::string video_cap_address = "udp://10.127.1.10:";
+    std::string camera_ip_address;
+    std::string video_cap_address;      // = "udp://camera_ip_address:video_port";
     uint16_t read_port = 14002;
     uint16_t write_port = 14001;
     uint16_t video_port = 15004;
@@ -71,7 +78,22 @@ int main(int argc, char** argv)
     std::string error_msg;
     int32_t read_result, write_result;
     std::string host_ip_address;
+    std::vector<uint8_t> rx_data;
 
+    // opencv variables to display the video feed
+    std::string window_name = "Video Feed";
+    cv::namedWindow(window_name, cv::WINDOW_AUTOSIZE);
+    cv::Mat frame;
+
+    if (argc == 1)
+    {
+        print_usage();
+        std::cin.ignore();
+        return 0;
+    }
+
+    camera_ip_address = argv[1];
+    video_cap_address = "udp://" + camera_ip_address + ":" + std::to_string(video_port);
 
     try
     {
@@ -119,7 +141,9 @@ int main(int argc, char** argv)
 
         get_local_ip(host_ip_address, error_msg);
 
-        std::vector<uint8_t> rx_data;
+        std::cout << "------------------------------------------------------------------" << std::endl;
+        std::cout << "host IP address: " << host_ip_address << std::endl;
+        std::cout << "------------------------------------------------------------------" << std::endl << std::endl;
 
         result = init_ip_camera(udp_camera_info, camera_ip_address);
 
@@ -135,8 +159,9 @@ int main(int argc, char** argv)
 
         vinden.set_image_size(read2(&sla_image_size.data[2]), read2(&sla_image_size.data[0]));
 
+        std::cout << "Image size (h x w): " << vinden.height << " x " << vinden.width << std::endl;
+
         // get the camera wind version number
-        wind_protocol wind_data;
         write_result = send_udp_data(udp_camera_info, vinden.get_version().to_vector());
         read_result = receive_udp_data(udp_camera_info, rx_data);
         wind_data = wind_protocol(rx_data);
@@ -213,7 +238,6 @@ int main(int argc, char** argv)
         // Turn on video streaming over ethernet
         write_result = send_udp_data(udp_camera_info, vinden.config_streaming_control(SO::STREAM_ON).to_vector());
 
-        video_cap_address = video_cap_address + std::to_string(video_port);
         char key = 0;
 
         cv::VideoCapture cap(video_cap_address, cv::CAP_FFMPEG);
@@ -223,18 +247,12 @@ int main(int argc, char** argv)
             key = 'q';
         }
 
-        cv::namedWindow("Video Feed", cv::WINDOW_AUTOSIZE);
-
-        cv::Mat frame;
-
-
         while (key != 'q')
         {
             cap >> frame;
-            cv::imshow("Video Feed", frame);
+            cv::imshow(window_name, frame);
 
             key = cv::waitKey(5);
-
         }
 
         cv::destroyAllWindows();

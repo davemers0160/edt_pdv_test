@@ -26,6 +26,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <errno.h>
 
 typedef int32_t SOCKET;
 
@@ -106,6 +107,7 @@ int32_t bind_udp_server(udp_info &info, std::string &error_msg)
 {
 	int32_t result = SUCCESS;
 
+	// fill in the server information 
 	info.read_addr_obj.sin_family = AF_INET;
 	info.read_addr_obj.sin_port = htons(info.read_port);
 
@@ -118,6 +120,7 @@ int32_t bind_udp_server(udp_info &info, std::string &error_msg)
 		info.read_addr_obj.sin_addr.s_addr = inet_addr(info.ip_address.c_str());
 	}
 
+	// create the socket file descriptor 
 	if ((!info.udp_sock) || (info.udp_sock == INVALID_SOCKET))
 	{
 		info.udp_sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
@@ -139,6 +142,8 @@ int32_t bind_udp_server(udp_info &info, std::string &error_msg)
 	setsockopt(info.udp_sock, SOL_SOCKET, SO_RCVBUF, (char*)&recieve_buffer_size, sizeof(recieve_buffer_size));
 	setsockopt(info.udp_sock, SOL_SOCKET, SO_REUSEADDR, (char*)&reuse_address, sizeof(reuse_address));
 
+	// Associate the address information with the socket using bind.
+    // At this point we can receive datagrams on the bound socket.
 	result = bind(info.udp_sock, (struct sockaddr*)&info.read_addr_obj, sizeof(struct sockaddr));
 
 	if (result)
@@ -162,15 +167,13 @@ int32_t init_udp_socket(udp_info &info, std::string& error_msg)
 #if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
 	WSADATA wsaData;
 
+	// Initialize Winsock version 2.2
 	result = WSAStartup(MAKEWORD(2, 2), &wsaData);
 	if (result != 0) 
 	{
 		error_msg = "Winsock startup failed. Error: " + std::to_string(result);
 		return WIN_START_ERR;
 	}
-
-#else
-
 #endif
 
 	result = bind_udp_server(info, error_msg);
@@ -198,8 +201,6 @@ int32_t receive_udp_data(udp_info& info, std::vector<uint8_t>& data)
 	int test = 0;
 
 	std::vector<uint8_t> d1(256);
-
-
 
 	data.clear();
 	
@@ -231,7 +232,7 @@ int32_t receive_udp_data(udp_info& info, std::vector<uint8_t>& data)
 		result = recvfrom(info.udp_sock, (char*)d1.data(), 256, 0, (sockaddr*)&info.read_addr_obj, &addr_length);
 		if (result == -1)
 		{
-		    std::cout << "recvfrom error = " << error << std::endl;
+		    std::cout << "recvfrom error: " << strerror(errno) << std::endl;
 		}
 
 	} while (result <= 0 && (--retry_count));
