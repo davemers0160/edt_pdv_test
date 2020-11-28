@@ -80,13 +80,28 @@ void zoom_trackbar_callback(int value, void* user_data)
 
 void load_param_gui(udp_info &udp_camera_info)
 {
+    wind_protocol wind_data;
 	int32_t focus_position = 0;
 	int32_t zoom_index = 0;
-
+    int32_t write_result, read_result;
+    std::vector<uint8_t> rx_data;
+    
 	std::string parameter_window = "Parameter Options";
 	cv::namedWindow(parameter_window, cv::WINDOW_NORMAL); // Create Window
 	cv::resizeWindow(parameter_window, 1000, 20);
+	
+	// get the intial value for the focus position
+    write_result = send_udp_data(udp_camera_info, SO::lens_class().get_focus_position().to_vector());
+    read_result = receive_udp_data(udp_camera_info, rx_data);
+    wind_data = wind_protocol(rx_data);
+    focus_position = wind_data.payload[0] | wind_data.payload[1]<<8;
 
+	// get the intial value for the zoom index
+    write_result = send_udp_data(udp_camera_info, SO::lens_class().get_zoom_index().to_vector());
+    read_result = receive_udp_data(udp_camera_info, rx_data);
+    wind_data = wind_protocol(rx_data);
+    zoom_index = wind_data.payload[0] | wind_data.payload[1]<<8;
+    
 	// create focus and zoom trackbars
 	cv::createTrackbar("Focus Parameter", parameter_window, &focus_position, 65534, focus_trackbar_callback, &udp_camera_info);
 	cv::createTrackbar("Zoom Parameter", parameter_window, &zoom_index, 18, zoom_trackbar_callback, &udp_camera_info);
