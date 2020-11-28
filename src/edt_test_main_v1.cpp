@@ -152,8 +152,6 @@ int main(int argc, char** argv)
         
         load_param_gui(udp_camera_info);
 
-        load_param_gui(udp_camera_info);
-
         write_result = send_udp_data(udp_camera_info, vinden.get_sla_board_version().to_vector());
         read_result = receive_udp_data(udp_camera_info, rx_data);
         fip_protocol sla_board_version = fip_protocol(rx_data);
