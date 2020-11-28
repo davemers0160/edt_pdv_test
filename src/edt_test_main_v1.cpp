@@ -162,7 +162,7 @@ int main(int argc, char** argv)
         fip_protocol sla_image_size = fip_protocol(rx_data);
         vinden.set_image_size(read2(&sla_image_size.data[2]), read2(&sla_image_size.data[0]));
 
-        std::cout << "Image size (h x w): " << vinden.height << " x " << vinden.width << std::endl;
+        std::cout << "Image size (h x w): " << vinden.height << " x " << vinden.width << std::endl << std::endl;
 
         // get the camera wind version number
         write_result = send_udp_data(udp_camera_info, vinden.get_version().to_vector());

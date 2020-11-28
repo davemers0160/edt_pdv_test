@@ -84,11 +84,12 @@ void load_param_gui(udp_info &udp_camera_info)
 	int32_t zoom_index = 0;
 
 	std::string parameter_window = "Parameter Options";
-	cv::namedWindow(parameter_window, cv::WINDOW_AUTOSIZE); // Create Window
+	cv::namedWindow(parameter_window, cv::WINDOW_NORMAL); // Create Window
+	cv::resizeWindow(parameter_window, 1000, 20);
 
 	// create focus and zoom trackbars
 	cv::createTrackbar("Focus Parameter", parameter_window, &focus_position, 65534, focus_trackbar_callback, &udp_camera_info);
-	cv::createTrackbar("Zoom Parameter", parameter_window, &zoom_index, 100, zoom_trackbar_callback, &udp_camera_info);
+	cv::createTrackbar("Zoom Parameter", parameter_window, &zoom_index, 18, zoom_trackbar_callback, &udp_camera_info);
 
 	//
 	//focus_trackbar_callback(0, &focus_position);
