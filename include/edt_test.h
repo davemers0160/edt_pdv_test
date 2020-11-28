@@ -26,6 +26,12 @@
 // include lfor the Sierra-Olympic Camera code
 #include "sierra_olympic_camera.h"
 
+// OpenCV Includes
+#include <opencv2/core.hpp>
+#include <opencv2/imgproc.hpp>
+#include <opencv2/highgui.hpp> 
+#include <sierra_olympic_camera.h>
+
 // ----------------------------------------------------------------------------
 constexpr auto EDT_UNIT_0 = 0;                      /* PCI interface for the EDT Crad */
 constexpr auto VINDEN = 0;                          /* Channel that the Vinden Camera is connected to */
@@ -53,6 +59,42 @@ int32_t init_ip_camera(udp_info &udp_camera_info, std::string ip_address, std::s
 
 }	// end of init_ip_camera
 
+
+void focus_trackbar_callback(int value, void* user_data)
+{
+	udp_info udp_camera_info = *(udp_info*)user_data;
+	uint16_t focus_position = (uint16_t)value;
+
+	int32_t write_result = send_udp_data(udp_camera_info, SO::lens_class().set_focus_position(focus_position).to_vector());
+
+}
+
+void zoom_trackbar_callback(int value, void* user_data)
+{
+	udp_info udp_camera_info = *(udp_info*)user_data;
+	uint16_t zoom_index = (uint16_t)value;
+
+	int32_t write_result = send_udp_data(udp_camera_info, SO::lens_class().set_zoom_index(zoom_index).to_vector());
+
+}
+
+void load_param_gui(udp_info &udp_camera_info)
+{
+	int32_t focus_position = 0;
+	int32_t zoom_index = 0;
+
+	std::string parameter_window = "Parameter Options";
+	cv::namedWindow(parameter_window, cv::WINDOW_AUTOSIZE); // Create Window
+
+	// create focus and zoom trackbars
+	cv::createTrackbar("Focus Parameter", parameter_window, &focus_position, 65534, focus_trackbar_callback, &udp_camera_info);
+	cv::createTrackbar("Zoom Parameter", parameter_window, &zoom_index, 100, zoom_trackbar_callback, &udp_camera_info);
+
+	//
+	//focus_trackbar_callback(0, &focus_position);
+	//zoom_trackbar_callback(0, &zoom_position);
+
+}
 
 // ----------------------------------------------------------------------------
 #if defined(USE_FTDI)
