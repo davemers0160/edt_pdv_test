@@ -21,14 +21,14 @@ public:
 
     fip_protocol() = default;
     
-    fip_protocol(uint8_t t_/*, uint8_t p_ = 12*/) : type(t_)/*, port(p_)*/
+    fip_protocol(uint8_t t_) : type(t_)
     {
         data.clear();
         length = 3;
         checksum = calc_checksum();
     }
 
-    fip_protocol(uint8_t t_, std::vector<uint8_t> d_/*, uint8_t p_ = 12*/) : type(t_)/*, port(p_)*/
+    fip_protocol(uint8_t t_, std::vector<uint8_t> d_) : type(t_)
     {
         data = d_;
         length = (uint8_t)(2 + data.size());

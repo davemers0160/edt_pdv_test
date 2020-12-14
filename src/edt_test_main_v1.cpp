@@ -232,6 +232,14 @@ int main(int argc, char** argv)
         wind_data = wind_protocol(rx_data);
         vinden.sensor.ffc_mode = wind_data.payload[0];
 
+        // get the current display parameter settings
+        write_result = send_udp_data(udp_camera_info, vinden.get_display_parameters().to_vector());
+        read_result = receive_udp_data(udp_camera_info, rx_data);
+        fip_protocol fp(rx_data);
+
+        // remove the zoom
+        write_result = send_udp_data(udp_camera_info, vinden.set_display_parameters(0x01, 0x4D).to_vector());
+
         // display the information about a specific camera
         std::cout << vinden << std::endl;
 

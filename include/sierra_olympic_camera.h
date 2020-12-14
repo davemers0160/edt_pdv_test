@@ -1005,9 +1005,57 @@ namespace SO
 
         //-----------------------------------------------------------------------------
         /**
+        @brief Get the display parameters from the SLA board.
+
+        This function builds a fip protocol packet to get the display parameters from the SLA board.
+
+        @return fip_protocol that contains the structure to get the display parameters.
+
+        @note Return data will be a fip_protocol packet that contains the display parameters.
+
+        @sa fip_protocol
+        */
+        fip_protocol get_display_parameters(void)
+        {
+            fip_protocol fp = fip_protocol(0x28, { 0x3A, 0x00 });
+
+            return fp;
+        }
+
+        //-----------------------------------------------------------------------------
+        /**
+        @brief Set the display parameters on the SLA board.
+
+        This function builds a fip protocol packet to set the display parameters on the SLA board.
+
+        @param[in] color: (0 - 41, 127)
+        @param[in] zoom: (0 - 255)
+        @return fip_protocol that contains the structure to set the display parameters.
+
+        @note No return data is expected.
+
+        @sa fip_protocol
+        */
+        fip_protocol set_display_parameters(uint8_t color, uint8_t zoom)
+        {
+            fip_protocol fp = fip_protocol(0x16);
+            fp.add_data((uint16_t)0x00);            // rotationDegrees
+            fp.add_data((uint16_t)0x00);            // rotationLimit
+            fp.add_data((uint8_t)0x00);             // decayRate
+            fp.add_data(color);                     // falseColorZTT
+            fp.add_data(zoom);                      // zoom
+            fp.add_data((uint16_t)0x00);            // panCol
+            fp.add_data((uint16_t)0x00);            // tiltRow
+            fp.add_data((uint8_t)0x00);             // cameraIndex
+
+            return fp;
+        }
+
+        //-----------------------------------------------------------------------------
+        /**
         @brief Configure the streaming control on the SLA board.
 
-        This function builds a fip protocol packet to configure the streaming control and set how the video streams from teh SLA board.
+        This function builds a fip protocol packet to configure the streaming control and set how the video streams from the SLA board.
 
         @param[in] value Table Number : (1 -> turn on streaming,  256 -> turn streaming off)
         @return fip_protocol that contains the structure to set the ethernet display parameter.
