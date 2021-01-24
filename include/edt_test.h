@@ -13,8 +13,6 @@
 //typedef int32_t SOCKET;
 #endif
 
-#include "udp_network_functions.h"
-
 // include for the EDT PCI interface card
 #include "edtinc.h"
 
@@ -22,6 +20,9 @@
 // FTDI helper functions
 #include "ftd2xx_functions.h"
 #endif	// USE_FTDI
+
+// include the functions needed for udp comms
+#include "udp_network_functions.h"
 
 // include lfor the Sierra-Olympic Camera code
 #include "sierra_olympic_camera.h"

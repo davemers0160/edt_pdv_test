@@ -165,7 +165,8 @@ int32_t get_local_ip(std::string &ip_address, std::string& error_msg)
     ip_address = std::string(buffer);
 
     return result;
-}
+
+}   // end of get_local_ip
 
 
 #endif  // IP_HELPER_FUNCTIONS_H
