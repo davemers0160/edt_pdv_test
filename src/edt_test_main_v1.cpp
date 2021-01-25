@@ -56,7 +56,13 @@ int main(int argc, char** argv)
     // EDT PDV specific variable
     Edtinfo edtinfo;
     Dependent* dd_p;
+    PdvDev* pdv_p;
     uint8_t* image_p;
+    int32_t edt_width, edt_height, edt_depth;
+    char* edt_cameratype;
+    int32_t fifo_buffers = 8;
+    int32_t timeouts = 0, last_timeouts = 0;
+    bool recovering_timeout = false;
 
     // Sierra-Olympic specific variables
     SO::camera vinden;
@@ -84,6 +90,7 @@ int main(int argc, char** argv)
     std::string window_name = "Video Feed";
     cv::namedWindow(window_name, cv::WINDOW_AUTOSIZE);
     cv::Mat frame;
+    char key = 0;
 
     if (argc == 1)
     {
@@ -112,10 +119,10 @@ int main(int argc, char** argv)
         //}
         //int result = pdv_readcfg(cfg_file.c_str(), dd_p, &edtinfo);
 
-        /*
+        
         // open a specifc board and channel
         std::cout << std::endl << "Opening: " << EDT_INTERFACE << ", Unit: " << EDT_UNIT_0 << ", Channel: " << VINDEN << std::endl;
-        PdvDev* pdv_p = pdv_open_channel(EDT_INTERFACE, EDT_UNIT_0, VINDEN);
+        pdv_p = pdv_open_channel(EDT_INTERFACE, EDT_UNIT_0, VINDEN);
         if (pdv_p == NULL)
         {
             std::cout << "Failed to connect to a pdv device... exiting!  Press Enter to close" << std::endl;
@@ -124,23 +131,26 @@ int main(int argc, char** argv)
         }
 
         // print out the device name
+        std::cout << "------------------------------------------------------------------" << std::endl;
         std::cout << "edt_devname: " << std::string(pdv_p->edt_devname) << std::endl;
 
-        // start the image capture process
-        std::cout << std::endl << "Starting the image capture process..." << std::endl;
-        pdv_start_image(pdv_p);
+        // flush the FIFO buffer
+        pdv_flush_fifo(pdv_p);
 
-        // get the image and place into a unsigned char pointer
-        // no clue how the packing is going to for int16_t ot uint16_t images
-        std::cout << std::endl << "Grabbing the image..." << std::endl;
-        image_p = pdv_wait_image(pdv_p);
+        // get image size and name for display, save, printfs, etc.
+        edt_width = pdv_get_width(pdv_p);
+        edt_height = pdv_get_height(pdv_p);
+        edt_depth = pdv_get_depth(pdv_p);
+        edt_cameratype = pdv_get_cameratype(pdv_p);
 
-        // close the device
-        std::cout << std::endl << "Closing the pdv device..." << std::endl;
-        result = pdv_close(pdv_p);
+        std::cout << "------------------------------------------------------------------" << std::endl;
+        std::cout << "Image (h x w x d): " << edt_height << " x " << edt_width << " x " << edt_depth << std::endl;
+        std::cout << "Camera Type: " << edt_cameratype << std::endl;
+        std::cout << "------------------------------------------------------------------" << std::endl;
 
-        std::cout << "close result: " << result << std::endl;
-        */
+        // allocate four buffers for optimal pdv ring buffer pipeline (reduce if memory is at a premium)
+        pdv_multibuf(pdv_p, fifo_buffers);
+        //printf(" %d image%s from '%s'\nwidth %d height %d depth %d\n", loops, loops == 1 ? "" : "s", edt_cameratype, edt_width, edt_height, edt_depth);
 
         std::cout << "------------------------------------------------------------------" << std::endl;
         std::cout << "host IP address: " << host_ip_address << std::endl;
@@ -156,104 +166,15 @@ int main(int argc, char** argv)
         
         load_param_gui(vinden.udp_camera_info);
 
-        //write_result = send_udp_data(udp_camera_info, vinden.get_sla_board_version().to_vector());
-        //read_result = receive_udp_data(udp_camera_info, rx_data);
-        //fip_protocol sla_board_version = fip_protocol(rx_data);
-        //std::cout << sla_board_version << std::endl;
-
-        //write_result = send_udp_data(udp_camera_info, vinden.get_sla_image_size().to_vector());
-        //read_result = receive_udp_data(udp_camera_info, rx_data);
-        //fip_protocol sla_image_size = fip_protocol(rx_data);
-        //vinden.set_image_size(read2(&sla_image_size.data[2]), read2(&sla_image_size.data[0]));
-
-        //std::cout << "Image size (h x w): " << vinden.height << " x " << vinden.width << std::endl << std::endl;
-
-        //// get the camera wind version number
-        //write_result = send_udp_data(udp_camera_info, vinden.get_version().to_vector());
-        //read_result = receive_udp_data(udp_camera_info, rx_data);
-        //wind_data = wind_protocol(rx_data);
-        //vinden.set_version(wind_data);
-
-        //// get the camera serial number
-        //write_result = send_udp_data(udp_camera_info, vinden.get_serial_number().to_vector());
-        //read_result = receive_udp_data(udp_camera_info, rx_data);
-        //wind_data = wind_protocol(rx_data);
-        //vinden.set_sn(wind_data);
-
-        //// get the camera lens version
-        //write_result = send_udp_data(udp_camera_info, vinden.lens.get_version().to_vector());
-        //read_result = receive_udp_data(udp_camera_info, rx_data);
-        //wind_data = wind_protocol(rx_data);
-        //vinden.lens.set_version(wind_data);
-
-        // ----------------------------------------------------------------------------
-        //// get the camera lens zoom index
-        //write_result = send_udp_data(udp_camera_info, vinden.lens.get_zoom_index().to_vector());
-        //read_result = receive_udp_data(udp_camera_info, rx_data);
-        //wind_data = wind_protocol(rx_data);
-        //vinden.lens.zoom_index = read2(&wind_data.payload[0]);
-
-        //// get the camera lens zoom position
-        //write_result = send_udp_data(udp_camera_info, vinden.lens.get_zoom_position().to_vector());
-        //read_result = receive_udp_data(udp_camera_info, rx_data);
-        //wind_data = wind_protocol(rx_data);
-        //vinden.lens.zoom_position = read2(&wind_data.payload[0]);
-
-        //// get the camera lens zoom speed
-        //write_result = send_udp_data(udp_camera_info, vinden.lens.get_zoom_speed().to_vector());
-        //read_result = receive_udp_data(udp_camera_info, rx_data);
-        //wind_data = wind_protocol(rx_data);
-        //vinden.lens.zoom_speed = (wind_data.payload[0]);
-
-        //// get the camera lens focus position
-        //write_result = send_udp_data(udp_camera_info, vinden.lens.get_focus_position().to_vector());
-        //read_result = receive_udp_data(udp_camera_info, rx_data);
-        //wind_data = wind_protocol(rx_data);
-        //vinden.lens.focus_position = read2(&wind_data.payload[0]);
-
-        //// get the camera lens focus speed
-        //write_result = send_udp_data(udp_camera_info, vinden.lens.get_focus_speed().to_vector());
-        //read_result = receive_udp_data(udp_camera_info, rx_data);
-        //wind_data = wind_protocol(rx_data);
-        //vinden.lens.focus_speed = (wind_data.payload[0]);
-
-        //// ----------------------------------------------------------------------------
-        //// get the sensor version number
-        //write_result = send_udp_data(udp_camera_info, vinden.sensor.get_version().to_vector());
-        //read_result = receive_udp_data(udp_camera_info, rx_data);
-        //wind_data = wind_protocol(rx_data);
-        //vinden.sensor.set_version(wind_data);
-
-        //// get the FFC period
-        //write_result = send_udp_data(udp_camera_info, vinden.sensor.get_auto_ffc_period().to_vector());
-        //read_result = receive_udp_data(udp_camera_info, rx_data);
-        //wind_data = wind_protocol(rx_data);
-        //vinden.sensor.ffc_period = read2(&wind_data.payload[0]);
-
-        //// get the FFC mode
-        //write_result = send_udp_data(udp_camera_info, vinden.sensor.get_auto_ffc_mode().to_vector());
-        //read_result = receive_udp_data(udp_camera_info, rx_data);
-        //wind_data = wind_protocol(rx_data);
-        //vinden.sensor.ffc_mode = wind_data.payload[0];
-
-        //// get the current display parameter settings
-        //write_result = send_udp_data(udp_camera_info, vinden.get_display_parameters().to_vector());
-        //read_result = receive_udp_data(udp_camera_info, rx_data);
-        //fip_protocol fp(rx_data);
-
-        //// remove the zoom
-        //write_result = send_udp_data(udp_camera_info, vinden.set_display_parameters(0x01, 0x4D).to_vector());
-
         // display the information about a specific camera
         std::cout << vinden << std::endl;
 
+#ifdef USE_UDP_VIDEO
         // set the video output parameters
         write_result = send_udp_data(vinden.udp_camera_info, vinden.set_ethernet_display_parameter(inet_addr(host_ip_address.c_str()), video_port).to_vector());
 
         // Turn on video streaming over ethernet
         write_result = send_udp_data(vinden.udp_camera_info, vinden.config_streaming_control(SO::STREAM_ON).to_vector());
-
-        char key = 0;
 
         cv::VideoCapture cap(video_cap_address, cv::CAP_FFMPEG);
 
@@ -261,10 +182,61 @@ int main(int argc, char** argv)
         {
             key = 'q';
         }
+#else
+        std::cout << std::endl << "Starting the cameralink image capture process..." << std::endl;
+
+        // prestart the first image or images outside the loop to get the pipeline going. 
+        // Start multiple images unless force_single set in config file, since some cameras 
+        // (e.g. ones that need a gap between images or that take a serial command to start 
+        // every image) don't tolerate queueing of multiple images
+        if (pdv_p->dd_p->force_single)
+        {
+            pdv_start_image(pdv_p);
+        }
+        else
+        {
+            pdv_start_images(pdv_p, fifo_buffers);
+        }
+
+#endif
 
         while (key != 'q')
         {
+
+#ifdef USE_UDP_VIDEO
+
             cap >> frame;
+#else
+
+            // get the image and immediately start the next one (if not the last time through the 
+            // loop). Processing (saving to a file in this case) can then occur in parallel with 
+            // the next acquisition
+            image_p = pdv_wait_image(pdv_p);
+            pdv_start_image(pdv_p);
+
+            timeouts = pdv_timeouts(pdv_p);
+
+            // check for timeouts or data overruns -- timeouts occur when data is lost, camera isn't 
+            // hooked up, etc, and application programs should always check for them. 
+            if (timeouts > last_timeouts)
+            {
+                // pdv_timeout_cleanup helps recover gracefully after a timeout, particularly if multiple buffers were prestarted
+                pdv_timeout_restart(pdv_p, TRUE);
+                last_timeouts = timeouts;
+                recovering_timeout = true;
+                printf("\ntimeout....\n");
+            }
+            else if (recovering_timeout)
+            {
+                pdv_timeout_restart(pdv_p, TRUE);
+                recovering_timeout = false;
+                printf("\nrestarted....\n");
+            }
+
+            frame = cv::Mat(edt_height, edt_width, CV_8UC1, image_p);
+
+#endif
+
             cv::imshow(window_name, frame);
 
             key = cv::waitKey(1);
@@ -283,7 +255,14 @@ int main(int argc, char** argv)
 
     write_result = send_udp_data(vinden.udp_camera_info, vinden.config_streaming_control(SO::STREAM_OFF).to_vector());
 
+    std::cout << std::endl << "Closing the UDP connection to the camera..." << std::endl;
     result = vinden.close();
+
+    // close the device
+    std::cout << std::endl << "Closing the pdv device..." << std::endl;
+    result = pdv_close(pdv_p);
+
+    std::cout << "close result: " << result << std::endl;
 
     return 0;
     
