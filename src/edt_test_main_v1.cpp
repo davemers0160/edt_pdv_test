@@ -99,16 +99,20 @@ int main(int argc, char** argv)
 
     try
     {
-        /*
-        // test the reading in of a config file
-        std::cout << std::endl << "Reading in config file..." << std::endl;
-        if ((dd_p = pdv_alloc_dependent()) == NULL)
-        {
-            std::cout << "alloc_dependent FAILED... exiting!" << std::endl;
-            exit(1);
-        }
-        int result = pdv_readcfg(cfg_file.c_str(), dd_p, &edtinfo);
+        
+        // the this machines local IP address
+        get_local_ip(host_ip_address, error_msg);
 
+        // test the reading in of a config file
+        //std::cout << std::endl << "Reading in config file..." << std::endl;
+        //if ((dd_p = pdv_alloc_dependent()) == NULL)
+        //{
+        //    std::cout << "alloc_dependent FAILED... exiting!" << std::endl;
+        //    exit(1);
+        //}
+        //int result = pdv_readcfg(cfg_file.c_str(), dd_p, &edtinfo);
+
+        /*
         // open a specifc board and channel
         std::cout << std::endl << "Opening: " << EDT_INTERFACE << ", Unit: " << EDT_UNIT_0 << ", Channel: " << VINDEN << std::endl;
         PdvDev* pdv_p = pdv_open_channel(EDT_INTERFACE, EDT_UNIT_0, VINDEN);
@@ -137,8 +141,6 @@ int main(int argc, char** argv)
 
         std::cout << "close result: " << result << std::endl;
         */
-
-        get_local_ip(host_ip_address, error_msg);
 
         std::cout << "------------------------------------------------------------------" << std::endl;
         std::cout << "host IP address: " << host_ip_address << std::endl;
