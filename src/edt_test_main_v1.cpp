@@ -74,7 +74,7 @@ int main(int argc, char** argv)
     uint16_t read_port = 14002;
     uint16_t write_port = 14001;
     uint16_t video_port = 15004;
-    udp_info udp_camera_info(write_port, read_port);
+    //udp_info udp_camera_info(write_port, read_port);
     std::string error_msg;
     int32_t read_result, write_result;
     std::string host_ip_address;
@@ -94,6 +94,8 @@ int main(int argc, char** argv)
 
     camera_ip_address = argv[1];
     video_cap_address = "udp://" + camera_ip_address + ":" + std::to_string(video_port);
+
+    vinden.udp_camera_info = udp_info(write_port, read_port);
 
     try
     {
@@ -142,112 +144,112 @@ int main(int argc, char** argv)
         std::cout << "host IP address: " << host_ip_address << std::endl;
         std::cout << "------------------------------------------------------------------" << std::endl << std::endl;
 
-        result = init_ip_camera(udp_camera_info, camera_ip_address, error_msg);
+        result = vinden.init_camera(camera_ip_address, error_msg);
         
-        if(result < 0)
-        {
-            std::cout << "result: " << result << std::endl;
-            std::cout << "error msg: " << error_msg << std::endl;
-        }
+        //if(result < 0)
+        //{
+        //    std::cout << "result: " << result << std::endl;
+        //    std::cout << "error msg: " << error_msg << std::endl;
+        //}
         
-        load_param_gui(udp_camera_info);
+        load_param_gui(vinden.udp_camera_info);
 
-        write_result = send_udp_data(udp_camera_info, vinden.get_sla_board_version().to_vector());
-        read_result = receive_udp_data(udp_camera_info, rx_data);
-        fip_protocol sla_board_version = fip_protocol(rx_data);
+        //write_result = send_udp_data(udp_camera_info, vinden.get_sla_board_version().to_vector());
+        //read_result = receive_udp_data(udp_camera_info, rx_data);
+        //fip_protocol sla_board_version = fip_protocol(rx_data);
         //std::cout << sla_board_version << std::endl;
 
-        write_result = send_udp_data(udp_camera_info, vinden.get_sla_image_size().to_vector());
-        read_result = receive_udp_data(udp_camera_info, rx_data);
-        fip_protocol sla_image_size = fip_protocol(rx_data);
-        vinden.set_image_size(read2(&sla_image_size.data[2]), read2(&sla_image_size.data[0]));
+        //write_result = send_udp_data(udp_camera_info, vinden.get_sla_image_size().to_vector());
+        //read_result = receive_udp_data(udp_camera_info, rx_data);
+        //fip_protocol sla_image_size = fip_protocol(rx_data);
+        //vinden.set_image_size(read2(&sla_image_size.data[2]), read2(&sla_image_size.data[0]));
 
-        std::cout << "Image size (h x w): " << vinden.height << " x " << vinden.width << std::endl << std::endl;
+        //std::cout << "Image size (h x w): " << vinden.height << " x " << vinden.width << std::endl << std::endl;
 
-        // get the camera wind version number
-        write_result = send_udp_data(udp_camera_info, vinden.get_version().to_vector());
-        read_result = receive_udp_data(udp_camera_info, rx_data);
-        wind_data = wind_protocol(rx_data);
-        vinden.set_version(wind_data);
+        //// get the camera wind version number
+        //write_result = send_udp_data(udp_camera_info, vinden.get_version().to_vector());
+        //read_result = receive_udp_data(udp_camera_info, rx_data);
+        //wind_data = wind_protocol(rx_data);
+        //vinden.set_version(wind_data);
 
-        // get the camera serial number
-        write_result = send_udp_data(udp_camera_info, vinden.get_serial_number().to_vector());
-        read_result = receive_udp_data(udp_camera_info, rx_data);
-        wind_data = wind_protocol(rx_data);
-        vinden.set_sn(wind_data);
+        //// get the camera serial number
+        //write_result = send_udp_data(udp_camera_info, vinden.get_serial_number().to_vector());
+        //read_result = receive_udp_data(udp_camera_info, rx_data);
+        //wind_data = wind_protocol(rx_data);
+        //vinden.set_sn(wind_data);
 
-        // get the camera lens version
-        write_result = send_udp_data(udp_camera_info, vinden.lens.get_version().to_vector());
-        read_result = receive_udp_data(udp_camera_info, rx_data);
-        wind_data = wind_protocol(rx_data);
-        vinden.lens.set_version(wind_data);
-
-        // ----------------------------------------------------------------------------
-        // get the camera lens zoom index
-        write_result = send_udp_data(udp_camera_info, vinden.lens.get_zoom_index().to_vector());
-        read_result = receive_udp_data(udp_camera_info, rx_data);
-        wind_data = wind_protocol(rx_data);
-        vinden.lens.zoom_index = read2(&wind_data.payload[0]);
-
-        // get the camera lens zoom position
-        write_result = send_udp_data(udp_camera_info, vinden.lens.get_zoom_position().to_vector());
-        read_result = receive_udp_data(udp_camera_info, rx_data);
-        wind_data = wind_protocol(rx_data);
-        vinden.lens.zoom_position = read2(&wind_data.payload[0]);
-
-        // get the camera lens zoom speed
-        write_result = send_udp_data(udp_camera_info, vinden.lens.get_zoom_speed().to_vector());
-        read_result = receive_udp_data(udp_camera_info, rx_data);
-        wind_data = wind_protocol(rx_data);
-        vinden.lens.zoom_speed = (wind_data.payload[0]);
-
-        // get the camera lens focus position
-        write_result = send_udp_data(udp_camera_info, vinden.lens.get_focus_position().to_vector());
-        read_result = receive_udp_data(udp_camera_info, rx_data);
-        wind_data = wind_protocol(rx_data);
-        vinden.lens.focus_position = read2(&wind_data.payload[0]);
-
-        // get the camera lens focus speed
-        write_result = send_udp_data(udp_camera_info, vinden.lens.get_focus_speed().to_vector());
-        read_result = receive_udp_data(udp_camera_info, rx_data);
-        wind_data = wind_protocol(rx_data);
-        vinden.lens.focus_speed = (wind_data.payload[0]);
+        //// get the camera lens version
+        //write_result = send_udp_data(udp_camera_info, vinden.lens.get_version().to_vector());
+        //read_result = receive_udp_data(udp_camera_info, rx_data);
+        //wind_data = wind_protocol(rx_data);
+        //vinden.lens.set_version(wind_data);
 
         // ----------------------------------------------------------------------------
-        // get the sensor version number
-        write_result = send_udp_data(udp_camera_info, vinden.sensor.get_version().to_vector());
-        read_result = receive_udp_data(udp_camera_info, rx_data);
-        wind_data = wind_protocol(rx_data);
-        vinden.sensor.set_version(wind_data);
+        //// get the camera lens zoom index
+        //write_result = send_udp_data(udp_camera_info, vinden.lens.get_zoom_index().to_vector());
+        //read_result = receive_udp_data(udp_camera_info, rx_data);
+        //wind_data = wind_protocol(rx_data);
+        //vinden.lens.zoom_index = read2(&wind_data.payload[0]);
 
-        // get the FFC period
-        write_result = send_udp_data(udp_camera_info, vinden.sensor.get_auto_ffc_period().to_vector());
-        read_result = receive_udp_data(udp_camera_info, rx_data);
-        wind_data = wind_protocol(rx_data);
-        vinden.sensor.ffc_period = read2(&wind_data.payload[0]);
+        //// get the camera lens zoom position
+        //write_result = send_udp_data(udp_camera_info, vinden.lens.get_zoom_position().to_vector());
+        //read_result = receive_udp_data(udp_camera_info, rx_data);
+        //wind_data = wind_protocol(rx_data);
+        //vinden.lens.zoom_position = read2(&wind_data.payload[0]);
 
-        // get the FFC mode
-        write_result = send_udp_data(udp_camera_info, vinden.sensor.get_auto_ffc_mode().to_vector());
-        read_result = receive_udp_data(udp_camera_info, rx_data);
-        wind_data = wind_protocol(rx_data);
-        vinden.sensor.ffc_mode = wind_data.payload[0];
+        //// get the camera lens zoom speed
+        //write_result = send_udp_data(udp_camera_info, vinden.lens.get_zoom_speed().to_vector());
+        //read_result = receive_udp_data(udp_camera_info, rx_data);
+        //wind_data = wind_protocol(rx_data);
+        //vinden.lens.zoom_speed = (wind_data.payload[0]);
 
-        // get the current display parameter settings
-        write_result = send_udp_data(udp_camera_info, vinden.get_display_parameters().to_vector());
-        read_result = receive_udp_data(udp_camera_info, rx_data);
-        fip_protocol fp(rx_data);
+        //// get the camera lens focus position
+        //write_result = send_udp_data(udp_camera_info, vinden.lens.get_focus_position().to_vector());
+        //read_result = receive_udp_data(udp_camera_info, rx_data);
+        //wind_data = wind_protocol(rx_data);
+        //vinden.lens.focus_position = read2(&wind_data.payload[0]);
 
-        // remove the zoom
-        write_result = send_udp_data(udp_camera_info, vinden.set_display_parameters(0x01, 0x4D).to_vector());
+        //// get the camera lens focus speed
+        //write_result = send_udp_data(udp_camera_info, vinden.lens.get_focus_speed().to_vector());
+        //read_result = receive_udp_data(udp_camera_info, rx_data);
+        //wind_data = wind_protocol(rx_data);
+        //vinden.lens.focus_speed = (wind_data.payload[0]);
+
+        //// ----------------------------------------------------------------------------
+        //// get the sensor version number
+        //write_result = send_udp_data(udp_camera_info, vinden.sensor.get_version().to_vector());
+        //read_result = receive_udp_data(udp_camera_info, rx_data);
+        //wind_data = wind_protocol(rx_data);
+        //vinden.sensor.set_version(wind_data);
+
+        //// get the FFC period
+        //write_result = send_udp_data(udp_camera_info, vinden.sensor.get_auto_ffc_period().to_vector());
+        //read_result = receive_udp_data(udp_camera_info, rx_data);
+        //wind_data = wind_protocol(rx_data);
+        //vinden.sensor.ffc_period = read2(&wind_data.payload[0]);
+
+        //// get the FFC mode
+        //write_result = send_udp_data(udp_camera_info, vinden.sensor.get_auto_ffc_mode().to_vector());
+        //read_result = receive_udp_data(udp_camera_info, rx_data);
+        //wind_data = wind_protocol(rx_data);
+        //vinden.sensor.ffc_mode = wind_data.payload[0];
+
+        //// get the current display parameter settings
+        //write_result = send_udp_data(udp_camera_info, vinden.get_display_parameters().to_vector());
+        //read_result = receive_udp_data(udp_camera_info, rx_data);
+        //fip_protocol fp(rx_data);
+
+        //// remove the zoom
+        //write_result = send_udp_data(udp_camera_info, vinden.set_display_parameters(0x01, 0x4D).to_vector());
 
         // display the information about a specific camera
         std::cout << vinden << std::endl;
 
         // set the video output parameters
-        write_result = send_udp_data(udp_camera_info, vinden.set_ethernet_display_parameter(inet_addr(host_ip_address.c_str()), video_port).to_vector());
+        write_result = send_udp_data(vinden.udp_camera_info, vinden.set_ethernet_display_parameter(inet_addr(host_ip_address.c_str()), video_port).to_vector());
 
         // Turn on video streaming over ethernet
-        write_result = send_udp_data(udp_camera_info, vinden.config_streaming_control(SO::STREAM_ON).to_vector());
+        write_result = send_udp_data(vinden.udp_camera_info, vinden.config_streaming_control(SO::STREAM_ON).to_vector());
 
         char key = 0;
 
@@ -277,9 +279,9 @@ int main(int argc, char** argv)
         std::cout << "error: " << e.what() << std::endl;
     }
 
-    write_result = send_udp_data(udp_camera_info, vinden.config_streaming_control(SO::STREAM_OFF).to_vector());
+    write_result = send_udp_data(vinden.udp_camera_info, vinden.config_streaming_control(SO::STREAM_OFF).to_vector());
 
-    result = close_connection(udp_camera_info.udp_sock, error_msg);
+    result = vinden.close();
 
     return 0;
     

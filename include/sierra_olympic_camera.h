@@ -3,6 +3,10 @@
 
 #include <cstdint>
 
+// include the functions needed for udp comms
+#include "udp_network_functions.h"
+
+// include the protocol headers
 #include <wind_protocol.h>
 #include <fip_protocol.h>
 
@@ -48,11 +52,13 @@ namespace SO
 
         SO_ERROR_RESPONSE = 0x00,       /**< Error responce command ID */
 
-        GET_CAMERA_VER = 0x01,       /**< Camera version command ID */
+        GET_CAMERA_VER = 0x01,          /**< Camera version command ID */
 
-        END_CAMERA_CTRL = 0x02,       /**< End camera control command ID */
+        END_CAMERA_CTRL = 0x02,         /**< End camera control command ID */
 
-        GET_CAMERA_SN = 0x05        /**< Camera serial number command ID */
+        GET_CAMERA_SN = 0x05,           /**< Camera serial number command ID */
+
+        SET_NETWORK_PARAMS = 0x1C       /**< Set Static Network IP Address */
 
     };
 
@@ -852,6 +858,8 @@ namespace SO
         uint16_t height;
         uint16_t width;
 
+        udp_info udp_camera_info;
+
         camera() = default;
 
         camera(uint8_t maj_rev_, uint8_t min_rev_, uint16_t bn, uint16_t ct) : maj_rev(maj_rev_), min_rev(min_rev_), build_num(bn), camera_type(ct)
@@ -861,6 +869,7 @@ namespace SO
 
             height = 0;
             width = 0;
+
         }
 
         //-----------------------------------------------------------------------------
@@ -871,7 +880,6 @@ namespace SO
         }
 
         //-----------------------------------------------------------------------------
-
         void set_version(uint8_t maj_rev_, uint8_t min_rev_, uint16_t bn, uint16_t ct)
         {
             maj_rev = maj_rev_;
@@ -899,7 +907,7 @@ namespace SO
                 build_num = read2(&ver.payload[2]);
                 camera_type = read2(&ver.payload[4]);
             }
-        }
+        }   // end of set_version
 
         //-----------------------------------------------------------------------------
         /**
@@ -917,7 +925,7 @@ namespace SO
         {
             // build a fip packet
             return fip_protocol(0x28, { 0 });
-        }
+        }   // end of get_sla_board_version
 
         //-----------------------------------------------------------------------------
         /**
@@ -935,7 +943,7 @@ namespace SO
         {
             // build a fip packet
             return fip_protocol(0x31, { 0 });
-        }
+        }   // end of get_sla_image_size
 
         //-----------------------------------------------------------------------------
         /**
@@ -956,7 +964,7 @@ namespace SO
                 char c = (char)(ser_num.payload[idx]);
                 sn = sn + c;
             }
-        }
+        }   // end of set_sn
 
         //-----------------------------------------------------------------------------
         /**
@@ -976,8 +984,154 @@ namespace SO
 
             // build a fip packet
             return fip_protocol(0x3D, port, lens_packet.to_vector());
-        }
+        }   // end of get_serial_number
        
+        //-----------------------------------------------------------------------------
+        /**
+        @brief Initialize the camera and get the current parameters.
+
+        This function initializes the UDP connection to the camera for control and gets the relevant parameters of the camera.
+
+        @return int32_t result of the connection attempt.
+        */
+        int32_t init_camera(std::string ip_address, std::string& error_msg)
+        {
+
+            int32_t result;
+            int32_t read_result, write_result;
+            std::vector<uint8_t> rx_data;
+            wind_protocol wind_data;
+            fip_protocol fip_data;
+
+            // init the read portion of the UDP socket
+            result = init_udp_socket(udp_camera_info, error_msg);
+
+            if (result == 0)
+            {
+                // init the write portion of the UDP socket
+                udp_camera_info.ip_address = ip_address;
+                udp_camera_info.read_addr_obj.sin_addr.s_addr = inet_addr(udp_camera_info.ip_address.c_str());
+
+                udp_camera_info.write_addr_obj.sin_addr.s_addr = inet_addr(udp_camera_info.ip_address.c_str());
+                udp_camera_info.write_addr_obj.sin_port = htons(udp_camera_info.write_port);
+                udp_camera_info.write_addr_obj.sin_family = AF_INET;
+
+                // get the SLA board version number
+                write_result = send_udp_data(udp_camera_info, get_sla_board_version().to_vector());
+                read_result = receive_udp_data(udp_camera_info, rx_data);
+                fip_data = fip_protocol(rx_data);
+
+                // get the image size
+                write_result = send_udp_data(udp_camera_info, get_sla_image_size().to_vector());
+                read_result = receive_udp_data(udp_camera_info, rx_data);
+                fip_data = fip_protocol(rx_data);
+                set_image_size(read2(&fip_data.data[2]), read2(&fip_data.data[0]));
+
+                // get the camera wind version number
+                write_result = send_udp_data(udp_camera_info, get_version().to_vector());
+                read_result = receive_udp_data(udp_camera_info, rx_data);
+                wind_data = wind_protocol(rx_data);
+                set_version(wind_data);
+
+                // get the camera serial number
+                write_result = send_udp_data(udp_camera_info, get_serial_number().to_vector());
+                read_result = receive_udp_data(udp_camera_info, rx_data);
+                wind_data = wind_protocol(rx_data);
+                set_sn(wind_data);
+
+                // get the camera lens version
+                write_result = send_udp_data(udp_camera_info, lens.get_version().to_vector());
+                read_result = receive_udp_data(udp_camera_info, rx_data);
+                wind_data = wind_protocol(rx_data);
+                lens.set_version(wind_data);
+
+                // ----------------------------------------------------------------------------
+                // get the camera lens zoom index
+                write_result = send_udp_data(udp_camera_info, lens.get_zoom_index().to_vector());
+                read_result = receive_udp_data(udp_camera_info, rx_data);
+                wind_data = wind_protocol(rx_data);
+                lens.zoom_index = read2(&wind_data.payload[0]);
+
+                // get the camera lens zoom position
+                write_result = send_udp_data(udp_camera_info, lens.get_zoom_position().to_vector());
+                read_result = receive_udp_data(udp_camera_info, rx_data);
+                wind_data = wind_protocol(rx_data);
+                lens.zoom_position = read2(&wind_data.payload[0]);
+
+                // get the camera lens zoom speed
+                write_result = send_udp_data(udp_camera_info, lens.get_zoom_speed().to_vector());
+                read_result = receive_udp_data(udp_camera_info, rx_data);
+                wind_data = wind_protocol(rx_data);
+                lens.zoom_speed = (wind_data.payload[0]);
+
+                // get the camera lens focus position
+                write_result = send_udp_data(udp_camera_info, lens.get_focus_position().to_vector());
+                read_result = receive_udp_data(udp_camera_info, rx_data);
+                wind_data = wind_protocol(rx_data);
+                lens.focus_position = read2(&wind_data.payload[0]);
+
+                // get the camera lens focus speed
+                write_result = send_udp_data(udp_camera_info, lens.get_focus_speed().to_vector());
+                read_result = receive_udp_data(udp_camera_info, rx_data);
+                wind_data = wind_protocol(rx_data);
+                lens.focus_speed = (wind_data.payload[0]);
+
+                // ----------------------------------------------------------------------------
+                // get the sensor version number
+                write_result = send_udp_data(udp_camera_info, sensor.get_version().to_vector());
+                read_result = receive_udp_data(udp_camera_info, rx_data);
+                wind_data = wind_protocol(rx_data);
+                sensor.set_version(wind_data);
+
+                // get the FFC period
+                write_result = send_udp_data(udp_camera_info, sensor.get_auto_ffc_period().to_vector());
+                read_result = receive_udp_data(udp_camera_info, rx_data);
+                wind_data = wind_protocol(rx_data);
+                sensor.ffc_period = read2(&wind_data.payload[0]);
+
+                // get the FFC mode
+                write_result = send_udp_data(udp_camera_info, sensor.get_auto_ffc_mode().to_vector());
+                read_result = receive_udp_data(udp_camera_info, rx_data);
+                wind_data = wind_protocol(rx_data);
+                sensor.ffc_mode = wind_data.payload[0];
+
+                // get the current display parameter settings
+                write_result = send_udp_data(udp_camera_info, get_display_parameters().to_vector());
+                read_result = receive_udp_data(udp_camera_info, rx_data);
+                fip_data = fip_protocol(rx_data);
+
+                // ----------------------------------------------------------------------------
+                // remove the zoom
+                write_result = send_udp_data(udp_camera_info, set_display_parameters(0x01, 0x4D).to_vector());
+
+            }
+            else
+            {
+                std::cout << "result: " << result << std::endl;
+                std::cout << "error msg: " << error_msg << std::endl;
+            }
+
+            return result;
+
+        }	// end of init_camera
+
+        //-----------------------------------------------------------------------------
+        void set_network_params(uint8_t mode, uint32_t ip_address, uint32_t gateway, uint32_t subnet = 0xFFFFFF00)
+        {
+            fip_protocol fp = fip_protocol(SET_NETWORK_PARAMS, { 0x01 });
+            fp.add_data(ip_address);        // ip_address
+            fp.add_data(subnet);            // subnet
+            fp.add_data(gateway);           // gateway
+            fp.add_data((uint16_t)0x00);    // c2replyPort
+            fp.add_data((uint32_t)0x00);    // reserved
+            fp.add_data((uint16_t)0x00);    // listenPort
+            fp.add_data((uint16_t)0x00);    // listenPort2
+            fp.add_data((uint8_t)0x00);     // hostName.len
+
+            int32_t write_result = send_udp_data(udp_camera_info, fp.to_vector());
+
+        }   // end of set_network_params
+
         //-----------------------------------------------------------------------------
         /**
         @brief Set the Ethernet Display parameter on the SLA board.
@@ -1001,7 +1155,7 @@ namespace SO
             fp.add_data((uint16_t)(0x03));
 
             return fp;
-        }
+        }   // end of set_ethernet_display_parameter
 
         //-----------------------------------------------------------------------------
         /**
@@ -1020,7 +1174,7 @@ namespace SO
             fip_protocol fp = fip_protocol(0x28, { 0x3A, 0x00 });
 
             return fp;
-        }
+        }   // end of get_display_parameters
 
         //-----------------------------------------------------------------------------
         /**
@@ -1049,7 +1203,7 @@ namespace SO
             fp.add_data((uint8_t)0x00);             // cameraIndex
 
             return fp;
-        }
+        }   // end of set_display_parameters
 
         //-----------------------------------------------------------------------------
         /**
@@ -1070,7 +1224,7 @@ namespace SO
             fip_protocol fp = fip_protocol(0x90);
             fp.add_data(value);
             return fp;
-        }
+        }   // end of config_streaming_control
 
         //-----------------------------------------------------------------------------
         /**
@@ -1090,7 +1244,39 @@ namespace SO
 
             // build a fip packet
             return fip_protocol(0x3D, port, lens_packet.to_vector());
-        }
+        }   // end of get_version
+
+        //-----------------------------------------------------------------------------
+        /**
+        @brief Set the lens focus position.
+
+        This function sets the lens focus position.
+
+        @return int32_t result of setting the focus position.
+
+        @sa lens
+        */
+        int32_t set_focus_position(uint16_t value)
+        {
+            int32_t result = send_udp_data(udp_camera_info, lens.set_focus_position(value).to_vector());
+            return result;
+        }   // end of set_focus_position
+
+        //-----------------------------------------------------------------------------
+        /**
+        @brief Set the zoom index.
+
+        This function sets the lens zoom index.
+
+        @return int32_t result of setting the zoom index.
+
+        @sa lens
+        */
+        int32_t set_zoom_index(uint16_t value)
+        {
+            int32_t result = send_udp_data(udp_camera_info, lens.set_zoom_index(value).to_vector());
+            return result;
+        }   // end of set_zoom_index
 
         //-----------------------------------------------------------------------------
         /**
@@ -1108,7 +1294,24 @@ namespace SO
 
             // build a fip packet
             return fip_protocol(0x3D, port, lens_packet.to_vector());
-        }
+        }   // end of end_cam_control
+
+        //-----------------------------------------------------------------------------    
+        /**
+        @brief Close the UDP connection.
+
+        This function closes the UDP connection to the camera.
+
+        @return int32_t result with the status of closing.
+        */
+        int32_t close()
+        {
+            std::string error_msg;
+
+            int32_t result = close_connection(udp_camera_info.udp_sock, error_msg);
+
+            return result;
+        }   // end of close
 
         //-----------------------------------------------------------------------------    
         inline friend std::ostream& operator<< (
@@ -1119,6 +1322,7 @@ namespace SO
             out << "Camera:" << std::endl;
             out << "  Serial Number:    " << item.sn << std::endl;
             out << "  Firmware Version: " << (uint32_t)item.maj_rev << "." << (uint32_t)item.min_rev << "." << (uint32_t)item.build_num << "." << (uint32_t)item.camera_type << std::endl;
+            out << "  Image size (h x w): " << item.height << " x " << item.width << std::endl;
             out << "Lens:" << std::endl;
             out << item.lens;
             out << "Sensor:" << std::endl;
