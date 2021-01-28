@@ -51,7 +51,7 @@ int main(int argc, char** argv)
     auto elapsed_time = std::chrono::duration_cast<d_sec>(stop_time - start_time);
 
     // generic config file for a 12-bit monochrome camera
-    std::string cfg_file = "../config/generic12cl.cfg";
+    std::string cfg_file = "../config/generic14cl.cfg";
 
     // EDT PDV specific variable
     Edtinfo edtinfo;
@@ -60,7 +60,7 @@ int main(int argc, char** argv)
     uint8_t* image_p;
     int32_t edt_width, edt_height, edt_depth;
     char* edt_cameratype;
-    int32_t fifo_buffers = 8;
+    int32_t fifo_buffers = 4;
     int32_t timeouts = 0, last_timeouts = 0;
     bool recovering_timeout = false;
 

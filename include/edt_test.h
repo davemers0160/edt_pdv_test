@@ -33,7 +33,7 @@
 #include <opencv2/highgui.hpp> 
 
 // ----------------------------------------------------------------------------
-constexpr auto EDT_UNIT_0 = 0;                      /* PCI interface for the EDT Crad */
+constexpr auto EDT_UNIT_0 = 0;                      /* PCI interface for the EDT Card */
 constexpr auto VINDEN = 0;                          /* Channel that the Vinden Camera is connected to */
 constexpr auto VENTUS = 1;                          /* Channel that the Ventus Camera is connected to */
 
