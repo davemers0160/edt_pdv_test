@@ -58,7 +58,7 @@ int main(int argc, char** argv)
     uint8_t* image_p;
     int32_t edt_width, edt_height, edt_depth;
     char* edt_cameratype;
-    int32_t fifo_buffers = 4;
+    int32_t fifo_buffers = 8;
     int32_t timeouts = 0, last_timeouts = 0;
     bool recovering_timeout = false;
     std::string bit_directory;
@@ -102,7 +102,7 @@ int main(int argc, char** argv)
     cfg_file = "../config/generic14cl.cfg";
 
     // directory where the bit file is located from the config file
-    bit_directory = "/opt/edtpdv/";
+    bit_directory = "/opt/EDTpdv/camera_config/bitfiles";
 
     camera_ip_address = argv[1];
     video_cap_address = "udp://" + camera_ip_address + ":" + std::to_string(video_port);
