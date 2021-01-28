@@ -38,7 +38,7 @@ constexpr auto VINDEN = 0;                          /* Channel that the Vinden C
 constexpr auto VENTUS = 1;                          /* Channel that the Ventus Camera is connected to */
 
 // ----------------------------------------------------------------------------
-bool init_edt_device(std::string cfg_file, std::string bit_directory, int32_t unit, int32_t channel)
+int32_t init_edt_device(std::string cfg_file, std::string bit_directory, int32_t unit, int32_t channel)
 {
     char edt_devname[256] = { 0 };
     char errstr[64];
@@ -53,14 +53,14 @@ bool init_edt_device(std::string cfg_file, std::string bit_directory, int32_t un
     if ((dd_p = pdv_alloc_dependent()) == NULL)
     {
         std::cout << "PDV alloc_dependent failed!" << std::endl;
-        return false;
+        return -1;
     }
 
     if (pdv_readcfg(cfg_file.c_str(), dd_p, &edt_info) != 0)
     {
         std::cout << "PDV readcfg failed!" << std::endl;
         free(dd_p);
-        return false;
+        return -1;
     }
 
     // open the device
@@ -78,7 +78,7 @@ bool init_edt_device(std::string cfg_file, std::string bit_directory, int32_t un
         std::cout << "error in edt_open_channel: " << std::string(edt_devname) <<  unit << std::endl;
         edt_close(edt_p);
         free(dd_p);
-        return false;
+        return -1;
     }
 
 
@@ -88,7 +88,7 @@ bool init_edt_device(std::string cfg_file, std::string bit_directory, int32_t un
         //edt_msg(EDTAPP_MSG_FATAL, "initcam failed. Run with '-V' to see complete debugging output\n");
         edt_close(edt_p);
         free(dd_p);
-        return false;
+        return -1;
     }
 
     // close teh edt device
@@ -97,7 +97,7 @@ bool init_edt_device(std::string cfg_file, std::string bit_directory, int32_t un
     // free the Dependent pointer
     free(dd_p);
 
-    return true;
+    return 0;
 
 }   // end of init_edt_device
 

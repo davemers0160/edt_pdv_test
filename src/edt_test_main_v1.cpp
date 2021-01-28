@@ -43,6 +43,7 @@ int main(int argc, char** argv)
     std::string sdate, stime;
 
     uint64_t idx = 0, jdx = 0;
+    int32_t result = 0;
     std::string console_input;
 
     typedef std::chrono::duration<double> d_sec;
@@ -50,12 +51,9 @@ int main(int argc, char** argv)
     auto stop_time = std::chrono::system_clock::now();
     auto elapsed_time = std::chrono::duration_cast<d_sec>(stop_time - start_time);
 
-    // generic config file for a 12-bit monochrome camera
-    std::string cfg_file = "../config/generic14cl.cfg";
-
     // EDT PDV specific variable
-    Edtinfo edtinfo;
-    Dependent* dd_p;
+    //Edtinfo edtinfo;
+    //Dependent* dd_p;
     PdvDev* pdv_p;
     uint8_t* image_p;
     int32_t edt_width, edt_height, edt_depth;
@@ -63,6 +61,8 @@ int main(int argc, char** argv)
     int32_t fifo_buffers = 4;
     int32_t timeouts = 0, last_timeouts = 0;
     bool recovering_timeout = false;
+    std::string bit_directory;
+    std::string cfg_file;
 
     // Sierra-Olympic specific variables
     SO::camera vinden;
@@ -74,7 +74,6 @@ int main(int argc, char** argv)
     uint32_t baud_rate = 115200;
     
     // IP based comms
-    int32_t result = 0;
     std::string camera_ip_address;
     std::string video_cap_address;      // = "udp://camera_ip_address:video_port";
     uint16_t read_port = 14002;
@@ -99,33 +98,41 @@ int main(int argc, char** argv)
         return 0;
     }
 
+    // generic config file for a 14-bit monochrome camera
+    cfg_file = "../config/generic14cl.cfg";
+
+    // directory where the bit file is located from the config file
+    bit_directory = "/opt/edtpdv/";
+
     camera_ip_address = argv[1];
     video_cap_address = "udp://" + camera_ip_address + ":" + std::to_string(video_port);
 
     vinden.udp_camera_info = udp_info(write_port, read_port);
 
+    // the this machines local IP address
+    get_local_ip(host_ip_address, error_msg);
+
+    std::cout << "------------------------------------------------------------------" << std::endl;
+    std::cout << "host IP address: " << host_ip_address << std::endl;
+    std::cout << "------------------------------------------------------------------" << std::endl << std::endl;
+
     try
     {
-        
-        // the this machines local IP address
-        get_local_ip(host_ip_address, error_msg);
+        // initialize the EDT device
+        result = init_edt_device(cfg_file, bit_directory, EDT_UNIT_0, VINDEN);
 
-        // test the reading in of a config file
-        //std::cout << std::endl << "Reading in config file..." << std::endl;
-        //if ((dd_p = pdv_alloc_dependent()) == NULL)
-        //{
-        //    std::cout << "alloc_dependent FAILED... exiting!" << std::endl;
-        //    exit(1);
-        //}
-        //int result = pdv_readcfg(cfg_file.c_str(), dd_p, &edtinfo);
+        if (result < 0)
+        {
+            return -1;
+        }
 
-        
+
         // open a specifc board and channel
         std::cout << std::endl << "Opening: " << EDT_INTERFACE << ", Unit: " << EDT_UNIT_0 << ", Channel: " << VINDEN << std::endl;
         pdv_p = pdv_open_channel(EDT_INTERFACE, EDT_UNIT_0, VINDEN);
         if (pdv_p == NULL)
         {
-            std::cout << "Failed to connect to a pdv device... exiting!  Press Enter to close" << std::endl;
+            std::cout << "Failed to connect to a PDV device!  Press Enter to close" << std::endl;
             std::cin.ignore();
             exit(1);
         }
@@ -152,9 +159,6 @@ int main(int argc, char** argv)
         pdv_multibuf(pdv_p, fifo_buffers);
         //printf(" %d image%s from '%s'\nwidth %d height %d depth %d\n", loops, loops == 1 ? "" : "s", edt_cameratype, edt_width, edt_height, edt_depth);
 
-        std::cout << "------------------------------------------------------------------" << std::endl;
-        std::cout << "host IP address: " << host_ip_address << std::endl;
-        std::cout << "------------------------------------------------------------------" << std::endl << std::endl;
 
         result = vinden.init_camera(camera_ip_address, error_msg);
         
