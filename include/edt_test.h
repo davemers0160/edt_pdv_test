@@ -38,26 +38,68 @@ constexpr auto VINDEN = 0;                          /* Channel that the Vinden C
 constexpr auto VENTUS = 1;                          /* Channel that the Ventus Camera is connected to */
 
 // ----------------------------------------------------------------------------
-//int32_t init_ip_camera(udp_info &udp_camera_info, std::string ip_address, std::string &error_msg)
-//{
-//
-//	int32_t result;
-//
-//
-//	// init the read portion of the UDP socket
-//	result = init_udp_socket(udp_camera_info, error_msg);
-//
-//	// init the write portion of the UDP socket
-//	udp_camera_info.ip_address = ip_address;
-//	udp_camera_info.read_addr_obj.sin_addr.s_addr = inet_addr(udp_camera_info.ip_address.c_str());
-//
-//	udp_camera_info.write_addr_obj.sin_addr.s_addr = inet_addr(udp_camera_info.ip_address.c_str());
-//	udp_camera_info.write_addr_obj.sin_port = htons(udp_camera_info.write_port);
-//	udp_camera_info.write_addr_obj.sin_family = AF_INET;
-//
-//	return result;
-//
-//}	// end of init_ip_camera
+bool init_edt_device(std::string cfg_file, std::string bit_directory, int32_t unit, int32_t channel)
+{
+    char edt_devname[256] = { 0 };
+    char errstr[64];
+    char* progname = "initcam";
+
+    EdtDev* edt_p = NULL;
+    Edtinfo edt_info;
+    Dependent* dd_p;
+
+
+    // 
+    if ((dd_p = pdv_alloc_dependent()) == NULL)
+    {
+        std::cout << "PDV alloc_dependent failed!" << std::endl;
+        return false;
+    }
+
+    if (pdv_readcfg(cfg_file.c_str(), dd_p, &edt_info) != 0)
+    {
+        std::cout << "PDV readcfg failed!" << std::endl;
+        free(dd_p);
+        return false;
+    }
+
+    // open the device
+    //unit = edt_parse_unit_channel(unitstr, edt_devname, EDT_INTERFACE, &channel);
+    //edt_msg(EDTAPP_MSG_INFO_1, "opening %s unit %d....\n", edt_devname, unit);
+
+    /*
+     * IMPORTANT: pdv_initcam is a special case in that it requies a device pointer returned by use
+     * edt_open_channel (or edt_open), NOT pdv_open_channel (or etc.). If you port this code to an
+     * application that subsequently performs other operations (e.g. image capture) on the device,
+     * edt_close should be called after pdv_initcam, then reopen with pdv_open_channel or pdv_open.
+     */
+    if ((edt_p = edt_open_channel(EDT_INTERFACE, unit, channel)) == NULL)
+    {
+        std::cout << "error in edt_open_channel: " << std::string(edt_devname) <<  unit << std::endl;
+        edt_close(edt_p);
+        free(dd_p);
+        return false;
+    }
+
+
+    if (pdv_initcam(edt_p, dd_p, unit, &edt_info, cfg_file.c_str(), (char*)bit_directory.c_str(), 0) != 0)
+    {
+        std::cout << "PDV initcam failed." << std::endl;
+        //edt_msg(EDTAPP_MSG_FATAL, "initcam failed. Run with '-V' to see complete debugging output\n");
+        edt_close(edt_p);
+        free(dd_p);
+        return false;
+    }
+
+    // close teh edt device
+    edt_close(edt_p);
+
+    // free the Dependent pointer
+    free(dd_p);
+
+    return true;
+
+}   // end of init_edt_device
 
 
 void focus_trackbar_callback(int value, void* user_data)
