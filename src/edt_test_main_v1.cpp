@@ -31,6 +31,8 @@
 #include <opencv2/highgui.hpp> 
 #include <opencv2/videoio.hpp>
 
+//#define USE_UDP_VIDEO 1
+
 void print_usage(void)
 {
     std::cout << "Enter the ip address of the camera to connect:" << std::endl;
@@ -63,6 +65,7 @@ int main(int argc, char** argv)
     bool recovering_timeout = false;
     std::string bit_directory;
     std::string cfg_file;
+    uint64_t buffer_size;
 
     // Sierra-Olympic specific variables
     SO::camera vinden;
@@ -99,7 +102,7 @@ int main(int argc, char** argv)
     }
 
     // generic config file for a 14-bit monochrome camera
-    cfg_file = "../config/generic14cl.cfg";
+    cfg_file = "../config/vinden_cl.cfg";
 
     // directory where the bit file is located from the config file
     bit_directory = "/opt/EDTpdv/camera_config/bitfiles";
@@ -149,13 +152,15 @@ int main(int argc, char** argv)
         edt_height = pdv_get_height(pdv_p);
         edt_depth = pdv_get_depth(pdv_p);
         edt_cameratype = pdv_get_cameratype(pdv_p);
+        
+        buffer_size = edt_width * edt_height * sizeof(uint16_t);
 
         std::cout << "------------------------------------------------------------------" << std::endl;
         std::cout << "Image (h x w x d): " << edt_height << " x " << edt_width << " x " << edt_depth << std::endl;
         std::cout << "Camera Type: " << edt_cameratype << std::endl;
         std::cout << "------------------------------------------------------------------" << std::endl;
 
-        // allocate four buffers for optimal pdv ring buffer pipeline (reduce if memory is at a premium)
+        // allocate N buffers for optimal pdv ring buffer pipeline (reduce if memory is at a premium)
         pdv_multibuf(pdv_p, fifo_buffers);
         //printf(" %d image%s from '%s'\nwidth %d height %d depth %d\n", loops, loops == 1 ? "" : "s", edt_cameratype, edt_width, edt_height, edt_depth);
 
@@ -216,6 +221,7 @@ int main(int argc, char** argv)
             // loop). Processing (saving to a file in this case) can then occur in parallel with 
             // the next acquisition
             image_p = pdv_wait_image(pdv_p);
+
             pdv_start_image(pdv_p);
 
             timeouts = pdv_timeouts(pdv_p);
@@ -237,8 +243,10 @@ int main(int argc, char** argv)
                 printf("\nrestarted....\n");
             }
 
-            frame = cv::Mat(edt_height, edt_width, CV_8UC1, image_p);
 
+            frame = cv::Mat(edt_height, edt_width, CV_16UC1, image_p);
+
+            cv::normalize(frame, frame, 0, 255, cv::NORM_MINMAX, CV_8UC1);
 #endif
 
             cv::imshow(window_name, frame);
