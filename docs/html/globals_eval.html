@@ -5,13 +5,22 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.20"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Sierra-Olympic Camera Test: File Members</title>
+<title>Sierra-Olympic Camera API: File Members</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/searchdata.js"></script>
 <script type="text/javascript" src="search/search.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
+  $(document).ready(function() { init_search(); });
+/* @license-end */
+</script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
@@ -21,11 +30,26 @@
  <tbody>
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
-   <div id="projectname">Sierra-Olympic Camera Test
+   <div id="projectname">Sierra-Olympic Camera API
    &#160;<span id="projectnumber">1.0</span>
    </div>
    <div id="projectbrief">Code example to test the interfaces of the Sierra-Olympic Cameras</div>
   </td>
+   <td>        <div id="MSearchBox" class="MSearchBoxInactive">
+        <span class="left">
+          <img id="MSearchSelect" src="search/mag_sel.svg"
+               onmouseover="return searchBox.OnSearchSelectShow()"
+               onmouseout="return searchBox.OnSearchSelectHide()"
+               alt=""/>
+          <input type="text" id="MSearchField" value="Search" accesskey="S"
+               onfocus="searchBox.OnSearchFieldFocus(true)" 
+               onblur="searchBox.OnSearchFieldFocus(false)" 
+               onkeyup="searchBox.OnSearchFieldChange(event)"/>
+          </span><span class="right">
+            <a id="MSearchClose" href="javascript:searchBox.CloseResultsWindow()"><img id="MSearchCloseImg" border="0" src="search/close.svg" alt=""/></a>
+          </span>
+        </div>
+</td>
  </tr>
  </tbody>
 </table>
@@ -37,17 +61,23 @@
 var searchBox = new SearchBox("searchBox", "search",false,'Search');
 /* @license-end */
 </script>
-<script type="text/javascript" src="menudata.js"></script>
-<script type="text/javascript" src="menu.js"></script>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
+    </div>
+  </div>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
 <script type="text/javascript">
 /* @license magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&amp;dn=gpl-2.0.txt GPL-v2 */
-$(function() {
-  initMenu('',true,false,'search.php','Search');
-  $(document).ready(function() { init_search(); });
-});
-/* @license-end */</script>
-<div id="main-nav"></div>
-</div><!-- top -->
+$(document).ready(function(){initNavTree('globals_eval.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
 <!-- window showing the filter options -->
 <div id="MSearchSelectWindow"
      onmouseover="return searchBox.OnSearchSelectShow()"
@@ -64,101 +94,41 @@ $(function() {
 
 <div class="contents">
 &#160;<ul>
-<li>END_CAMERA_CTRL
-: <a class="el" href="so__cam__commands_8h.html#a332fc1c7b1b20a652003af48e10c6060a118ab327d6a8279a7f87bc7242caf8a7">so_cam_commands.h</a>
+<li>CLOSE_FAILED
+: <a class="el" href="udp__network__functions_8h.html#ad5a1a2b7bf9c86f8d1bf0846d40f233da3bcb05abb93829393cf6180f65d589a2">udp_network_functions.h</a>
 </li>
-<li>FLAT_FIELD_CORR
-: <a class="el" href="so__cam__commands_8h.html#a0024e033e3dedacfe9e357d066804010af23fc871d4d25fdfd09d946ec40a6633">so_cam_commands.h</a>
+<li>CONNECTION_ERROR
+: <a class="el" href="udp__network__functions_8h.html#ad5a1a2b7bf9c86f8d1bf0846d40f233da933f614e4909db5914bb021329f26f8a">udp_network_functions.h</a>
 </li>
-<li>GET_AUOT_FFC_PER
-: <a class="el" href="so__cam__commands_8h.html#a0024e033e3dedacfe9e357d066804010a83fb624dda66f43cfb7458615947276c">so_cam_commands.h</a>
+<li>GET_ADDRESS_ERROR
+: <a class="el" href="udp__network__functions_8h.html#ad5a1a2b7bf9c86f8d1bf0846d40f233da36e50d19051da3f4d4852c1a7a1d2a0f">udp_network_functions.h</a>
 </li>
-<li>GET_AUTO_FFC_MODE
-: <a class="el" href="so__cam__commands_8h.html#a0024e033e3dedacfe9e357d066804010ab2735e9aed5dd35dfb57c979a3e76fc9">so_cam_commands.h</a>
+<li>READ_FAILED
+: <a class="el" href="udp__network__functions_8h.html#ad5a1a2b7bf9c86f8d1bf0846d40f233da8ac2ab1eb2fbd15efbbdf5fd534fbab1">udp_network_functions.h</a>
 </li>
-<li>GET_CAMERA_VER
-: <a class="el" href="so__cam__commands_8h.html#a332fc1c7b1b20a652003af48e10c6060af365e62e0675935bcee99a9c96fada86">so_cam_commands.h</a>
+<li>SEND_ERROR
+: <a class="el" href="udp__network__functions_8h.html#ad5a1a2b7bf9c86f8d1bf0846d40f233da8b99f6163dc3152610fcd8b6878609b9">udp_network_functions.h</a>
 </li>
-<li>GET_FOCUS_POS
-: <a class="el" href="so__cam__commands_8h.html#ac2c73fa143e51cf7277a8cbd6fb6437fa5a3ae7cc9b9a7a3dc47be0f3a2c48699">so_cam_commands.h</a>
+<li>SOCKET_BIND_ERR
+: <a class="el" href="udp__network__functions_8h.html#ad5a1a2b7bf9c86f8d1bf0846d40f233da28bf936789c7c159964e86da6b081598">udp_network_functions.h</a>
 </li>
-<li>GET_FOCUS_SPEED
-: <a class="el" href="so__cam__commands_8h.html#ac2c73fa143e51cf7277a8cbd6fb6437fa834df52abe3b9e2f550241ba6fbba593">so_cam_commands.h</a>
+<li>SOCKET_CREATION_ERR
+: <a class="el" href="udp__network__functions_8h.html#ad5a1a2b7bf9c86f8d1bf0846d40f233daebb697a88ab3ccf958046c328aebe186">udp_network_functions.h</a>
 </li>
-<li>GET_NUC_TABLE
-: <a class="el" href="so__cam__commands_8h.html#a0024e033e3dedacfe9e357d066804010a2be5fcb5ca146e4701c10e5914a6964d">so_cam_commands.h</a>
+<li>SUCCESS
+: <a class="el" href="udp__network__functions_8h.html#ad5a1a2b7bf9c86f8d1bf0846d40f233dac7f69f7c9e5aea9b8f54cf02870e2bf8">udp_network_functions.h</a>
 </li>
-<li>GET_SENSOR_READY
-: <a class="el" href="so__cam__commands_8h.html#a0024e033e3dedacfe9e357d066804010a6e35c5b94f9351bdce8ecf6fc40dd176">so_cam_commands.h</a>
-</li>
-<li>GET_ZOOM_INDEX
-: <a class="el" href="so__cam__commands_8h.html#ac2c73fa143e51cf7277a8cbd6fb6437fa0e1512bda2f7caffefeeeab9d9035202">so_cam_commands.h</a>
-</li>
-<li>GET_ZOOM_MTR_POS
-: <a class="el" href="so__cam__commands_8h.html#ac2c73fa143e51cf7277a8cbd6fb6437fa5e3d9755bae5246b99ac969ef20dfb72">so_cam_commands.h</a>
-</li>
-<li>GET_ZOOM_SPEED
-: <a class="el" href="so__cam__commands_8h.html#ac2c73fa143e51cf7277a8cbd6fb6437fa90e255f6ef3f275ab50220d369b5e7bd">so_cam_commands.h</a>
-</li>
-<li>LENS_READY
-: <a class="el" href="so__cam__commands_8h.html#ac2c73fa143e51cf7277a8cbd6fb6437fa77570f4e92cf5b00001df7ff7c0b9e8f">so_cam_commands.h</a>
-</li>
-<li>LENS_VERSION
-: <a class="el" href="so__cam__commands_8h.html#ac2c73fa143e51cf7277a8cbd6fb6437fa3ccac038ed962ffd472bc96686268812">so_cam_commands.h</a>
-</li>
-<li>LOAD_NUC_TABLE
-: <a class="el" href="so__cam__commands_8h.html#a0024e033e3dedacfe9e357d066804010ab10d5693738cdaf709da57e1309e56a4">so_cam_commands.h</a>
-</li>
-<li>RUN_CONT_FOCUS
-: <a class="el" href="so__cam__commands_8h.html#ac2c73fa143e51cf7277a8cbd6fb6437fad3f14a3f2c94f5d34fe6f9a3899a0fed">so_cam_commands.h</a>
-</li>
-<li>RUN_CONT_ZOOM
-: <a class="el" href="so__cam__commands_8h.html#ac2c73fa143e51cf7277a8cbd6fb6437faffe91cfe9f2daa871390c6475f80b645">so_cam_commands.h</a>
-</li>
-<li>SENSOR_VERSION
-: <a class="el" href="so__cam__commands_8h.html#a0024e033e3dedacfe9e357d066804010a363a54c47ae07e4e82fddb9152857afd">so_cam_commands.h</a>
-</li>
-<li>SET_AUTO_FFC_MODE
-: <a class="el" href="so__cam__commands_8h.html#a0024e033e3dedacfe9e357d066804010ad9395fadf73a68e37a5c62d04f43ed3c">so_cam_commands.h</a>
-</li>
-<li>SET_AUTO_FFC_PER
-: <a class="el" href="so__cam__commands_8h.html#a0024e033e3dedacfe9e357d066804010a9760b31b8ec55e9033dac0a8832adc49">so_cam_commands.h</a>
-</li>
-<li>SET_FOCUS_POS
-: <a class="el" href="so__cam__commands_8h.html#ac2c73fa143e51cf7277a8cbd6fb6437fa873a1123adab6697701b8e5a804d28b5">so_cam_commands.h</a>
-</li>
-<li>SET_FOCUS_SPEED
-: <a class="el" href="so__cam__commands_8h.html#ac2c73fa143e51cf7277a8cbd6fb6437fafe9782cd351e68551582ba9005b7eecd">so_cam_commands.h</a>
-</li>
-<li>SET_INF_FOCUS
-: <a class="el" href="so__cam__commands_8h.html#ac2c73fa143e51cf7277a8cbd6fb6437fac10ff49e05d65bcd4eb69dae44b3314e">so_cam_commands.h</a>
-</li>
-<li>SET_LENS_BLUR
-: <a class="el" href="so__cam__commands_8h.html#ac2c73fa143e51cf7277a8cbd6fb6437fa2cae88a9b2a562dfe79f24bd73e429a0">so_cam_commands.h</a>
-</li>
-<li>SET_SHUTTER
-: <a class="el" href="so__cam__commands_8h.html#a0024e033e3dedacfe9e357d066804010a927dfb2ac38f403839e06377d77df2de">so_cam_commands.h</a>
-</li>
-<li>SET_ZOOM_INDEX
-: <a class="el" href="so__cam__commands_8h.html#ac2c73fa143e51cf7277a8cbd6fb6437fae91c4d068f6ea34ccc7b10ae45844942">so_cam_commands.h</a>
-</li>
-<li>SET_ZOOM_SPEED
-: <a class="el" href="so__cam__commands_8h.html#ac2c73fa143e51cf7277a8cbd6fb6437fa1e7ff9d74b0580a7e35569097a9c1cb4">so_cam_commands.h</a>
-</li>
-<li>SO_ERROR_RESPONSE
-: <a class="el" href="so__cam__commands_8h.html#a332fc1c7b1b20a652003af48e10c6060ae2e406ee922b01e720ee3390267ca71a">so_cam_commands.h</a>
-</li>
-<li>START_AUTOFOCUS
-: <a class="el" href="so__cam__commands_8h.html#ac2c73fa143e51cf7277a8cbd6fb6437fa4a44754963c17506ea5f45a0bb46c815">so_cam_commands.h</a>
-</li>
-<li>STOP_AUTOFOCUS
-: <a class="el" href="so__cam__commands_8h.html#ac2c73fa143e51cf7277a8cbd6fb6437fa21041c12d02ba77f6441673576bb8b18">so_cam_commands.h</a>
+<li>WIN_START_ERR
+: <a class="el" href="udp__network__functions_8h.html#ad5a1a2b7bf9c86f8d1bf0846d40f233dabe7ecc4e8954265b4416e52f0c639d1d">udp_network_functions.h</a>
 </li>
 </ul>
 </div><!-- contents -->
+</div><!-- doc-content -->
 <!-- start footer part -->
-<hr class="footer"/><address class="footer"><small>
-Generated by&#160;<a href="http://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.8.20
-</small></address>
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="footer">Generated by <a href="http://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.8.20 </li>
+  </ul>
+</div>
 </body>
 </html>

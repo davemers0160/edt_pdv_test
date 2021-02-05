@@ -1,5 +1,7 @@
 var searchData=
 [
-  ['camera_2',['camera',['../class_s_o_1_1camera.html',1,'SO::camera'],['../class_s_o_1_1camera.html#a3420a939553e5653fbcaa998a229778b',1,'SO::camera::camera()=default'],['../class_s_o_1_1camera.html#abd1f5243fe45fe064d8a7d059b741529',1,'SO::camera::camera(uint8_t maj_rev_, uint8_t min_rev_, uint16_t bn, uint16_t ct)']]],
-  ['camera_5ftype_3',['camera_type',['../class_s_o_1_1camera.html#a293eead119145bcc771b04d87ed8acde',1,'SO::camera']]]
+  ['baud_5frate_2',['baud_rate',['../structftdi_device_details.html#a74fdc61da7f5e05b3589d9dd51757594',1,'ftdiDeviceDetails']]],
+  ['bind_5fudp_5fserver_3',['bind_udp_server',['../udp__network__functions_8h.html#a07b6facb7d67da96891f168d1b65ce90',1,'udp_network_functions.h']]],
+  ['bits_4',['bits',['../structftdi_device_details.html#a57114464024d383c0d3cec89efd338ed',1,'ftdiDeviceDetails']]],
+  ['build_5fnum_5',['build_num',['../class_s_o_1_1camera.html#a70b3928e7747902e593f9537c624794e',1,'SO::camera']]]
 ];

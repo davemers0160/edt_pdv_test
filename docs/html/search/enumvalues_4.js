@@ -1,5 +1,6 @@
 var searchData=
 [
-  ['run_5fcont_5ffocus_182',['RUN_CONT_FOCUS',['../namespace_s_o.html#aef064f8a21ed2b59c16b2cc998912821a0dba451a373e1c4798332da58bcfec53',1,'SO']]],
-  ['run_5fcont_5fzoom_183',['RUN_CONT_ZOOM',['../namespace_s_o.html#aef064f8a21ed2b59c16b2cc998912821a858831503e737083faf85f20de30d6ff',1,'SO']]]
+  ['lens_5fready_314',['LENS_READY',['../namespace_s_o.html#aef064f8a21ed2b59c16b2cc998912821a0393b47ad66cf6f39060bd17b92a019e',1,'SO']]],
+  ['lens_5fversion_315',['LENS_VERSION',['../namespace_s_o.html#aef064f8a21ed2b59c16b2cc998912821a0f17b09e867abbdc1ff0047d5cd25f84',1,'SO']]],
+  ['load_5fnuc_5ftable_316',['LOAD_NUC_TABLE',['../namespace_s_o.html#abcc473c926b949df928e300586542c52a847b910cab8372ac9914aeca005e023d',1,'SO']]]
 ];

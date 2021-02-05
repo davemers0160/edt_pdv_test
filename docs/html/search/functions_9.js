@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['to_5fvector_133',['to_vector',['../classfip__protocol.html#a680a272015cb53f6c368656142f0d6d4',1,'fip_protocol::to_vector()'],['../classwind__protocol.html#a431685dd50ec1b270b032c30a1d19839',1,'wind_protocol::to_vector()']]]
+  ['open_5fcom_5fport_209',['open_com_port',['../ftd2xx__functions_8h.html#a47627356a3a11509715f04de9265d478',1,'ftd2xx_functions.h']]],
+  ['operator_3c_3c_210',['operator&lt;&lt;',['../ftd2xx__functions_8h.html#ac87eee552d10dacaf00835c148c2ae08',1,'ftd2xx_functions.h']]]
 ];

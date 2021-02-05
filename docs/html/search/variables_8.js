@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['payload_152',['payload',['../classwind__protocol.html#a5ac25e111910c72a4eb249a137b5464d',1,'wind_protocol']]],
-  ['port_153',['port',['../classfip__protocol.html#a543b2531415aa96db3d7a36a7301fcf0',1,'fip_protocol']]]
+  ['maj_5frev_266',['maj_rev',['../class_s_o_1_1camera.html#a10d7063cd66a441aacfc42c94f65b430',1,'SO::camera']]],
+  ['min_5frev_267',['min_rev',['../class_s_o_1_1camera.html#a5ce5d0aa7fa15cfe1f95bdfa8462a39c',1,'SO::camera']]]
 ];

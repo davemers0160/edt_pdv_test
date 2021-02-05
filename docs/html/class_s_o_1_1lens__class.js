@@ -16,6 +16,7 @@ var class_s_o_1_1lens__class =
     [ "set_focus_speed", "class_s_o_1_1lens__class.html#aa1d99ee37e43c926d61d7d44b77eb081", null ],
     [ "set_infinity_focus", "class_s_o_1_1lens__class.html#af83d2ac557b0b40706e5146b460f5147", null ],
     [ "set_lens_blur", "class_s_o_1_1lens__class.html#a82810dfaa0873cfcc4ccb3d0081d3c50", null ],
+    [ "set_version", "class_s_o_1_1lens__class.html#a28ba50120ce379162c55b199da44efd2", null ],
     [ "set_zoom_index", "class_s_o_1_1lens__class.html#a8b987688c0f6e44b94fd812dac189e73", null ],
     [ "set_zoom_speed", "class_s_o_1_1lens__class.html#a816c9f6d131f59d7ad3b1420956c3f26", null ],
     [ "start_autofocus", "class_s_o_1_1lens__class.html#a60b98c67a9bb9608755f119e4ef5684f", null ],

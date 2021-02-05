@@ -116,9 +116,14 @@ Classes</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="enum-members"></a>
 Enumerations</h2></td></tr>
-<tr class="memitem:a8c0db17c48d57704e2007de685e26b47"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespace_s_o.html#a8c0db17c48d57704e2007de685e26b47">system_command</a> { <a class="el" href="namespace_s_o.html#a8c0db17c48d57704e2007de685e26b47af666e1399d17af8707e65c65f456b429">SO_ERROR_RESPONSE</a> = 0x00, 
+<tr class="memitem:a8c0db17c48d57704e2007de685e26b47"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespace_s_o.html#a8c0db17c48d57704e2007de685e26b47">system_command</a> { <br />
+&#160;&#160;<a class="el" href="namespace_s_o.html#a8c0db17c48d57704e2007de685e26b47af666e1399d17af8707e65c65f456b429">SO_ERROR_RESPONSE</a> = 0x00, 
 <a class="el" href="namespace_s_o.html#a8c0db17c48d57704e2007de685e26b47aebb8f3042d38e4f754016931ffeeb296">GET_CAMERA_VER</a> = 0x01, 
-<a class="el" href="namespace_s_o.html#a8c0db17c48d57704e2007de685e26b47a510ba42b3c74e4319a9f5651d12cec63">END_CAMERA_CTRL</a> = 0x02
+<a class="el" href="namespace_s_o.html#a8c0db17c48d57704e2007de685e26b47a510ba42b3c74e4319a9f5651d12cec63">END_CAMERA_CTRL</a> = 0x02, 
+<a class="el" href="namespace_s_o.html#a8c0db17c48d57704e2007de685e26b47abb866473ac4d6f3a768745e88378d9b7">GET_CAMERA_SN</a> = 0x05, 
+<br />
+&#160;&#160;<a class="el" href="namespace_s_o.html#a8c0db17c48d57704e2007de685e26b47aa0ac664f1b0c3454aa3a43a86ab11848">SET_NETWORK_PARAMS</a> = 0x1C
+<br />
  }</td></tr>
 <tr class="separator:a8c0db17c48d57704e2007de685e26b47"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aef064f8a21ed2b59c16b2cc998912821"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespace_s_o.html#aef064f8a21ed2b59c16b2cc998912821">lens_command</a> { <br />
@@ -167,6 +172,10 @@ Enumerations</h2></td></tr>
 Variables</h2></td></tr>
 <tr class="memitem:adbff76e6848611841e00977292f44d9d"><td class="memItemLeft" align="right" valign="top">const std::vector&lt; std::string &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespace_s_o.html#adbff76e6848611841e00977292f44d9d">error_codes</a></td></tr>
 <tr class="separator:adbff76e6848611841e00977292f44d9d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0860a46af0582369ec2c871112eaa4c1"><td class="memItemLeft" align="right" valign="top">const uint16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespace_s_o.html#a0860a46af0582369ec2c871112eaa4c1">STREAM_ON</a> = 1</td></tr>
+<tr class="separator:a0860a46af0582369ec2c871112eaa4c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a26004d8c5e9cafe81f38cb461e9b570a"><td class="memItemLeft" align="right" valign="top">const uint16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespace_s_o.html#a26004d8c5e9cafe81f38cb461e9b570a">STREAM_OFF</a> = 256</td></tr>
+<tr class="separator:a26004d8c5e9cafe81f38cb461e9b570a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Enumeration Type Documentation</h2>
 <a id="aef064f8a21ed2b59c16b2cc998912821"></a>
@@ -219,7 +228,7 @@ Variables</h2></td></tr>
 </td></tr>
 </table>
 
-<p class="definition">Definition at line <a class="el" href="sierra__olympic__camera_8h_source.html#l00039">39</a> of file <a class="el" href="sierra__olympic__camera_8h_source.html">sierra_olympic_camera.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sierra__olympic__camera_8h_source.html#l00070">70</a> of file <a class="el" href="sierra__olympic__camera_8h_source.html">sierra_olympic_camera.h</a>.</p>
 
 </div>
 </div>
@@ -259,7 +268,7 @@ Variables</h2></td></tr>
 </td></tr>
 </table>
 
-<p class="definition">Definition at line <a class="el" href="sierra__olympic__camera_8h_source.html#l00073">73</a> of file <a class="el" href="sierra__olympic__camera_8h_source.html">sierra_olympic_camera.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sierra__olympic__camera_8h_source.html#l00104">104</a> of file <a class="el" href="sierra__olympic__camera_8h_source.html">sierra_olympic_camera.h</a>.</p>
 
 </div>
 </div>
@@ -283,9 +292,13 @@ Variables</h2></td></tr>
 </td></tr>
 <tr><td class="fieldname"><a id="a8c0db17c48d57704e2007de685e26b47a510ba42b3c74e4319a9f5651d12cec63"></a>END_CAMERA_CTRL&#160;</td><td class="fielddoc"><p>End camera control command ID </p>
 </td></tr>
+<tr><td class="fieldname"><a id="a8c0db17c48d57704e2007de685e26b47abb866473ac4d6f3a768745e88378d9b7"></a>GET_CAMERA_SN&#160;</td><td class="fielddoc"><p>Camera serial number command ID </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a8c0db17c48d57704e2007de685e26b47aa0ac664f1b0c3454aa3a43a86ab11848"></a>SET_NETWORK_PARAMS&#160;</td><td class="fielddoc"><p>Set Static Network IP Address </p>
+</td></tr>
 </table>
 
-<p class="definition">Definition at line <a class="el" href="sierra__olympic__camera_8h_source.html#l00024">24</a> of file <a class="el" href="sierra__olympic__camera_8h_source.html">sierra_olympic_camera.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sierra__olympic__camera_8h_source.html#l00051">51</a> of file <a class="el" href="sierra__olympic__camera_8h_source.html">sierra_olympic_camera.h</a>.</p>
 
 </div>
 </div>
@@ -322,7 +335,39 @@ Variables</h2></td></tr>
 </div><!-- fragment --><p>Error Codes</p>
 <p>These are the string error codes returned by the error response packet </p>
 
-<p class="definition">Definition at line <a class="el" href="sierra__olympic__camera_8h_source.html#l00098">98</a> of file <a class="el" href="sierra__olympic__camera_8h_source.html">sierra_olympic_camera.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="sierra__olympic__camera_8h_source.html#l00129">129</a> of file <a class="el" href="sierra__olympic__camera_8h_source.html">sierra_olympic_camera.h</a>.</p>
+
+</div>
+</div>
+<a id="a26004d8c5e9cafe81f38cb461e9b570a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a26004d8c5e9cafe81f38cb461e9b570a">&#9670;&nbsp;</a></span>STREAM_OFF</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const uint16_t SO::STREAM_OFF = 256</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="sierra__olympic__camera_8h_source.html#l00149">149</a> of file <a class="el" href="sierra__olympic__camera_8h_source.html">sierra_olympic_camera.h</a>.</p>
+
+</div>
+</div>
+<a id="a0860a46af0582369ec2c871112eaa4c1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0860a46af0582369ec2c871112eaa4c1">&#9670;&nbsp;</a></span>STREAM_ON</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const uint16_t SO::STREAM_ON = 1</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="sierra__olympic__camera_8h_source.html#l00148">148</a> of file <a class="el" href="sierra__olympic__camera_8h_source.html">sierra_olympic_camera.h</a>.</p>
 
 </div>
 </div>

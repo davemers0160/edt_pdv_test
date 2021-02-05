@@ -1,6 +1,4 @@
 var searchData=
 [
-  ['zoom_5findex_161',['zoom_index',['../class_s_o_1_1lens__class.html#a62d0b180c149e1df9cb32dc57567c296',1,'SO::lens_class']]],
-  ['zoom_5fposition_162',['zoom_position',['../class_s_o_1_1lens__class.html#a33ef2021071bac9e178883619ef867a6',1,'SO::lens_class']]],
-  ['zoom_5fspeed_163',['zoom_speed',['../class_s_o_1_1lens__class.html#a38ba4659022bc7b96e8f6410de255a71',1,'SO::lens_class']]]
+  ['type_280',['type',['../classfip__protocol.html#ae96b1a9248a5aa33f5a1fce008c58c30',1,'fip_protocol::type()'],['../structftdi_device_details.html#ab0346f6f9f77990f52907860a08bab57',1,'ftdiDeviceDetails::type()']]]
 ];

@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['camera_101',['camera',['../class_s_o_1_1camera.html#a3420a939553e5653fbcaa998a229778b',1,'SO::camera::camera()=default'],['../class_s_o_1_1camera.html#abd1f5243fe45fe064d8a7d059b741529',1,'SO::camera::camera(uint8_t maj_rev_, uint8_t min_rev_, uint16_t bn, uint16_t ct)']]]
+  ['add_5fdata_175',['add_data',['../classfip__protocol.html#ab27a7e887953beedf30e031995e48021',1,'fip_protocol::add_data(uint8_t value)'],['../classfip__protocol.html#a7ab00303a8b7acc93070d2a49559de26',1,'fip_protocol::add_data(uint16_t value)'],['../classfip__protocol.html#aa67e54ef6899ecf51955686b60fb1f08',1,'fip_protocol::add_data(uint32_t value)']]]
 ];

@@ -37,7 +37,14 @@ var sierra__olympic__camera_8h =
     [ "system_command", "sierra__olympic__camera_8h.html#a8c0db17c48d57704e2007de685e26b47", [
       [ "SO_ERROR_RESPONSE", "sierra__olympic__camera_8h.html#a8c0db17c48d57704e2007de685e26b47af666e1399d17af8707e65c65f456b429", null ],
       [ "GET_CAMERA_VER", "sierra__olympic__camera_8h.html#a8c0db17c48d57704e2007de685e26b47aebb8f3042d38e4f754016931ffeeb296", null ],
-      [ "END_CAMERA_CTRL", "sierra__olympic__camera_8h.html#a8c0db17c48d57704e2007de685e26b47a510ba42b3c74e4319a9f5651d12cec63", null ]
+      [ "END_CAMERA_CTRL", "sierra__olympic__camera_8h.html#a8c0db17c48d57704e2007de685e26b47a510ba42b3c74e4319a9f5651d12cec63", null ],
+      [ "GET_CAMERA_SN", "sierra__olympic__camera_8h.html#a8c0db17c48d57704e2007de685e26b47abb866473ac4d6f3a768745e88378d9b7", null ],
+      [ "SET_NETWORK_PARAMS", "sierra__olympic__camera_8h.html#a8c0db17c48d57704e2007de685e26b47aa0ac664f1b0c3454aa3a43a86ab11848", null ]
     ] ],
-    [ "error_codes", "sierra__olympic__camera_8h.html#adbff76e6848611841e00977292f44d9d", null ]
+    [ "read2", "sierra__olympic__camera_8h.html#ace9c24e3aabd9605583be7ce9bb411d2", null ],
+    [ "read3", "sierra__olympic__camera_8h.html#a57a564e6712b93af049a74485f228c3f", null ],
+    [ "read4", "sierra__olympic__camera_8h.html#a554339cf235217841bd4c805da3e9097", null ],
+    [ "error_codes", "sierra__olympic__camera_8h.html#adbff76e6848611841e00977292f44d9d", null ],
+    [ "STREAM_OFF", "sierra__olympic__camera_8h.html#a26004d8c5e9cafe81f38cb461e9b570a", null ],
+    [ "STREAM_ON", "sierra__olympic__camera_8h.html#a0860a46af0582369ec2c871112eaa4c1", null ]
 ];

@@ -1,17 +1,16 @@
 var searchData=
 [
-  ['get_5fauot_5fffc_5fper_20',['GET_AUOT_FFC_PER',['../namespace_s_o.html#abcc473c926b949df928e300586542c52aae03dec73d00d48588cde42a5b067c50',1,'SO']]],
-  ['get_5fauto_5fffc_5fmode_21',['get_auto_ffc_mode',['../class_s_o_1_1sensor__class.html#afa2becda4204131232de46dd23845846',1,'SO::sensor_class::get_auto_ffc_mode()'],['../namespace_s_o.html#abcc473c926b949df928e300586542c52a6c2b551461108072c58cd987ba39827b',1,'SO::GET_AUTO_FFC_MODE()']]],
-  ['get_5fauto_5fffc_5fperiod_22',['get_auto_ffc_period',['../class_s_o_1_1sensor__class.html#ac0e305f22e8832fb82bef4713a4c015d',1,'SO::sensor_class']]],
-  ['get_5fcamera_5fver_23',['GET_CAMERA_VER',['../namespace_s_o.html#a8c0db17c48d57704e2007de685e26b47aebb8f3042d38e4f754016931ffeeb296',1,'SO']]],
-  ['get_5ffocus_5fpos_24',['GET_FOCUS_POS',['../namespace_s_o.html#aef064f8a21ed2b59c16b2cc998912821a537ac240d422dbed0172536fa9b82b7a',1,'SO']]],
-  ['get_5ffocus_5fposition_25',['get_focus_position',['../class_s_o_1_1lens__class.html#acbf36352d59e47a57f1c35fccda8b28f',1,'SO::lens_class']]],
-  ['get_5ffocus_5fspeed_26',['get_focus_speed',['../class_s_o_1_1lens__class.html#ad81c43bd8830285ff30f135ce7b43f51',1,'SO::lens_class::get_focus_speed()'],['../namespace_s_o.html#aef064f8a21ed2b59c16b2cc998912821add1861eb02bbd1001e0ba756e26d060f',1,'SO::GET_FOCUS_SPEED()']]],
-  ['get_5fnuc_5ftable_27',['get_nuc_table',['../class_s_o_1_1sensor__class.html#ab1196fba0f82b1e47a99986342c53ab2',1,'SO::sensor_class::get_nuc_table()'],['../namespace_s_o.html#abcc473c926b949df928e300586542c52ac6f30e6d9bb1caf7e8e19cc1b301364b',1,'SO::GET_NUC_TABLE()']]],
-  ['get_5fsensor_5fready_28',['GET_SENSOR_READY',['../namespace_s_o.html#abcc473c926b949df928e300586542c52aa2c80a667c78b77b7355ff6f66991af8',1,'SO']]],
-  ['get_5fversion_29',['get_version',['../class_s_o_1_1lens__class.html#a4db20d436e77ef5eb76f3fbb24933d61',1,'SO::lens_class::get_version()'],['../class_s_o_1_1sensor__class.html#a9c2b80f6df5f4b75ce735a6c5c00a79d',1,'SO::sensor_class::get_version()'],['../class_s_o_1_1camera.html#a51ee9ed0187240bec7e4ccc303924721',1,'SO::camera::get_version()']]],
-  ['get_5fzoom_5findex_30',['get_zoom_index',['../class_s_o_1_1lens__class.html#a1a626f3a50a6d869d169c1d61c65adf2',1,'SO::lens_class::get_zoom_index()'],['../namespace_s_o.html#aef064f8a21ed2b59c16b2cc998912821a4aee00bf8f4b30fa12e2a3b5a15e72fc',1,'SO::GET_ZOOM_INDEX()']]],
-  ['get_5fzoom_5fmtr_5fpos_31',['GET_ZOOM_MTR_POS',['../namespace_s_o.html#aef064f8a21ed2b59c16b2cc998912821acddeb433187c57eb5a15375c1df12c59',1,'SO']]],
-  ['get_5fzoom_5fposition_32',['get_zoom_position',['../class_s_o_1_1lens__class.html#a8bf2c827ebd19b616dc4f00a3bf10c27',1,'SO::lens_class']]],
-  ['get_5fzoom_5fspeed_33',['get_zoom_speed',['../class_s_o_1_1lens__class.html#a2199bb501c0aad0909a9ff604b47f2c9',1,'SO::lens_class::get_zoom_speed()'],['../namespace_s_o.html#aef064f8a21ed2b59c16b2cc998912821abdb964f01dbd3e5127920173c12e0d8d',1,'SO::GET_ZOOM_SPEED()']]]
+  ['ffc_5fmode_23',['ffc_mode',['../class_s_o_1_1sensor__class.html#a9f18b1a1e79c6b8df14958ec9e359c05',1,'SO::sensor_class']]],
+  ['ffc_5fperiod_24',['ffc_period',['../class_s_o_1_1sensor__class.html#a5275eb6075789afb16b48a11f441c45a',1,'SO::sensor_class']]],
+  ['fip_5fprotocol_25',['fip_protocol',['../classfip__protocol.html',1,'fip_protocol'],['../classfip__protocol.html#a9baceb36be79829f1250356c0a99870a',1,'fip_protocol::fip_protocol()=default'],['../classfip__protocol.html#a22a3cbfcd2b8c749afbf62de00f1d5c5',1,'fip_protocol::fip_protocol(uint8_t t_)'],['../classfip__protocol.html#a897e660da09088f508882c79da7b2feb',1,'fip_protocol::fip_protocol(uint8_t t_, std::vector&lt; uint8_t &gt; d_)'],['../classfip__protocol.html#a2f941e08932b9295885552ecd599d266',1,'fip_protocol::fip_protocol(uint8_t t_, uint8_t port_, std::vector&lt; uint8_t &gt; d_)'],['../classfip__protocol.html#a18e1b2f23fe3794269d5ab1086436107',1,'fip_protocol::fip_protocol(std::vector&lt; uint8_t &gt; d_)']]],
+  ['fip_5fprotocol_2eh_26',['fip_protocol.h',['../fip__protocol_8h.html',1,'']]],
+  ['flat_5ffield_5fcorr_27',['FLAT_FIELD_CORR',['../namespace_s_o.html#abcc473c926b949df928e300586542c52a15e111ce7dbfadc01e23bd92f1fc0a72',1,'SO']]],
+  ['flush_5fport_28',['flush_port',['../ftd2xx__functions_8h.html#a2541e521adc4f533c81b65a83ee48490',1,'ftd2xx_functions.h']]],
+  ['focus_5fposition_29',['focus_position',['../class_s_o_1_1lens__class.html#a101ba7a52d1a09f62495850bb76a34c1',1,'SO::lens_class']]],
+  ['focus_5fspeed_30',['focus_speed',['../class_s_o_1_1lens__class.html#a9baddd595d4a385ca2daab3487a0f705',1,'SO::lens_class']]],
+  ['focus_5ftrackbar_5fcallback_31',['focus_trackbar_callback',['../edt__test_8h.html#ad17be479591648b09a9a077b462c356f',1,'edt_test.h']]],
+  ['ftd2xx_5ffunctions_2eh_32',['ftd2xx_functions.h',['../ftd2xx__functions_8h.html',1,'']]],
+  ['ftdidevicedetails_33',['ftdiDeviceDetails',['../structftdi_device_details.html',1,'ftdiDeviceDetails'],['../structftdi_device_details.html#a14695b7685f8c2a2eac223c34ba90cd1',1,'ftdiDeviceDetails::ftdiDeviceDetails()'],['../ftd2xx__functions_8h.html#aaaa6d35814edca0a73b7b6020ccc0bd0',1,'ftdiDeviceDetails():&#160;ftd2xx_functions.h']]],
+  ['fw_5fmaj_5frev_34',['fw_maj_rev',['../class_s_o_1_1lens__class.html#aa9eaaa36234da680c4f5dd5d3661fc98',1,'SO::lens_class::fw_maj_rev()'],['../class_s_o_1_1sensor__class.html#a54ff5fc7d5cba690e997167cf37a4f17',1,'SO::sensor_class::fw_maj_rev()']]],
+  ['fw_5fmin_5frev_35',['fw_min_rev',['../class_s_o_1_1lens__class.html#a9e5182f9ed220ba1e225c12cec331e81',1,'SO::lens_class::fw_min_rev()'],['../class_s_o_1_1sensor__class.html#a39017ad01aae79122e8ee2efcd0f433e',1,'SO::sensor_class::fw_min_rev()']]]
 ];

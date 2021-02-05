@@ -97,12 +97,14 @@ $(document).ready(function(){initNavTree('sierra__olympic__camera_8h.html',''); 
 <a href="#nested-classes">Classes</a> &#124;
 <a href="#namespaces">Namespaces</a> &#124;
 <a href="#enum-members">Enumerations</a> &#124;
+<a href="#func-members">Functions</a> &#124;
 <a href="#var-members">Variables</a>  </div>
   <div class="headertitle">
 <div class="title">sierra_olympic_camera.h File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><code>#include &lt;cstdint&gt;</code><br />
+<code>#include &quot;<a class="el" href="udp__network__functions_8h_source.html">udp_network_functions.h</a>&quot;</code><br />
 <code>#include &lt;<a class="el" href="wind__protocol_8h_source.html">wind_protocol.h</a>&gt;</code><br />
 <code>#include &lt;<a class="el" href="fip__protocol_8h_source.html">fip_protocol.h</a>&gt;</code><br />
 </div>
@@ -127,9 +129,14 @@ Namespaces</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="enum-members"></a>
 Enumerations</h2></td></tr>
-<tr class="memitem:a8c0db17c48d57704e2007de685e26b47"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespace_s_o.html#a8c0db17c48d57704e2007de685e26b47">SO::system_command</a> { <a class="el" href="namespace_s_o.html#a8c0db17c48d57704e2007de685e26b47af666e1399d17af8707e65c65f456b429">SO::SO_ERROR_RESPONSE</a> = 0x00, 
+<tr class="memitem:a8c0db17c48d57704e2007de685e26b47"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespace_s_o.html#a8c0db17c48d57704e2007de685e26b47">SO::system_command</a> { <br />
+&#160;&#160;<a class="el" href="namespace_s_o.html#a8c0db17c48d57704e2007de685e26b47af666e1399d17af8707e65c65f456b429">SO::SO_ERROR_RESPONSE</a> = 0x00, 
 <a class="el" href="namespace_s_o.html#a8c0db17c48d57704e2007de685e26b47aebb8f3042d38e4f754016931ffeeb296">SO::GET_CAMERA_VER</a> = 0x01, 
-<a class="el" href="namespace_s_o.html#a8c0db17c48d57704e2007de685e26b47a510ba42b3c74e4319a9f5651d12cec63">SO::END_CAMERA_CTRL</a> = 0x02
+<a class="el" href="namespace_s_o.html#a8c0db17c48d57704e2007de685e26b47a510ba42b3c74e4319a9f5651d12cec63">SO::END_CAMERA_CTRL</a> = 0x02, 
+<a class="el" href="namespace_s_o.html#a8c0db17c48d57704e2007de685e26b47abb866473ac4d6f3a768745e88378d9b7">SO::GET_CAMERA_SN</a> = 0x05, 
+<br />
+&#160;&#160;<a class="el" href="namespace_s_o.html#a8c0db17c48d57704e2007de685e26b47aa0ac664f1b0c3454aa3a43a86ab11848">SO::SET_NETWORK_PARAMS</a> = 0x1C
+<br />
  }</td></tr>
 <tr class="separator:a8c0db17c48d57704e2007de685e26b47"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aef064f8a21ed2b59c16b2cc998912821"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespace_s_o.html#aef064f8a21ed2b59c16b2cc998912821">SO::lens_command</a> { <br />
@@ -174,16 +181,117 @@ Enumerations</h2></td></tr>
  }</td></tr>
 <tr class="separator:abcc473c926b949df928e300586542c52"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
+Functions</h2></td></tr>
+<tr class="memitem:a554339cf235217841bd4c805da3e9097"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sierra__olympic__camera_8h.html#a554339cf235217841bd4c805da3e9097">read4</a> (const uint8_t *ptr)</td></tr>
+<tr class="separator:a554339cf235217841bd4c805da3e9097"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a57a564e6712b93af049a74485f228c3f"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sierra__olympic__camera_8h.html#a57a564e6712b93af049a74485f228c3f">read3</a> (const uint8_t *ptr)</td></tr>
+<tr class="separator:a57a564e6712b93af049a74485f228c3f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ace9c24e3aabd9605583be7ce9bb411d2"><td class="memItemLeft" align="right" valign="top">uint16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="sierra__olympic__camera_8h.html#ace9c24e3aabd9605583be7ce9bb411d2">read2</a> (const uint8_t *ptr)</td></tr>
+<tr class="separator:ace9c24e3aabd9605583be7ce9bb411d2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="var-members"></a>
 Variables</h2></td></tr>
 <tr class="memitem:adbff76e6848611841e00977292f44d9d"><td class="memItemLeft" align="right" valign="top">const std::vector&lt; std::string &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespace_s_o.html#adbff76e6848611841e00977292f44d9d">SO::error_codes</a></td></tr>
 <tr class="separator:adbff76e6848611841e00977292f44d9d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0860a46af0582369ec2c871112eaa4c1"><td class="memItemLeft" align="right" valign="top">const uint16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespace_s_o.html#a0860a46af0582369ec2c871112eaa4c1">SO::STREAM_ON</a> = 1</td></tr>
+<tr class="separator:a0860a46af0582369ec2c871112eaa4c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a26004d8c5e9cafe81f38cb461e9b570a"><td class="memItemLeft" align="right" valign="top">const uint16_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespace_s_o.html#a26004d8c5e9cafe81f38cb461e9b570a">SO::STREAM_OFF</a> = 256</td></tr>
+<tr class="separator:a26004d8c5e9cafe81f38cb461e9b570a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Contains the classes to interface to a camera. </p>
 
 <p class="definition">Definition in file <a class="el" href="sierra__olympic__camera_8h_source.html">sierra_olympic_camera.h</a>.</p>
-</div></div><!-- contents -->
+</div><h2 class="groupheader">Function Documentation</h2>
+<a id="ace9c24e3aabd9605583be7ce9bb411d2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ace9c24e3aabd9605583be7ce9bb411d2">&#9670;&nbsp;</a></span>read2()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint16_t read2 </td>
+          <td>(</td>
+          <td class="paramtype">const uint8_t *&#160;</td>
+          <td class="paramname"><em>ptr</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Helper to read 2 bytes into a uint16_t </p>
+
+<p class="definition">Definition at line <a class="el" href="sierra__olympic__camera_8h_source.html#l00037">37</a> of file <a class="el" href="sierra__olympic__camera_8h_source.html">sierra_olympic_camera.h</a>.</p>
+
+</div>
+</div>
+<a id="a57a564e6712b93af049a74485f228c3f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a57a564e6712b93af049a74485f228c3f">&#9670;&nbsp;</a></span>read3()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint32_t read3 </td>
+          <td>(</td>
+          <td class="paramtype">const uint8_t *&#160;</td>
+          <td class="paramname"><em>ptr</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Helper to read 3 bytes into a uint32_t </p>
+
+<p class="definition">Definition at line <a class="el" href="sierra__olympic__camera_8h_source.html#l00029">29</a> of file <a class="el" href="sierra__olympic__camera_8h_source.html">sierra_olympic_camera.h</a>.</p>
+
+</div>
+</div>
+<a id="a554339cf235217841bd4c805da3e9097"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a554339cf235217841bd4c805da3e9097">&#9670;&nbsp;</a></span>read4()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint32_t read4 </td>
+          <td>(</td>
+          <td class="paramtype">const uint8_t *&#160;</td>
+          <td class="paramname"><em>ptr</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Helper to read 4 bytes into a uint32_t </p>
+
+<p class="definition">Definition at line <a class="el" href="sierra__olympic__camera_8h_source.html#l00021">21</a> of file <a class="el" href="sierra__olympic__camera_8h_source.html">sierra_olympic_camera.h</a>.</p>
+
+</div>
+</div>
+</div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->

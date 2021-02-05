@@ -13,6 +13,7 @@ var class_s_o_1_1sensor__class =
     [ "set_auto_ffc_mode", "class_s_o_1_1sensor__class.html#ab16176d7fb33e29c1df260866b005d03", null ],
     [ "set_auto_ffc_period", "class_s_o_1_1sensor__class.html#aa07560d82c163f931098561a65636264", null ],
     [ "set_shutter", "class_s_o_1_1sensor__class.html#a00e704b53b29012f91b90653c75d5cf6", null ],
+    [ "set_version", "class_s_o_1_1sensor__class.html#a32ca1641f6328bb90828e9e276cd7a33", null ],
     [ "operator<<", "class_s_o_1_1sensor__class.html#a1e4ed84c06a1254e8aee5a50b5eb73de", null ],
     [ "ffc_mode", "class_s_o_1_1sensor__class.html#a9f18b1a1e79c6b8df14958ec9e359c05", null ],
     [ "ffc_period", "class_s_o_1_1sensor__class.html#a5275eb6075789afb16b48a11f441c45a", null ],
