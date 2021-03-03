@@ -93,6 +93,9 @@ int main(int argc, char** argv)
     cv::namedWindow(window_name, cv::WINDOW_AUTOSIZE);
     cv::Mat frame;
     char key = 0;
+    bool record = false;
+    std::vector<cv::Mat> multiframes(300);
+    uint32_t index;
 
     if (argc == 1)
     {
@@ -209,12 +212,15 @@ int main(int argc, char** argv)
 
 #endif
 
+        index = 0;
+
         while (key != 'q')
         {
 
 #ifdef USE_UDP_VIDEO
 
             cap >> frame;
+            cv::cvtColor(frame, frame, cv::COLOR_BGR2GRAY);
 #else
 
             // get the image and immediately start the next one (if not the last time through the 
@@ -249,10 +255,30 @@ int main(int argc, char** argv)
             cv::normalize(frame, frame, 0, 255, cv::NORM_MINMAX, CV_8UC1);
 #endif
 
+            if (record)
+            {
+                multiframes[index++] = frame;
+
+                if (index == 300)
+                {
+                    cv::imwrite("../results/test1.tiff", multiframes);
+                    record = false;
+                }
+            }
+
             cv::imshow(window_name, frame);
 
             key = cv::waitKey(1);
-        }
+            
+            if (key == 'r')
+            {
+                record = true;
+            } 
+
+
+
+
+        }   // end of while
 
         cv::destroyAllWindows();
 
