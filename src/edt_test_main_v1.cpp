@@ -104,8 +104,31 @@ int main(int argc, char** argv)
         return 0;
     }
 
-    // generic config file for a 14-bit monochrome camera
-    cfg_file = "../config/vinden_cl.cfg";
+    std::cout << "Enter the EDT Board Number [0-2]: ";
+    std::getline(std::cin, console_input);
+    int32_t edt_unit = std::stoi(console_input);
+
+    std::cout << "Enter the EDT Port Number [0-1]: ";
+    std::getline(std::cin, console_input);
+    int32_t edt_port = std::stoi(console_input);
+
+    std::cout << "Enter the Camera Type [0 - Ventus, 1 - Vinden]: ";
+    std::getline(std::cin, console_input);
+    int32_t cam_type = std::stoi(console_input);
+
+    // generic config file for a monochrome camera
+    switch (cam_type)
+    {
+    case 0:
+        cfg_file = "../config/ventus_cl.cfg";
+        break;
+    case 1:
+        cfg_file = "../config/vinden_cl.cfg";
+        break;
+    default:
+        cfg_file = "../config/vinden_cl.cfg";
+        break;
+    }
 
     // directory where the bit file is located from the config file
     bit_directory = "/opt/EDTpdv/camera_config/bitfiles";
@@ -125,7 +148,7 @@ int main(int argc, char** argv)
     try
     {
         // initialize the EDT device
-        result = init_edt_device(cfg_file, bit_directory, EDT_UNIT_0, VINDEN);
+        result = init_edt_device(cfg_file, bit_directory, edt_unit, edt_port);
 
         if (result < 0)
         {
@@ -134,8 +157,8 @@ int main(int argc, char** argv)
 
 
         // open a specifc board and channel
-        std::cout << std::endl << "Opening: " << EDT_INTERFACE << ", Unit: " << EDT_UNIT_0 << ", Channel: " << VINDEN << std::endl;
-        pdv_p = pdv_open_channel(EDT_INTERFACE, EDT_UNIT_0, VINDEN);
+        std::cout << std::endl << "Opening: " << EDT_INTERFACE << ", Unit: " << edt_unit << ", Channel: " << edt_port << std::endl;
+        pdv_p = pdv_open_channel(EDT_INTERFACE, edt_unit, edt_port);
         if (pdv_p == NULL)
         {
             std::cout << "Failed to connect to a PDV device!  Press Enter to close" << std::endl;
