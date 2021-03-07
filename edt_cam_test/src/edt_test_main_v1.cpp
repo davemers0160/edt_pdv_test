@@ -131,7 +131,11 @@ int main(int argc, char** argv)
     }
 
     // directory where the bit file is located from the config file
+#if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
+    bit_directory = "C:/EDT/pdv/camera_config/bitfiles";
+#else
     bit_directory = "/opt/EDTpdv/camera_config/bitfiles";
+#endif
 
     camera_ip_address = argv[1];
     video_cap_address = "udp://" + camera_ip_address + ":" + std::to_string(video_port);
