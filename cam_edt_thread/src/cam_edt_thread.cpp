@@ -35,21 +35,18 @@
 // ----------------------------------------------------------------------------
 // Globals
 // ----------------------------------------------------------------------------
+int32_t result = 0;
 std::string bit_directory;
 std::string cfg_file;
 
+// EDT PDV specific variable
 int32_t edt_unit;
 int32_t edt_channel;
-int32_t cam_type;
-uint64_t buffer_size;
-
 int32_t edt_width, edt_height, edt_depth;
-
 PdvDev* pdv_p;
 int32_t timeouts = 0;
 int32_t last_timeouts = 0;
 bool recovering_timeout = false;
-    
 uint8_t* image_p;
 
 // ----------------------------------------------------------------------------
@@ -61,25 +58,25 @@ void print_usage(void)
 
 
 // ----------------------------------------------------------------------------
-int32_t init_edt_device(std::string cfg_file, std::string bit_directory, int32_t unit, int32_t channel)
+void init()
 {
-    int32_t result = 0;
     int32_t fifo_buffers = 8; 
     
     char edt_devname[256] = { 0 };
 
     EdtDev* edt_p = NULL;
     Edtinfo edt_info;
-    Dependent* dd_p;
+    Dependent* dd_p = NULL;
 
     // open a specifc board and channel
-    std::cout << std::endl << "Opening: " << EDT_INTERFACE << ", Unit: " << unit << ", Channel: " << channel << std::endl;
+    std::cout << std::endl << "Opening: " << EDT_INTERFACE << ", Unit: " << edt_unit << ", Channel: " << edt_channel << std::endl;
 
     // allocate memory for the Dependent structure
     if ((dd_p = pdv_alloc_dependent()) == NULL)
     {
         std::cout << "PDV alloc_dependent failed!" << std::endl;
-        return -1;
+        result = -1;
+        return;
     }
 
     // read in the config file
@@ -87,29 +84,32 @@ int32_t init_edt_device(std::string cfg_file, std::string bit_directory, int32_t
     {
         std::cout << "PDV readcfg failed!" << std::endl;
         free(dd_p);
-        return -1;
+        result = -1;
+        return;
     }
 
     // IMPORTANT: pdv_initcam is a special case in that it requies a device pointer returned by use
     // edt_open_channel (or edt_open), NOT pdv_open_channel (or etc.). If you port this code to an
     // application that subsequently performs other operations (e.g. image capture) on the device,
     // edt_close should be called after pdv_initcam, then reopen with pdv_open_channel or pdv_open.
-    if ((edt_p = edt_open_channel(EDT_INTERFACE, unit, channel)) == NULL)
+    if ((edt_p = edt_open_channel(EDT_INTERFACE, edt_unit, edt_channel)) == NULL)
     {
-        std::cout << "error in edt_open_channel: " << std::string(edt_devname) <<  unit << std::endl;
+        std::cout << "error in edt_open_channel: " << std::string(edt_devname) << edt_unit << std::endl;
         edt_close(edt_p);
         free(dd_p);
-        return -1;
+        result = -1;
+        return;
     }
 
     // init the edt device
-    if (pdv_initcam(edt_p, dd_p, unit, &edt_info, cfg_file.c_str(), (char*)bit_directory.c_str(), 0) != 0)
+    if (pdv_initcam(edt_p, dd_p, edt_unit, &edt_info, cfg_file.c_str(), (char*)bit_directory.c_str(), 0) != 0)
     {
         std::cout << "PDV initcam failed." << std::endl;
         //edt_msg(EDTAPP_MSG_FATAL, "initcam failed. Run with '-V' to see complete debugging output\n");
         edt_close(edt_p);
         free(dd_p);
-        return -1;
+        result = -1;
+        result;
     }
 
     // close teh edt device
@@ -119,12 +119,13 @@ int32_t init_edt_device(std::string cfg_file, std::string bit_directory, int32_t
     free(dd_p);
 
     // open the pdv channel
-    pdv_p = pdv_open_channel(EDT_INTERFACE, unit, channel);
+    pdv_p = pdv_open_channel(EDT_INTERFACE, edt_unit, edt_channel);
     if (pdv_p == NULL)
     {
         std::cout << "Failed to connect to a PDV device!  Press Enter to close" << std::endl;
         //std::cin.ignore();
-        return -1;
+        result = -1;
+        return;
     }
 
     // print out the device name
@@ -140,7 +141,7 @@ int32_t init_edt_device(std::string cfg_file, std::string bit_directory, int32_t
     edt_depth = pdv_get_depth(pdv_p);
     //edt_cameratype = pdv_get_cameratype(pdv_p);
 
-    buffer_size = edt_width * edt_height * sizeof(uint16_t);
+    //buffer_size = edt_width * edt_height * sizeof(uint16_t);
 
     std::cout << "------------------------------------------------------------------" << std::endl;
     std::cout << "Image (h x w x d): " << edt_height << " x " << edt_width << " x " << edt_depth << std::endl;
@@ -165,8 +166,6 @@ int32_t init_edt_device(std::string cfg_file, std::string bit_directory, int32_t
     }
 
     std::cout << std::endl << "Initialization Complete!" << std::endl;
-
-    return result;
 
 }   // end of init_edt_device
 
@@ -230,32 +229,7 @@ int main(int argc, char** argv)
     auto stop_time = std::chrono::system_clock::now();
     auto elapsed_time = std::chrono::duration_cast<d_sec>(stop_time - start_time);
 
-    // EDT PDV specific variable
-    //Edtinfo edtinfo;
-    //Dependent* dd_p;
-    //PdvDev* pdv_p;
-    //char* edt_cameratype;
-
-
-    // Sierra-Olympic specific variables
-    // SO::camera vinden;
-    // wind_protocol wind_data;
-    // uint32_t driver_device_num = 0;
-    // uint32_t connect_count = 0;
-    // uint32_t read_timeout = 30000;
-    // uint32_t write_timeout = 1000;
-    // uint32_t baud_rate = 115200;
-    
-    // IP based comms
-    // std::string camera_ip_address;
-    // std::string video_cap_address;
-    // uint16_t read_port = 14002;
-    // uint16_t write_port = 14001;
-    // uint16_t video_port = 15004;
-    // std::string error_msg;
-    // int32_t read_result, write_result;
-    // std::string host_ip_address;
-    // std::vector<uint8_t> rx_data;
+    int32_t cam_type;
 
     // opencv variables to display the video feed
     std::string window_name = "Video Feed";
@@ -264,7 +238,7 @@ int main(int argc, char** argv)
     char key = 0;
     //bool record = false;
     //std::vector<cv::Mat> multiframes(300);
-    uint32_t index;
+    //uint32_t index;
 
     if (argc == 1)
     {
@@ -309,9 +283,7 @@ int main(int argc, char** argv)
     try
     {
      
-        result = init_edt_device(cfg_file, bit_directory, edt_unit, edt_channel);
-        
-        index = 0;
+        init();
 
         while (key != 'q')
         {

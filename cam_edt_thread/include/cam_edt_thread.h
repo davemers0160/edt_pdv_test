@@ -31,7 +31,7 @@ constexpr auto VINDEN = 0;                          /* Channel that the Vinden C
 constexpr auto VENTUS = 1;                          /* Channel that the Ventus Camera is connected to */
 
 // ----------------------------------------------------------------------------
-int32_t init_edt_device(std::string cfg_file, std::string bit_directory, int32_t unit, int32_t channel);
+void init();
 void update();
 void close_edt();
 
