@@ -167,14 +167,13 @@ void init()
 
     std::cout << std::endl << "Initialization Complete!" << std::endl;
 
-}   // end of init_edt_device
+}   // end of init
 
 
 // ----------------------------------------------------------------------------
 void update()
 {
-
-    
+   
     // get the image and immediately start the next one (if not the last time through the 
     // loop). Processing (saving to a file in this case) can then occur in parallel with 
     // the next acquisition
@@ -200,8 +199,8 @@ void update()
         recovering_timeout = false;
         std::cout << "restarted...." << std::endl;
     }
-            
-}
+
+}   // end of update
 
 
 // ----------------------------------------------------------------------------
