@@ -23,7 +23,7 @@
 //#include "ip_helper.h"
 
 // Project Includes
-#include "cam_edt_thread.h"
+#include "cam_img.h"
 
 // OpenCV Includes
 #include <opencv2/core.hpp>
