@@ -239,12 +239,12 @@ int main(int argc, char** argv)
     //std::vector<cv::Mat> multiframes(300);
     //uint32_t index;
 
-    if (argc == 1)
-    {
-        print_usage();
-        std::cin.ignore();
-        return 0;
-    }
+    //if (argc == 1)
+    //{
+    //    print_usage();
+    //    std::cin.ignore();
+    //    return 0;
+    //}
 
     std::cout << "Enter the EDT Board Number [0-2]: ";
     std::getline(std::cin, console_input);
@@ -262,13 +262,13 @@ int main(int argc, char** argv)
     switch (cam_type)
     {
     case 0:
-        cfg_file = "../../commmon/config/ventus_cl.cfg";
+        cfg_file = "../../common/config/ventus_cl.cfg";
         break;
     case 1:
-        cfg_file = "../../commmon/config/vinden_cl.cfg";
+        cfg_file = "../../common/config/vinden_cl.cfg";
         break;
     default:
-        cfg_file = "../../commmon/config/vinden_cl.cfg";
+        cfg_file = "../../common/config/vinden_cl.cfg";
         break;
     }
 

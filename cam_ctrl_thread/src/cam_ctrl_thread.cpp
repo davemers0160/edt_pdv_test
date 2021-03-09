@@ -103,8 +103,8 @@ int main(int argc, char** argv)
     std::vector<uint8_t> rx_data;
 
     // opencv variables to display the video feed
-    std::string window_name = "Video Feed";
-    cv::namedWindow(window_name, cv::WINDOW_AUTOSIZE);
+    //std::string window_name = "Video Feed";
+    //cv::namedWindow(window_name, cv::WINDOW_AUTOSIZE);
     cv::Mat frame;
     char key = 0;
 
@@ -140,8 +140,6 @@ int main(int argc, char** argv)
 
         }   // end of while
 
-        cv::destroyAllWindows();
-
         int bp = 0;
 
     }
@@ -149,7 +147,9 @@ int main(int argc, char** argv)
     {
         std::cout << "error: " << e.what() << std::endl;
     }
-
+    
+    cv::destroyAllWindows();
+    
     // close the SO camera thread
     close_thread();
 

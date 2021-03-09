@@ -120,13 +120,13 @@ int main(int argc, char** argv)
     switch (cam_type)
     {
     case 0:
-        cfg_file = "../../commmon/config/ventus_cl.cfg";
+        cfg_file = "../../common/config/ventus_cl.cfg";
         break;
     case 1:
-        cfg_file = "../../commmon/config/vinden_cl.cfg";
+        cfg_file = "../../common/config/vinden_cl.cfg";
         break;
     default:
-        cfg_file = "../../commmon/config/vinden_cl.cfg";
+        cfg_file = "../../common/config/vinden_cl.cfg";
         break;
     }
 

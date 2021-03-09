@@ -15,8 +15,8 @@
 
 cmake_minimum_required(VERSION 2.8.12)
 
-PROJECT(cam_edt_thread_project)
-set(exe_name "cam_edt_tread")
+PROJECT(cam_img_project)
+set(exe_name "cam_img")
 
 set(PLATFORM "$ENV{PLATFORM}" CACHE INTERNAL "Copied from environment variable")
 if("${PLATFORM}" STREQUAL "")
