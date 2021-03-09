@@ -42,19 +42,6 @@ set(project_includes
     )
 
 
-# look for the EDT PDV library
-message(" ")
-include(${PR_ROOT}/common/cmake_utils/find_edtpdv.cmake)
-if(EDTPDV_FOUND)
-    set(project_includes ${project_includes} ${EDTPDV_INCLUDE_DIRS})
-    set(project_libs ${project_libs} ${EDTPDV_LIBS})
-    
-    if(UNIX AND NOT APPLE)
-        set(project_libs ${project_libs} dl pthread)
-        add_compile_options("-lm")
-    endif()
-endif()
-
 # look for opencv
 message(STATUS "--------------------------------------------------------------------------------")
 message(STATUS "Looking for OpenCV installation...")
