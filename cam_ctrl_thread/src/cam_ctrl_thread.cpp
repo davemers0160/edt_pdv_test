@@ -35,7 +35,7 @@ uint16_t write_port = 14001;
 uint16_t video_port = 15004;
 
 // Sierra-Olympic specific variables
-SO::camera vinden;
+SO::camera so_cam;
 std::string camera_ip_address;
 
 
@@ -52,13 +52,13 @@ void init(void)
     std::string error_msg;
 
     // configure the UDP info
-    vinden.udp_camera_info = udp_info(write_port, read_port);
+    so_cam.udp_camera_info = udp_info(write_port, read_port);
 
     // initialize camera
-    result = vinden.init_camera(camera_ip_address, error_msg);
+    result = so_cam.init_camera(camera_ip_address, error_msg);
 
     // display the information about a specific camera
-    std::cout << vinden << std::endl;
+    std::cout << so_cam << std::endl;
 
 }
 
@@ -74,7 +74,7 @@ void update()
 void close_thread()
 {
     std::cout << std::endl << "Closing the UDP connection to the camera..." << std::endl;
-    result = vinden.close();
+    result = so_cam.close();
 
     std::cout << "close result: " << result << std::endl;
 }
@@ -131,7 +131,7 @@ int main(int argc, char** argv)
         init();
 
         // load the param gui to control focus and zoom
-        load_param_gui(vinden.udp_camera_info);
+        load_param_gui(so_cam.udp_camera_info);
 
         while (key != 'q')
         {
