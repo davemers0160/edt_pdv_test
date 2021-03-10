@@ -165,7 +165,10 @@ void init()
         pdv_start_images(pdv_p, fifo_buffers);
     }
 
-    std::cout << std::endl << "Initialization Complete!" << std::endl;
+    std::cout << std::endl << "Camera Initialization Complete!" << std::endl;
+
+
+
 
 }   // end of init
 
