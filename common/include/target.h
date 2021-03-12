@@ -102,7 +102,7 @@ public:
 
 
     //cv::KeyPoint kp;
-    std::string id;
+    std::string id = "";
     
     //bool illuminated;
     //double pixel_size;
@@ -116,7 +116,7 @@ public:
     target_rect roi;
 
     // Target confidence is currently determined by the keypoint overlap score
-    double confidence;
+    double confidence = 0.0;
         
     // Intensity for all bands  
     //double vis_intensity;
