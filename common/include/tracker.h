@@ -18,7 +18,7 @@
 #include <opencv2/tracking.hpp>
 
 //#include "camera.h"
-#include "target.h"
+//#include "target.h"
 
 // ----------------------------------------------------------------------------
 /**
@@ -36,6 +36,103 @@ enum tracker_types
     GOTURN,
     MOSSE,
     CSRT
+};
+
+
+class target_rect
+{
+
+public:
+    int32_t x;
+    int32_t y;
+    int32_t w;
+    int32_t h;
+
+    std::string id = "";
+
+    double confidence = 0.0;
+
+    target_rect() : x(0), y(0), w(0), h(0)
+    {}
+
+    target_rect(int32_t x_, int32_t y_, int32_t w_, int32_t h_) : x(x_), y(y_), w(w_), h(h_)
+    {
+        id = "";
+    }
+
+    target_rect(int32_t x_, int32_t y_, int32_t w_, int32_t h_, std::string id_) : x(x_), y(y_), w(w_), h(h_)
+    {
+        id = id_;
+    }
+
+    ~target_rect() {}
+
+    // ----------------------------------------------------------------------------
+    target_rect intersect(const target_rect& r)
+    {
+        int32_t x1 = std::max(x, r.x);
+        int32_t y1 = std::max(y, r.y);
+        int32_t x2 = std::min((x + w), (r.x + r.w));
+        int32_t y2 = std::min((y + h), (r.y + r.h));
+
+        return target_rect(x1, y1, x2 - x1, y2 - y1);
+
+    }
+
+    // ----------------------------------------------------------------------------
+    int64_t area()
+    {
+        return w * h;
+    }
+
+    // ----------------------------------------------------------------------------
+    bool is_empty()
+    {
+        return !(h > 0 || w > 0);
+    }
+
+    // ----------------------------------------------------------------------------
+    double get_iou(target_rect& r)
+    {
+
+        target_rect r_int = intersect(r);
+        double inner = (double)(r_int.area());
+
+        double outer = (double)(area()) + (double)(r.area()) - inner;
+
+        if (outer > 0.0)
+        {
+            return inner / outer;
+        }
+        else
+        {
+            return 0.0;
+        }
+
+    }   // end of get_iou
+
+    // ----------------------------------------------------------------------------
+    void get_center(int32_t& x_, int32_t& y_)
+    {
+        x_ = x + (w >> 1);
+        y_ = y + (h >> 1);
+    }
+
+    // ----------------------------------------------------------------------------
+    inline friend std::ostream& operator<< (
+        std::ostream& out,
+        const target_rect& item
+        )
+    {
+        out << "x=" << item.x;
+        out << ", y=" << item.y;
+        out << ", h=" << item.h;
+        out << ", w=" << item.w << std::endl;
+        return out;
+    }
+
+private:
+
 };
 
 // ----------------------------------------------------------------------------
@@ -69,7 +166,6 @@ public:
 	{
         max_lost = 10;
         lost_track = 0;
-        targets.clear();
         tracking = false;
 
         create(track_type);
@@ -77,7 +173,7 @@ public:
 
     ~ms_tracker()
     {
-        targets.clear();
+        //targets.clear();
         tracker.release();
     }
 
@@ -88,23 +184,48 @@ public:
     //}
 
     // ----------------------------------------------------------------------------
-    void add_target(target &t)
+    void add_target(target_rect &t)
     {
-        targets.push_front(t);
+        //targets.push_front(t);
+        target = t;
         tracking = true;
     }
 
     // ----------------------------------------------------------------------------
-    std::list<target>::iterator get_targets()
+    //std::list<target>::iterator get_targets()
+    target_rect get_target()
     {
-        return targets.begin();
+        //return targets.begin();
+        return target;
+    }
+
+    //// ----------------------------------------------------------------------------
+    //void remove_last_target()
+    //{
+    //    targets.pop_back();
+    //}
+
+    //// ----------------------------------------------------------------------------
+    //void remove_first_target()
+    //{
+    //    targets.pop_front();
+    //}
+
+    // ----------------------------------------------------------------------------
+    void remove_target()
+    {
+        //std::list<target>::iterator it = targets.begin();
+        //std::advance(it, index);
+
+        target = target_rect();
+        tracking = false;
     }
 
     // ----------------------------------------------------------------------------
-    uint32_t get_num_targets()
-    {
-        return (uint32_t)targets.size();
-    }
+    //uint32_t get_num_targets()
+    //{
+    //    return (uint32_t)targets.size();
+    //}
 
     // ----------------------------------------------------------------------------
     // create the tracker object
@@ -147,7 +268,7 @@ public:
     bool init(cv::Mat &img, target_rect &roi)
     {
         cv::Rect2d r(roi.x, roi.y, roi.w, roi.h);
-        bool tracking = tracker->init(img, r);
+        tracking = tracker->init(img, r);
         roi = target_rect((int32_t)r.x, (int32_t)r.y, (int32_t)r.width, (int32_t)r.height);
         return tracking;
     }   // end of init
@@ -200,33 +321,60 @@ public:
     {
         int32_t idx, jdx;
         bool result = true;
-        std::list<target> tg;
+//        std::list<target> tg;
+        target_rect new_tgt;
         int32_t l, t, b, r;
 
         lost_track = 0;
 
         // run a simple blob detector to get an initial detection
-        blob_detection(img, tg, 40.0);
+        blob_detection(img, new_tgt, 40.0);
 
         // going to assume that there is no target detections
         //if (!cam.keypoints.empty()) //{
 
         // there are no current targets
-        if (targets.empty() && !tg.empty())
+        //if (targets.empty() && !tg.empty())
+        if (tracking == false)
         {
             // copy t into targets if t is not empty
-            targets.assign(tg.begin(), tg.end());
+            //targets.assign(tg.begin(), tg.end());
+            target = new_tgt;
             tracking = true;
         }
         else
         {
-            // TODO: if t is not empty then run a check for overlaps between t and targets
+            // if t is not empty then run a check for overlaps between t and targets
             // condense any targets that have an iou of min_matching_iou
-            if (!tg.empty())
+            if (!target.is_empty())
             {
-                // create an array of bools to track if a member of targets has been used
-                std::vector<bool> used(tg.size(), false);
 
+                // create an array of bools to track if a member of targets has been used
+                //std::vector<bool> used(tg.size(), false);
+                //bool used = false;
+
+
+
+                //auto tgt = std::next(targets.begin(), idx);
+                //target new_tgt = std::next(tg.begin(), jdx);
+
+                if (target.get_iou(new_tgt) >= min_matching_iou)
+                {
+                    //used = true;
+
+                    l = std::min(target.x, new_tgt.x);
+                    t = std::min(target.y, new_tgt.y);
+
+                    r = std::max(target.x, new_tgt.x);
+                    b = std::max(target.y, new_tgt.y);
+
+                    target.x = l;
+                    target.y = t;
+                    target.w = r - l;
+                    target.h = t - b;
+                }
+
+/*
                 for (idx = 0; idx < targets.size(); ++idx)
                 {
                     // run the t list backwards and check the overlap between the existing 
@@ -260,17 +408,17 @@ public:
                     }
 
                 }
-
+*/
                 // cycle through the new targets and add the ones that didn't overlap
                 // existing targets to the existing list
-                for (idx = 0; idx < tg.size(); ++idx)
-                {
-                    if (used[idx] == false)
-                    {
-                        auto new_tgt = std::next(tg.begin(), idx);
-                        targets.push_front(*new_tgt);
-                    }
-                }
+                //for (idx = 0; idx < tg.size(); ++idx)
+                //{
+                //    if (used[idx] == false)
+                //    {
+                //        auto new_tgt = std::next(tg.begin(), idx);
+                //        targets.push_front(*new_tgt);
+                //    }
+                //}
 
                 tracking = true;
             }
@@ -338,21 +486,21 @@ public:
     // ----------------------------------------------------------------------------
     void track_object(cv::Mat& img)
     {
-        auto tgt = targets.begin();
+        //auto tgt = targets.begin();
 
-        target prev_tgt = (*tgt);
+        target_rect prev_tgt = target;
 
-        if (update(img, (*tgt).roi)) // Tracking successful
+        if (update(img, target)) // Tracking successful
         {
             //c.display_image("Tracking", img);
             lost_track = 0; // reset lost track counter
 
             // check to see if the detect matches the previous detect
-            double iou = (*tgt).get_iou(prev_tgt);
+            double iou = target.get_iou(prev_tgt);
             if (iou >= min_matching_iou)
             {
-                (*tgt).id = prev_tgt.id;
-                (*tgt).confidence = iou;
+                target.id = prev_tgt.id;
+                target.confidence = iou;
             }
         }
         else
@@ -389,10 +537,16 @@ public:
 private:
 
     double min_matching_iou = 0.8;
-    std::list<target> targets;      /**< std::list of the targets.  This allows the tracker to have more than one target */
+    //std::list<target> targets;      /**< std::list of the targets.  This allows the tracker to have more than one target */
+    //target tgt;                     /**< single target for this tracker */
+    target_rect target;
+
+
+    
 
     // For more info, see https://learnopencv.com/blob-detection-using-opencv-python-c/
-    void blob_detection(cv::Mat &img, std::list<target> &t, float min_area = 20.0)
+//    void blob_detection(cv::Mat& img, std::list<target>& t, float min_area = 20.0)
+    void blob_detection(cv::Mat& img, target_rect& t, float min_area = 20.0)
     {
         std::vector<cv::KeyPoint> keypoints;
         cv::SimpleBlobDetector::Params params;
@@ -440,16 +594,24 @@ private:
         cv::imshow("keypoints", kp_display);
         cv::waitKey(0);
 
-        for (cv::KeyPoint kp : keypoints)
+        // TODO: need to add some logic to pick the largest blob and use that as the detection
+        if (keypoints.size() > 0)
         {
-            target_rect r((int32_t)(kp.pt.x - kp.size), (int32_t)(kp.pt.y - kp.size), (int32_t)(kp.pt.x + kp.size), (int32_t)(kp.pt.x + kp.size));
-
-            t.push_back(r);
+            target_rect r((int32_t)(keypoints[0].pt.x - keypoints[0].size), (int32_t)(keypoints[0].pt.y - keypoints[0].size), (int32_t)(keypoints[0].pt.x + keypoints[0].size), (int32_t)(keypoints[0].pt.x + keypoints[0].size));
+            t = r;
         }
+
+        //for (cv::KeyPoint kp : keypoints)
+        //{
+        //    target_rect r((int32_t)(kp.pt.x - kp.size), (int32_t)(kp.pt.y - kp.size), (int32_t)(kp.pt.x + kp.size), (int32_t)(kp.pt.x + kp.size));
+
+        //    t = r;
+        //}
 
     }   // end of blob_detection
 
-    void blob_detection(uint8_t* d, int32_t h, int32_t w, std::list<target> &t, float min_area = 20.0)
+//    void blob_detection(uint8_t* d, int32_t h, int32_t w, std::list<target> &t, float min_area = 20.0)
+    void blob_detection(uint8_t* d, int32_t h, int32_t w, target_rect& t, float min_area = 20.0)
     {
         cv::Mat img = cv::Mat(h, w, CV_8UC1, d, w * sizeof(*d));
 

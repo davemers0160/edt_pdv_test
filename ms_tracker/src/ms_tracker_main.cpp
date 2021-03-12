@@ -12,7 +12,7 @@
 #include "image_proc.h"
 //#include "camera.h"
 #include "tracker.h"
-#include "target.h"
+//#include "target.h"
 
 // additional includes for external libraries
 #include "select_roi.h"
@@ -50,12 +50,12 @@ int main()
     //Camera cam("Camera Feed", imgs[0].rows, imgs[0].cols);
 
     // tracker class
-    int32_t tracker_type = tracker_types::CSRT;
+    int32_t tracker_type = tracker_types::MIL;
     ms_tracker tracker(tracker_type);
 
     cv::namedWindow(window_name, cv::WINDOW_NORMAL);
 
-    target new_target;
+    target_rect new_target;
     
     // ----------------------------------------------------------------------------
     if (valid_imgs)
@@ -69,16 +69,16 @@ int main()
             cv::Rect roi = cv::selectROI("Manual Target Select", imgs[0]);
 
             // 
-            new_target = target(roi.x, roi.y, roi.width, roi.height, num2str(time(0), "%08x"));
+            new_target = target_rect(roi.x, roi.y, roi.width, roi.height, num2str(time(0), "%08x"));
 
             // 
             cv::destroyWindow("Manual Target Select");
         }
 
-        if ((new_target.roi.w > 0) && (new_target.roi.h > 0))
+        if (!new_target.is_empty())
         {
             tracker.add_target(new_target);
-            tracker.init(imgs[0], new_target.roi);
+            tracker.init(imgs[0], new_target);
         
             std::cout << "target:" << std::endl << new_target << std::endl;        
         }
@@ -95,8 +95,8 @@ int main()
         if (tracker.tracking)
         {
             tracker.track_object(imgs[idx]);
-            auto tgt = tracker.get_targets();
-            cv::Rect r((*tgt).roi.x, (*tgt).roi.y, (*tgt).roi.w, (*tgt).roi.h);
+            target_rect tgt = tracker.get_target();
+            cv::Rect r(tgt.x, tgt.y, tgt.w, tgt.h);
             cv::rectangle(imgs[idx], r, cv::Scalar(255), 2, 1);           
         }
         //// detect
@@ -126,15 +126,23 @@ int main()
             // get a manual detect from the image
             //cv::Rect roi = cv::selectROI(window_name, imgs[idx]);
             //new_target = target(roi.x, roi.y, roi.width, roi.height, num2str(time(0), "%08x"));
-            
-            select_roi((char *)window_name.c_str(), imgs[idx].ptr<uint8_t>(0), width, height, 1, &rx, &ry, &rw, &rh);
-            cv::destroyWindow(window_name);
-            new_target = target(rx, ry, rw, rh, num2str(time(0), "%08x"));
+            std::string win_name = "Select";
+            select_roi((char*)win_name.c_str(), imgs[idx].ptr<uint8_t>(0), width, height, 1, &rx, &ry, &rw, &rh);
+            new_target = target_rect(rx, ry, rw, rh, num2str(time(0), "%08x"));
 
-            if ((new_target.roi.w > 0) && (new_target.roi.h > 0))
+            if (!new_target.is_empty())
             {
+                if (!tracker.get_target().is_empty())
+                {
+                    tracker = ms_tracker(tracker_type);
+                    tracker.init(imgs[idx], new_target);
+                }
+                else
+                { 
+                    tracker.init(imgs[idx], new_target);
+                }
+
                 tracker.add_target(new_target);
-                tracker.init(imgs[idx], new_target.roi);
 
                 std::cout << "target:" << std::endl << new_target << std::endl;
             }
