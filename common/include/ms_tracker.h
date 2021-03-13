@@ -18,7 +18,7 @@
 #include <opencv2/tracking.hpp>
 
 //#include "camera.h"
-//#include "target.h"
+#include "target_rect.h"
 
 // ----------------------------------------------------------------------------
 /**
@@ -39,101 +39,6 @@ enum tracker_types
 };
 
 
-class target_rect
-{
-
-public:
-    int32_t x;
-    int32_t y;
-    int32_t w;
-    int32_t h;
-
-    std::string id = "";
-
-    double confidence = 0.0;
-
-    target_rect() : x(0), y(0), w(0), h(0)
-    {}
-
-    target_rect(int32_t x_, int32_t y_, int32_t w_, int32_t h_) : x(x_), y(y_), w(w_), h(h_)
-    {
-        id = "";
-    }
-
-    target_rect(int32_t x_, int32_t y_, int32_t w_, int32_t h_, std::string id_) : x(x_), y(y_), w(w_), h(h_)
-    {
-        id = id_;
-    }
-
-    ~target_rect() {}
-
-    // ----------------------------------------------------------------------------
-    target_rect intersect(const target_rect& r)
-    {
-        int32_t x1 = std::max(x, r.x);
-        int32_t y1 = std::max(y, r.y);
-        int32_t x2 = std::min((x + w), (r.x + r.w));
-        int32_t y2 = std::min((y + h), (r.y + r.h));
-
-        return target_rect(x1, y1, x2 - x1, y2 - y1);
-
-    }
-
-    // ----------------------------------------------------------------------------
-    int64_t area()
-    {
-        return w * h;
-    }
-
-    // ----------------------------------------------------------------------------
-    bool is_empty()
-    {
-        return !(h > 0 || w > 0);
-    }
-
-    // ----------------------------------------------------------------------------
-    double get_iou(target_rect& r)
-    {
-
-        target_rect r_int = intersect(r);
-        double inner = (double)(r_int.area());
-
-        double outer = (double)(area()) + (double)(r.area()) - inner;
-
-        if (outer > 0.0)
-        {
-            return inner / outer;
-        }
-        else
-        {
-            return 0.0;
-        }
-
-    }   // end of get_iou
-
-    // ----------------------------------------------------------------------------
-    void get_center(int32_t& x_, int32_t& y_)
-    {
-        x_ = x + (w >> 1);
-        y_ = y + (h >> 1);
-    }
-
-    // ----------------------------------------------------------------------------
-    inline friend std::ostream& operator<< (
-        std::ostream& out,
-        const target_rect& item
-        )
-    {
-        out << "x=" << item.x;
-        out << ", y=" << item.y;
-        out << ", h=" << item.h;
-        out << ", w=" << item.w << std::endl;
-        return out;
-    }
-
-private:
-
-};
 
 // ----------------------------------------------------------------------------
 /** @brief Multispectral Tracker Class
@@ -262,66 +167,132 @@ public:
             tracker = cv::TrackerKCF::create();
             break;
         }
-    }
+    }   // end of create
         
     // ----------------------------------------------------------------------------
     bool init(cv::Mat &img, target_rect &roi)
     {
         cv::Rect2d r(roi.x, roi.y, roi.w, roi.h);
         tracking = tracker->init(img, r);
-        roi = target_rect((int32_t)r.x, (int32_t)r.y, (int32_t)r.width, (int32_t)r.height);
+
+        roi = target_rect((int32_t)std::floor(r.x + 0.5), (int32_t)std::floor(r.y + 0.5), (int32_t)std::floor(r.width + 0.5), (int32_t)std::floor(r.height + 0.5));
+
         return tracking;
+
     }   // end of init
 
-    bool init(uint8_t* d, int32_t h, int32_t w, int64_t* rx, int64_t* ry, int64_t* rw, int64_t* rh)
+
+    bool init(uint8_t* d, int32_t h, int32_t w, int32_t c, target_rect& roi)
     {
-        cv::Rect2d r((double)(*rx), (double)(*ry), (double)(*rw), (double)(*rh));
+        cv::Mat img;
+        cv::Rect2d r(roi.x, roi.y, roi.w, roi.h);
 
-        cv::Mat img = cv::Mat(h, w, CV_8UC1, d, w * sizeof(*d));
+        if(c == 1)
+            img = cv::Mat(h, w, CV_8UC1, d, w * sizeof(*d));
+        else if(c == 3)
+            img = cv::Mat(h, w, CV_8UC3, d, w * c* sizeof(*d));
 
-        bool tracking = tracker->init(img, r);
+        tracking = tracker->init(img, r);
 
-        *rx = (int64_t)std::floor(r.x + 0.5);
-        *ry = (int64_t)std::floor(r.y + 0.5);
-        *rw = (int64_t)std::floor(r.width + 0.5);
-        *rh = (int64_t)std::floor(r.height + 0.5);
+        roi.x = (int32_t)std::floor(r.x + 0.5);
+        roi.y = (int32_t)std::floor(r.y + 0.5);
+        roi.w = (int32_t)std::floor(r.width + 0.5);
+        roi.h = (int32_t)std::floor(r.height + 0.5);
 
         return tracking;
+
+    }   // end of init
+
+
+    bool init(uint8_t* d, int32_t h, int32_t w, int32_t c, int32_t* rx, int32_t* ry, int32_t* rw, int32_t* rh)
+    {
+        cv::Mat img;
+        cv::Rect2d r((double)(*rx), (double)(*ry), (double)(*rw), (double)(*rh));
+
+        if (c == 1)
+            img = cv::Mat(h, w, CV_8UC1, d, w * sizeof(*d));
+        else if (c == 3)
+            img = cv::Mat(h, w, CV_8UC3, d, w * c * sizeof(*d));
+
+        tracking = tracker->init(img, r);
+
+        *rx = (int32_t)std::floor(r.x + 0.5);
+        *ry = (int32_t)std::floor(r.y + 0.5);
+        *rw = (int32_t)std::floor(r.width + 0.5);
+        *rh = (int32_t)std::floor(r.height + 0.5);
+
+        return tracking;
+
     }   // end of init
 
     // ----------------------------------------------------------------------------
     bool update(cv::Mat& img, target_rect& roi)
     {
         cv::Rect2d r(roi.x, roi.y, roi.w, roi.h);
-        bool tracking = tracker->update(img, r);
-        roi = target_rect((int32_t)r.x, (int32_t)r.y, (int32_t)r.width, (int32_t)r.height);
+        tracking = tracker->update(img, r);
+
+        target_rect new_tgt = target_rect((int32_t)std::floor(r.x + 0.5), (int32_t)std::floor(r.y + 0.5), (int32_t)std::floor(r.width + 0.5), (int32_t)std::floor(r.height + 0.5));
+
+        if (roi.get_iou(new_tgt) >= min_matching_iou)
+        {
+            roi = new_tgt;
+        }
+
         return tracking;
+
     }   // end of update
 
 
-    bool update(uint8_t *d, int32_t h, int32_t w, int64_t *rx, int64_t *ry, int64_t *rw, int64_t *rh)
+    bool update(uint8_t* d, int32_t h, int32_t w, int32_t c, target_rect& roi)
     {
-        cv::Rect2d r((double)(*rx), (double)(*ry), (double)(*rw), (double)(*rh));
+        cv::Mat img;
+        cv::Rect2d r(roi.x, roi.y, roi.w, roi.h);
 
-        cv::Mat img = cv::Mat(h, w, CV_8UC1, d, w * sizeof(*d));
+        if (c == 1)
+            img = cv::Mat(h, w, CV_8UC1, d, w * sizeof(*d));
+        else if (c == 3)
+            img = cv::Mat(h, w, CV_8UC3, d, w * c * sizeof(*d));
 
-        bool tracking = tracker->update(img, r);
+        tracking = tracker->update(img, r);
+        target_rect new_tgt = target_rect((int32_t)r.x, (int32_t)r.y, (int32_t)r.width, (int32_t)r.height);
 
-        *rx = (int64_t)std::floor(r.x + 0.5);
-        *ry = (int64_t)std::floor(r.y + 0.5);
-        *rw = (int64_t)std::floor(r.width + 0.5);
-        *rh = (int64_t)std::floor(r.height + 0.5);
+        if (roi.get_iou(new_tgt) >= min_matching_iou)
+        {
+            roi = new_tgt;
+        }
 
         return tracking;
+
+    }   // end of update
+
+    bool update(uint8_t *d, int32_t h, int32_t w, int32_t c, int32_t *rx, int32_t *ry, int32_t *rw, int32_t *rh)
+    {
+        cv::Mat img;
+        cv::Rect2d r((double)(*rx), (double)(*ry), (double)(*rw), (double)(*rh));
+
+        if (c == 1)
+            img = cv::Mat(h, w, CV_8UC1, d, w * sizeof(*d));
+        else if (c == 3)
+            img = cv::Mat(h, w, CV_8UC3, d, w * c * sizeof(*d));
+
+        tracking = tracker->update(img, r);
+
+        *rx = (int32_t)std::floor(r.x + 0.5);
+        *ry = (int32_t)std::floor(r.y + 0.5);
+        *rw = (int32_t)std::floor(r.width + 0.5);
+        *rh = (int32_t)std::floor(r.height + 0.5);
+
+        return tracking;
+
     }   // end of update
 
     // ----------------------------------------------------------------------------
     // TODO: lots of stuff to work out on the find object side
     bool find_object(cv::Mat& img)
     {
-        int32_t idx, jdx;
+        //int32_t idx, jdx;
         bool result = true;
-//        std::list<target> tg;
+
         target_rect new_tgt;
         int32_t l, t, b, r;
 
@@ -344,7 +315,7 @@ public:
         }
         else
         {
-            // if t is not empty then run a check for overlaps between t and targets
+            // if target is not empty then run a check for overlaps between target and new_tgt
             // condense any targets that have an iou of min_matching_iou
             if (!target.is_empty())
             {
@@ -480,7 +451,7 @@ public:
         bool result = find_object(img);
 
         return result;
-    }
+    }   // end of find_object
 
 
     // ----------------------------------------------------------------------------
@@ -517,9 +488,14 @@ public:
 
     }   // end of track_object
 
-    void track_object(uint8_t* d, int32_t h, int32_t w)
+    void track_object(uint8_t* d, int32_t h, int32_t w, int32_t c)
     {
-        cv::Mat img = cv::Mat(h, w, CV_8UC1, d, w * sizeof(*d));
+        cv::Mat img;
+
+        if (c == 1)
+            img = cv::Mat(h, w, CV_8UC1, d, w * sizeof(*d));
+        else if (c == 3)
+            img = cv::Mat(h, w, CV_8UC3, d, w * c * sizeof(*d));
 
         track_object(img);
 
