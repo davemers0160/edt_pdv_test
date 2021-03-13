@@ -123,6 +123,7 @@ if(WIN32)
 
 elseif(UNIX)
 
+    add_definitions(-DLIB_EXPORTS)
     # Change these to point to the right location for a particular machine
     #add_definitions("-fPIC")
     set(CMAKE_POSITION_INDEPENDENT_CODE ON)

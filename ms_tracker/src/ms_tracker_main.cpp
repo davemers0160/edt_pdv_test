@@ -33,7 +33,12 @@ int main()
     //std::string ir_image_path = samples::findFile("InfraredImage2.tiff");
     //std::string vis_image_path = samples::findFile("VisibleImage2.tiff");
 
+#if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
     cv::samples::addSamplesDataSearchPath("../../../../data/movie_images");
+#else
+    cv::samples::addSamplesDataSearchPath("../../../../data/movie_images");
+#endif
+
     std::string image_path = cv::samples::findFile("test.tiff");
 
     // these are the images that would normally become from a separate thread
