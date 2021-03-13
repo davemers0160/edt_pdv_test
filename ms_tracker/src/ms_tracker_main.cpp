@@ -9,13 +9,14 @@
 #include <opencv2/imgproc.hpp>
 
 #include "ms_tracker_main.h"
-#include "image_proc.h"
+//#include "image_proc.h"
 //#include "camera.h"
-#include "tracker.h"
+//#include "ms_tracker.h"
 //#include "target.h"
 
 // additional includes for external libraries
 #include "select_roi.h"
+#include "ms_tracker_lib.h"
 
 // simple tracker to test out trackers on a single camera
 
@@ -51,7 +52,8 @@ int main()
 
     // tracker class
     int32_t tracker_type = tracker_types::MIL;
-    ms_tracker tracker(tracker_type);
+    //ms_tracker tracker(tracker_type);
+    create_tracker(tracker_type);
 
     cv::namedWindow(window_name, cv::WINDOW_NORMAL);
 
@@ -77,25 +79,29 @@ int main()
 
         if (!new_target.is_empty())
         {
-            tracker.add_target(new_target);
-            tracker.init(imgs[0], new_target);
+            //tracker.add_target(new_target);
+            //tracker.init(imgs[0], new_target);
         
+            init_tracker(imgs[0].ptr<uint8_t>(0), height, width, 1, &new_target);
+
             std::cout << "target:" << std::endl << new_target << std::endl;        
         }
     }
 
     // ----------------------------------------------------------------------------
-    std::cout << "Press any key to cycle through the images or q to quit the program." << std::endl;
+    std::cout << "Press q to quit the program." << std::endl;
     
     // ----------------------------------------------------------------------------
     for(uint64_t idx=1; idx< imgs.size(); ++idx)
     {
 
         // track
-        if (tracker.tracking)
+        if (tracker_status())
         {
-            tracker.track_object(imgs[idx]);
-            target_rect tgt = tracker.get_target();
+            //tracker.track_object(imgs[idx]);
+            target_rect tgt;    // = tracker.get_target();
+
+            update_tracker(imgs[idx].ptr<uint8_t>(0), height, width, 1, &tgt);
             cv::Rect r(tgt.x, tgt.y, tgt.w, tgt.h);
             cv::rectangle(imgs[idx], r, cv::Scalar(255), 2, 1);           
         }
@@ -132,17 +138,22 @@ int main()
 
             if (!new_target.is_empty())
             {
-                if (!tracker.get_target().is_empty())
+                if (!tracker_status())
                 {
-                    tracker = ms_tracker(tracker_type);
-                    tracker.init(imgs[idx], new_target);
+                    //tracker = ms_tracker(tracker_type);
+                    //tracker.init(imgs[idx], new_target);
+
+                    create_tracker(tracker_type);
+                    init_tracker(imgs[idx].ptr<uint8_t>(0), height, width, 1, &new_target);
                 }
                 else
                 { 
-                    tracker.init(imgs[idx], new_target);
+                    //tracker.init(imgs[idx], new_target);
+                    init_tracker(imgs[idx].ptr<uint8_t>(0), height, width, 1, &new_target);
+
                 }
 
-                tracker.add_target(new_target);
+                //tracker.add_target(new_target);
 
                 std::cout << "target:" << std::endl << new_target << std::endl;
             }
