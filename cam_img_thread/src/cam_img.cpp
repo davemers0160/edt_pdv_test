@@ -25,6 +25,11 @@
 // Project Includes
 #include "cam_img.h"
 
+// additional includes for external libraries
+#include "select_roi.h"
+#include "ms_tracker_lib.h"
+
+
 // OpenCV Includes
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
@@ -39,6 +44,9 @@ int32_t result = 0;
 std::string bit_directory;
 std::string cfg_file;
 
+// opencv globals
+cv::Mat frame;
+
 // EDT PDV specific variable
 int32_t edt_unit;
 int32_t edt_channel;
@@ -48,6 +56,19 @@ int32_t timeouts = 0;
 int32_t last_timeouts = 0;
 bool recovering_timeout = false;
 uint8_t* image_p;
+
+// tracker specific variables
+int32_t tracker_type = tracker_types::MIL;
+target_rect target;
+
+// ----------------------------------------------------------------------------
+template<typename T>
+std::string num2str(T val, std::string fmt)
+{
+    char in_string[64];
+    sprintf(in_string, fmt.c_str(), val);
+    return std::string(in_string);
+}   // end of num2str  
 
 // ----------------------------------------------------------------------------
 void print_usage(void)
@@ -167,7 +188,8 @@ void init()
 
     std::cout << std::endl << "Camera Initialization Complete!" << std::endl;
 
-
+    // begin the init of the tracker
+    create_tracker(tracker_type);
 
 
 }   // end of init
@@ -181,6 +203,18 @@ void update()
     // loop). Processing (saving to a file in this case) can then occur in parallel with 
     // the next acquisition
     image_p = pdv_wait_image(pdv_p);
+
+    frame = cv::Mat(edt_height, edt_width, CV_16UC1, image_p);
+
+    cv::normalize(frame, frame, 0, 255, cv::NORM_MINMAX, CV_8UC1);
+
+    // check to see if we're tracking
+    if (tracker_status())
+    {
+        update_tracker(frame.ptr<uint8_t>(0), edt_height, edt_width, 1, &target);
+        //cv::Rect r(tgt.x, tgt.y, tgt.w, tgt.h);
+        //cv::rectangle(imgs[idx], r, cv::Scalar(255), 2, 1);
+    }
 
     pdv_start_image(pdv_p);
 
@@ -236,7 +270,7 @@ int main(int argc, char** argv)
     // opencv variables to display the video feed
     std::string window_name = "Video Feed";
     cv::namedWindow(window_name, cv::WINDOW_AUTOSIZE);
-    cv::Mat frame;
+    //cv::Mat frame;
     char key = 0;
     //bool record = false;
     //std::vector<cv::Mat> multiframes(300);
@@ -292,15 +326,42 @@ int main(int argc, char** argv)
 
             update();
 
-            frame = cv::Mat(edt_height, edt_width, CV_16UC1, image_p);
+            //frame = cv::Mat(edt_height, edt_width, CV_16UC1, image_p);
 
-            cv::normalize(frame, frame, 0, 255, cv::NORM_MINMAX, CV_8UC1);
+            //cv::normalize(frame, frame, 0, 255, cv::NORM_MINMAX, CV_8UC1);
 
             cv::imshow(window_name, frame);
 
             key = cv::waitKey(1);
 
+            if (key == 't')
+            {
+                int rx = 0, ry = 0, rw = 0, rh = 0;
 
+                // get a manual detect from the image
+                select_roi(frame.ptr<uint8_t>(0), edt_width, edt_height, 1, &rx, &ry, &rw, &rh);
+                target = target_rect(rx, ry, rw, rh, num2str(time(0), "%08x"));
+
+                if (!target.is_empty())
+                {
+                    if (!tracker_status())
+                    {
+                        create_tracker(tracker_type);
+                        //init_tracker(frame.ptr<uint8_t>(0), edt_height, edt_width, 1, &target);
+                    }
+                    //else
+                    //{
+                    //    //tracker.init(imgs[idx], new_target);
+
+                    //}
+
+                    init_tracker(frame.ptr<uint8_t>(0), edt_height, edt_width, 1, &target);
+
+                    //tracker.add_target(new_target);
+
+                    std::cout << "target:" << std::endl << target << std::endl;
+                }
+            }
         }   // end of while
 
         cv::destroyAllWindows();

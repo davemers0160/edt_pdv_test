@@ -54,6 +54,18 @@ if(EDTPDV_FOUND)
     endif()
 endif()
 
+
+# add a bunch of other libraries
+set(project_includes ${project_includes} "${PR_ROOT}/../opencv_helper/select_roi_lib/include")
+if(WIN32)
+    set(project_libs ${project_libs} "${PR_ROOT}/../opencv_helper/select_roi_lib/build/Release/select_roi.lib")
+    set(project_libs ${project_libs} "${PR_ROOT}/ms_tracker_lib/build/Release/ms_tracker.lib")
+else()
+    set(project_libs ${project_libs} "${PR_ROOT}/../opencv_helper/select_roi_lib/build/libselect_roi.so")
+    set(project_libs ${project_libs} "${PR_ROOT}/ms_tracker_lib/build/libms_tracker.so")
+endif()
+
+
 # look for opencv
 message(STATUS "--------------------------------------------------------------------------------")
 message(STATUS "Looking for OpenCV installation...")

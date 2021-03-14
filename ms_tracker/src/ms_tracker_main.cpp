@@ -138,7 +138,7 @@ int main()
             //cv::Rect roi = cv::selectROI(window_name, imgs[idx]);
             //new_target = target(roi.x, roi.y, roi.width, roi.height, num2str(time(0), "%08x"));
             std::string win_name = "Select";
-            select_roi((char*)win_name.c_str(), imgs[idx].ptr<uint8_t>(0), width, height, 1, &rx, &ry, &rw, &rh);
+            select_roi(imgs[idx].ptr<uint8_t>(0), width, height, 1, &rx, &ry, &rw, &rh);
             new_target = target_rect(rx, ry, rw, rh, num2str(time(0), "%08x"));
 
             if (!new_target.is_empty())
