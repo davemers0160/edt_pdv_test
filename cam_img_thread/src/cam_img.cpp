@@ -55,7 +55,7 @@ PdvDev* pdv_p;
 int32_t timeouts = 0;
 int32_t last_timeouts = 0;
 bool recovering_timeout = false;
-uint8_t* image_p;
+uint16_t* image_p;
 
 // tracker specific variables
 int32_t tracker_type = tracker_types::MIL;
@@ -202,7 +202,7 @@ void update()
     // get the image and immediately start the next one (if not the last time through the 
     // loop). Processing (saving to a file in this case) can then occur in parallel with 
     // the next acquisition
-    image_p = pdv_wait_image(pdv_p);
+    image_p = (uint16_t*)pdv_wait_image(pdv_p);
 
     frame = cv::Mat(edt_height, edt_width, CV_16UC1, image_p);
 
@@ -212,8 +212,8 @@ void update()
     if (tracker_status())
     {
         update_tracker(frame.ptr<uint8_t>(0), edt_height, edt_width, 1, &target);
-        //cv::Rect r(tgt.x, tgt.y, tgt.w, tgt.h);
-        //cv::rectangle(imgs[idx], r, cv::Scalar(255), 2, 1);
+        cv::Rect r(target.x, target.y, target.w, target.h);
+        cv::rectangle(frame, r, cv::Scalar(255), 2, 1);
     }
 
     pdv_start_image(pdv_p);
@@ -269,7 +269,7 @@ int main(int argc, char** argv)
 
     // opencv variables to display the video feed
     std::string window_name = "Video Feed";
-    cv::namedWindow(window_name, cv::WINDOW_AUTOSIZE);
+    cv::namedWindow(window_name, cv::WINDOW_NORMAL);
     //cv::Mat frame;
     char key = 0;
     //bool record = false;
@@ -344,11 +344,13 @@ int main(int argc, char** argv)
 
                 if (!target.is_empty())
                 {
-                    if (!tracker_status())
-                    {
+                    std::cout << "target.is_empty(): " << target.is_empty() << std::endl;
+                    //if (!tracker_status())
+                    //{
+                        std::cout << "tracker_status(): " << tracker_status() << std::endl;
                         create_tracker(tracker_type);
                         //init_tracker(frame.ptr<uint8_t>(0), edt_height, edt_width, 1, &target);
-                    }
+                    //}
                     //else
                     //{
                     //    //tracker.init(imgs[idx], new_target);
@@ -360,6 +362,10 @@ int main(int argc, char** argv)
                     //tracker.add_target(new_target);
 
                     std::cout << "target:" << std::endl << target << std::endl;
+                }
+                else
+                {
+                    std::cout << "other: " << target.is_empty() << std::endl;
                 }
             }
         }   // end of while
