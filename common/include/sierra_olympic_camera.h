@@ -46,7 +46,7 @@ namespace SO
     /**
     System Commands
 
-    These are the command IDs to interact with the camera
+    These are the system command IDs to interact with the camera.  These apply to the Sightline board
     */
     enum system_command {
 
@@ -1116,6 +1116,57 @@ namespace SO
         }	// end of init_camera
 
         //-----------------------------------------------------------------------------
+        /**
+        @brief Discover SLA Board.
+
+        This function sends out a UDP broadcast message to determine what devices are attached and what those
+        ip addresses are.
+
+        @return ip address of the discovered SLA boards.
+        */
+        uint32_t discover(void)
+        {
+            uint32_t ip_address = 0;
+            std::string sl_discover = "SLDISCOVER";
+            std::vector<uint8_t> rx_data;
+            std::string error_msg;
+
+            udp_info udp_discover("255.255.255.255", 51000, 51000);
+            int32_t result = init_udp_socket(udp_discover, error_msg);
+
+            std::vector<uint8_t> sld(sl_discover.begin(), sl_discover.end());
+
+            result = send_udp_data(udp_discover, sld);
+            result = receive_udp_data(udp_discover, rx_data);
+
+            uint32_t ID = read4(rx_data.data());
+            uint32_t length = read4(rx_data.data() + 4);
+            uint16_t minor = read2(rx_data.data() + 4);
+            uint16_t major = read2(rx_data.data() + 2);
+            uint16_t type = read2(rx_data.data() + 2);
+            uint16_t hw_type = read2(rx_data.data() + 2);
+            uint32_t mac = read4(rx_data.data() + 2);
+            ip_address = read4(rx_data.data() + 4);
+            uint32_t net_mask = read4(rx_data.data() + 4);
+            uint16_t port = read2(rx_data.data() + 38);
+
+            close_connection(udp_discover.udp_sock, error_msg);
+            return ip_address;
+        }
+
+        //-----------------------------------------------------------------------------
+        /**
+        @brief Set the network parameters on the SLA board.
+
+        This function builds a fip protocol packet to set the network parameters for the SLA board.
+
+        @param[in] mode : the ip assignement mode: 0 = Use DHCP, 1 = Use specified Static IP address
+        @param[in] ip_address : ip address to set teh SLA board to; use inet_addr to convert string address to 32-bits
+        @param[in] gateway : ip gateway
+        @param[in] subnet : ip subnet; default = 255.255.255.0
+
+        @note No return data is expected.
+        */
         void set_network_params(uint8_t mode, uint32_t ip_address, uint32_t gateway, uint32_t subnet = 0xFFFFFF00)
         {
             fip_protocol fp = fip_protocol(SET_NETWORK_PARAMS, { 0x01 });
@@ -1142,7 +1193,7 @@ namespace SO
         @param[in] port : port of the receiving device
         @return fip_protocol that contains the structure to set the ethernet display parameter.
 
-        @note No return data is expected.
+        @note Return data will be a fip_protocol packet that contains the Ethernet display parameters.
 
         @sa fip_protocol
         */
