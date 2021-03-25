@@ -137,7 +137,7 @@ int32_t bind_udp_server(udp_info &info, std::string &error_msg)
 		return -1;
 	}
 
-	int recieve_buffer_size = 1024 * 1024;  // see MAX_READ_BUFFER_SIZE - jsarao
+	int recieve_buffer_size = 1024 * 1024;  // MAX_READ_BUFFER_SIZE 
 	unsigned long reuse_address = 1;
 	setsockopt(info.udp_sock, SOL_SOCKET, SO_RCVBUF, (char*)&recieve_buffer_size, sizeof(recieve_buffer_size));
 	setsockopt(info.udp_sock, SOL_SOCKET, SO_REUSEADDR, (char*)&reuse_address, sizeof(reuse_address));
@@ -192,15 +192,24 @@ int32_t send_udp_data(udp_info &info, std::vector<uint8_t> data)
 	return result;
 }
 
+int32_t send_udp_data(udp_info& info, std::string data)
+{
+	int32_t result = 0;
+
+	result = sendto(info.udp_sock, data.c_str(), (int)data.length(), 0, (sockaddr*)&info.write_addr_obj, sizeof(struct sockaddr_in));
+
+	return result;
+}
+
 // ----------------------------------------------------------------------------
-int32_t receive_udp_data(udp_info& info, std::vector<uint8_t>& data)
+int32_t receive_udp_data(udp_info& info, std::vector<uint8_t>& data, int32_t length=256)
 {
 	int32_t result;
 	int32_t error = 10060L;		// WIN32 -> WSAETIMEDOUT
 	int32_t retry_count = 1;
 	int test = 0;
 
-	std::vector<uint8_t> d1(256);
+	std::vector<uint8_t> d1(length);
 
 	data.clear();
 	
@@ -210,7 +219,7 @@ int32_t receive_udp_data(udp_info& info, std::vector<uint8_t>& data)
 	
 	// receive up to 256 bytes
 	do {
-		result = recvfrom(info.udp_sock, (char*)d1.data(), 256, 0, (sockaddr*)&info.read_addr_obj, &addr_length);
+		result = recvfrom(info.udp_sock, (char*)d1.data(), length, 0, (sockaddr*)&info.read_addr_obj, &addr_length);
 		if (result == -1)
 		{
 
@@ -227,17 +236,17 @@ int32_t receive_udp_data(udp_info& info, std::vector<uint8_t>& data)
 
 	uint32_t addr_length = 0;
 	
-	// receive up to 256 bytes
+	// receive up to length number of bytes
 	do {
-		result = recvfrom(info.udp_sock, (char*)d1.data(), 256, 0, (sockaddr*)&info.read_addr_obj, &addr_length);
+		result = recvfrom(info.udp_sock, (char*)d1.data(), length, 0, (sockaddr*)&info.read_addr_obj, &addr_length);
 		if (result == -1)
 		{
 		    std::cout << "recvfrom error: " << strerror(errno) << std::endl;
 		}
 
 	} while (result <= 0 && (--retry_count));
-#endif
 
+#endif
 
 	if (result > 0)
 	{
@@ -247,6 +256,79 @@ int32_t receive_udp_data(udp_info& info, std::vector<uint8_t>& data)
 
 	return result;
 }	// end of receive_udp_data
+
+
+int32_t udp_broadcast(std::string broadcast_address, 
+	uint16_t send_to_port, 
+	std::string broadcast_msg,
+	std::vector<uint8_t>& received_data,
+	std::string error_msg, 
+	int32_t length = 1024
+)
+{
+
+	int32_t result = 0;
+	error_msg = "";
+	int32_t broadcast = 1;
+	udp_info broadcast_info;
+
+#if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
+	WSADATA wsaData;
+
+	// Initialize Winsock version 2.2
+	result = WSAStartup(MAKEWORD(2, 2), &wsaData);
+	if (result != 0)
+	{
+		error_msg = "Winsock startup failed. Error: " + std::to_string(result);
+		return WIN_START_ERR;
+	}
+#endif
+
+	//SOCKET sock;
+	//sock = socket(AF_INET, SOCK_DGRAM, 0);
+
+	broadcast_info.udp_sock = socket(AF_INET, SOCK_DGRAM, 0);
+
+	result = setsockopt(broadcast_info.udp_sock, SOL_SOCKET, SO_BROADCAST, (char*)&broadcast, sizeof(broadcast));
+
+	if (result < 0)
+	{
+		error_msg = "Error in setting Broadcast option.";
+		close_connection(broadcast_info.udp_sock, error_msg);
+		return SOCKET_CREATION_ERR;
+	}
+
+	//struct sockaddr_in read_addr;
+	//struct sockaddr_in write_addr;
+
+	//int len = sizeof(struct sockaddr_in);
+
+	//char sendMSG[] = "Broadcast message from SLAVE TAG";
+
+	//char recvbuff[50] = "";
+
+	//int recvbufflen = 50;
+
+	// set up the write object
+	broadcast_info.write_addr_obj.sin_family = AF_INET;
+	broadcast_info.write_addr_obj.sin_port = htons(send_to_port);
+	//broadcast_info.write_addr_obj.sin_addr.s_addr  = INADDR_BROADCAST; // this is equiv to 255.255.255.255
+	broadcast_info.write_addr_obj.sin_addr.s_addr = inet_addr(broadcast_address.c_str());
+
+	// set up the reader object
+	broadcast_info.read_addr_obj.sin_family = AF_INET;
+	broadcast_info.read_addr_obj.sin_port = htons(send_to_port);
+	broadcast_info.read_addr_obj.sin_addr.s_addr = INADDR_ANY;
+
+	result = send_udp_data(broadcast_info, broadcast_msg);
+
+	result = receive_udp_data(broadcast_info, received_data, length);
+
+	result = close_connection(broadcast_info.udp_sock, error_msg);
+
+	return result;
+
+}	// end of udp_broadcast
 
 
 #endif  // _UDP_NETWORK_FUNCTIONS_H
