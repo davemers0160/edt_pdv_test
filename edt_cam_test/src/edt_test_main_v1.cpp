@@ -149,6 +149,10 @@ int main(int argc, char** argv)
     std::cout << "host IP address: " << host_ip_address << std::endl;
     std::cout << "------------------------------------------------------------------" << std::endl << std::endl;
 
+    // try to do a discovery before connecting to the camera and initializing
+    uint32_t ip_32 = vinden.discover();
+
+
     try
     {
         // initialize the EDT device
@@ -194,6 +198,8 @@ int main(int argc, char** argv)
         pdv_multibuf(pdv_p, fifo_buffers);
         //printf(" %d image%s from '%s'\nwidth %d height %d depth %d\n", loops, loops == 1 ? "" : "s", edt_cameratype, edt_width, edt_height, edt_depth);
 
+        // try to do a discovery before connecting to the camera and initializing
+        //uint32_t ip_32 = vinden.discover();
 
         result = vinden.init_camera(camera_ip_address, error_msg);
         

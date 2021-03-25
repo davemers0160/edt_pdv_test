@@ -1124,20 +1124,33 @@ namespace SO
 
         @return ip address of the discovered SLA boards.
         */
+        //uint32_t discover(std::string host_ip_address, uint16_t read_port)
         uint32_t discover(void)
         {
             uint32_t ip_address = 0;
             std::string sl_discover = "SLDISCOVER";
             std::vector<uint8_t> rx_data;
             std::string error_msg;
+            int32_t discover_len = 104;
 
-            udp_info udp_discover("255.255.255.255", 51000, 51000);
-            int32_t result = init_udp_socket(udp_discover, error_msg);
+            std::string broadcast_address = "255.255.255.255";
 
-            std::vector<uint8_t> sld(sl_discover.begin(), sl_discover.end());
+            //udp_info udp_discover("255.255.255.255", 51000, read_port);
+            
+            //int32_t result = init_udp_socket(udp_discover, error_msg);
 
-            result = send_udp_data(udp_discover, sld);
-            result = receive_udp_data(udp_discover, rx_data);
+            //std::vector<uint8_t> sld(sl_discover.begin(), sl_discover.end());
+
+            //result = send_udp_data(udp_discover, sld);
+            //result = receive_udp_data(udp_discover, rx_data);
+
+            int32_t result = udp_broadcast(broadcast_address, 51000, sl_discover, rx_data, error_msg, discover_len);
+
+            if (result != 0)
+            {
+                std::cout << error_msg << std::endl;
+                return -1;
+            }
 
             uint32_t ID = read4(rx_data.data());
             uint32_t length = read4(rx_data.data() + 4);
@@ -1150,7 +1163,7 @@ namespace SO
             uint32_t net_mask = read4(rx_data.data() + 4);
             uint16_t port = read2(rx_data.data() + 38);
 
-            close_connection(udp_discover.udp_sock, error_msg);
+            //close_connection(udp_discover.udp_sock, error_msg);
             return ip_address;
         }
 
