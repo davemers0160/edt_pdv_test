@@ -148,6 +148,24 @@ namespace SO
     const uint16_t STREAM_ON = 1;
     const uint16_t STREAM_OFF = 256;
 
+    const uint32_t SL_MAGIC_NUMBER = 0x51acd00d;
+
+    typedef struct discover_info {
+        uint32_t magic;             /**< Magic identifier number */
+        uint32_t length;            /**< Discover message length */
+        uint16_t minor_version;     /**< Discover protocol minor version */
+        uint16_t major_version;     /**< Discover protocol major version */
+        uint16_t type;              /**< Services provided */  
+        uint16_t board_type;        /**< Board type, one of SL_BOARD_TYPE (since v0.2) */
+        char mac_address[20];       /**< MAC address of sender */
+        char ip_address[16];        /**< IP address of sender */
+        char netmask[16];           /**< netmask assocated with ipaddr */
+        char name[32];              /**< Human Readable name of sender */
+        uint16_t videoPort;         /**< Port number where images are sent */
+        uint16_t comsPort;          /**< Input command port number (new in 2.17, assume 14001 if not present) */
+    } discover_info;
+
+
     //-----------------------------------------------------------------------------
     /** @brief Sierra Olympic Lens Class
 
@@ -1125,46 +1143,72 @@ namespace SO
         @return ip address of the discovered SLA boards.
         */
         //uint32_t discover(std::string host_ip_address, uint16_t read_port)
-        uint32_t discover(void)
+        uint32_t discover(std::string host_ip_address,
+            std::string &device_ip_address,
+            uint32_t recv_timeout_ms = 2000,
+            uint32_t send_timeout_ms = 1000
+        )
         {
-            uint32_t ip_address = 0;
-            std::string sl_discover = "SLDISCOVER";
-            std::vector<uint8_t> rx_data;
+            int32_t result = 0;
             std::string error_msg;
+            uint16_t broadcast_port = 51000;
             int32_t discover_len = 104;
+            int32_t num_found = 0;
 
+            discover_info disc_info;
+            udp_info info;
+
+            bool valid_data = false;
+
+            std::string broadcast_msg = "SLDISCOVER";
             std::string broadcast_address = "255.255.255.255";
+            //std::string broadcast_address = "192.168.1.255";
 
-            //udp_info udp_discover("255.255.255.255", 51000, read_port);
-            
-            //int32_t result = init_udp_socket(udp_discover, error_msg);
+            // initialize winsock for windows
+            result = winsock_init(error_msg);
 
-            //std::vector<uint8_t> sld(sl_discover.begin(), sl_discover.end());
-
-            //result = send_udp_data(udp_discover, sld);
-            //result = receive_udp_data(udp_discover, rx_data);
-
-            int32_t result = udp_broadcast(broadcast_address, 51000, sl_discover, rx_data, error_msg, discover_len);
+            // initialize the udp socket for broadcast
+            result = init_udp_broadcast(info, host_ip_address, broadcast_address, broadcast_port, error_msg, recv_timeout_ms, send_timeout_ms);
 
             if (result != 0)
+                return result;
+
+            // send the broadcast message
+            result = sendto(info.udp_sock, (char*)broadcast_msg.c_str(), (int32_t)broadcast_msg.length(), 0, (struct sockaddr*)&info.read_addr_obj, sizeof(struct sockaddr_in));
+            if (result != broadcast_msg.length())
             {
-                std::cout << error_msg << std::endl;
+                error_msg = "Error sending data: expected sent bytes = " + std::to_string(broadcast_msg.length()) + ", actual bytes sent = " + std::to_string(result);
                 return -1;
             }
 
-            uint32_t ID = read4(rx_data.data());
-            uint32_t length = read4(rx_data.data() + 4);
-            uint16_t minor = read2(rx_data.data() + 4);
-            uint16_t major = read2(rx_data.data() + 2);
-            uint16_t type = read2(rx_data.data() + 2);
-            uint16_t hw_type = read2(rx_data.data() + 2);
-            uint32_t mac = read4(rx_data.data() + 2);
-            ip_address = read4(rx_data.data() + 4);
-            uint32_t net_mask = read4(rx_data.data() + 4);
-            uint16_t port = read2(rx_data.data() + 38);
+            // wait for a return message
+            while (valid_data == false)
+            {
+                memset(&disc_info, 0, sizeof(disc_info));
+                result = receive_broadcast_response(info.udp_sock, info.read_addr_obj, (char*)&disc_info, sizeof(disc_info));
 
-            //close_connection(udp_discover.udp_sock, error_msg);
-            return ip_address;
+                // Check if this is a valid info return
+                if ((result == sizeof(disc_info)) & (disc_info.magic == SL_MAGIC_NUMBER))
+                {
+                    valid_data = true;
+                }
+            }
+
+            //result = SLADiscover(host_ip_address, broadcast_address, 51000, sl_discover);
+            // udp_broadcast(host_ip_address, broadcast_address, 51000, sl_discover, rx_data, error_msg, discover_len);
+
+
+            //if (result != 0)
+            //{
+            //    std::cout << error_msg << std::endl;
+            //    return -1;
+            //}
+
+            device_ip_address = disc_info.ip_address;
+
+            result = close_connection(info.udp_sock, error_msg);
+
+            return 0;
         }
 
         //-----------------------------------------------------------------------------

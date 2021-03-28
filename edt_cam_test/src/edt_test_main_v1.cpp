@@ -150,7 +150,7 @@ int main(int argc, char** argv)
     std::cout << "------------------------------------------------------------------" << std::endl << std::endl;
 
     // try to do a discovery before connecting to the camera and initializing
-    uint32_t ip_32 = vinden.discover();
+    uint32_t ip_32 = vinden.discover(host_ip_address, camera_ip_address);
 
 
     try

@@ -81,6 +81,26 @@ enum socket_errors {
 };
 
 // ----------------------------------------------------------------------------
+int32_t winsock_init(std::string &error_msg)
+{
+	int32_t result = 0;
+
+#if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
+	WSADATA wsaData;
+
+	// Initialize Winsock version 2.2
+	result = WSAStartup(MAKEWORD(2, 2), &wsaData);
+	if (result != 0)
+	{
+		error_msg = "Winsock startup failed. Error: " + std::to_string(result);
+		return WIN_START_ERR;
+	}
+#endif
+
+	return result;
+}	// end of winsock_init
+
+// ----------------------------------------------------------------------------
 int32_t close_connection(SOCKET& s, std::string& error_msg)
 {
 	int32_t result = 0;
@@ -164,17 +184,18 @@ int32_t init_udp_socket(udp_info &info, std::string& error_msg)
 	int32_t result = 0;
 	error_msg = "";
 
-#if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
-	WSADATA wsaData;
-
-	// Initialize Winsock version 2.2
-	result = WSAStartup(MAKEWORD(2, 2), &wsaData);
-	if (result != 0) 
-	{
-		error_msg = "Winsock startup failed. Error: " + std::to_string(result);
-		return WIN_START_ERR;
-	}
-#endif
+//#if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
+//	WSADATA wsaData;
+//
+//	// Initialize Winsock version 2.2
+//	result = WSAStartup(MAKEWORD(2, 2), &wsaData);
+//	if (result != 0) 
+//	{
+//		error_msg = "Winsock startup failed. Error: " + std::to_string(result);
+//		return WIN_START_ERR;
+//	}
+//#endif
+	result = winsock_init(error_msg);
 
 	result = bind_udp_server(info, error_msg);
 
@@ -183,26 +204,18 @@ int32_t init_udp_socket(udp_info &info, std::string& error_msg)
 
 
 // ----------------------------------------------------------------------------
-int32_t send_udp_data(udp_info &info, std::vector<uint8_t> data)
+inline int32_t send_udp_data(udp_info &info, std::vector<uint8_t> data)
 {
-	int32_t result = 0;
-
-	result = sendto(info.udp_sock, (char *)data.data(), (int)data.size(), 0, (sockaddr*)&info.write_addr_obj, sizeof(struct sockaddr_in));
-
-	return result;
+	return (int32_t)sendto(info.udp_sock, (char *)data.data(), (int)data.size(), 0, (sockaddr*)&info.write_addr_obj, sizeof(struct sockaddr_in));
 }
 
-int32_t send_udp_data(udp_info& info, std::string data)
+inline int32_t send_udp_data(udp_info& info, std::string data)
 {
-	int32_t result = 0;
-
-	result = sendto(info.udp_sock, data.c_str(), (int)data.length(), 0, (sockaddr*)&info.write_addr_obj, sizeof(struct sockaddr_in));
-
-	return result;
+	return (int32_t)sendto(info.udp_sock, data.c_str(), (int)data.length(), 0, (sockaddr*)&info.write_addr_obj, sizeof(struct sockaddr_in));;
 }
 
 // ----------------------------------------------------------------------------
-int32_t receive_udp_data(udp_info& info, std::vector<uint8_t>& data, int32_t length=256)
+int32_t receive_udp_data(SOCKET udp_sock, struct sockaddr_in read_addr_obj, std::vector<uint8_t>& data, int32_t length=256)
 {
 	int32_t result;
 	int32_t error = 10060L;		// WIN32 -> WSAETIMEDOUT
@@ -215,11 +228,11 @@ int32_t receive_udp_data(udp_info& info, std::vector<uint8_t>& data, int32_t len
 	
 #if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
 
-	int32_t addr_length = sizeof(info.read_addr_obj);
+	int32_t addr_length = sizeof(read_addr_obj);
 	
 	// receive up to 256 bytes
 	do {
-		result = recvfrom(info.udp_sock, (char*)d1.data(), length, 0, (sockaddr*)&info.read_addr_obj, &addr_length);
+		result = recvfrom(udp_sock, (char*)d1.data(), length, 0, (sockaddr*)&read_addr_obj, &addr_length);
 		if (result == -1)
 		{
 
@@ -238,7 +251,7 @@ int32_t receive_udp_data(udp_info& info, std::vector<uint8_t>& data, int32_t len
 	
 	// receive up to length number of bytes
 	do {
-		result = recvfrom(info.udp_sock, (char*)d1.data(), length, 0, (sockaddr*)&info.read_addr_obj, &addr_length);
+		result = recvfrom(udp_sock, (char*)d1.data(), length, 0, (sockaddr*)&read_addr_obj, &addr_length);
 		if (result == -1)
 		{
 		    std::cout << "recvfrom error: " << strerror(errno) << std::endl;
@@ -257,78 +270,115 @@ int32_t receive_udp_data(udp_info& info, std::vector<uint8_t>& data, int32_t len
 	return result;
 }	// end of receive_udp_data
 
-
-int32_t udp_broadcast(std::string broadcast_address, 
-	uint16_t send_to_port, 
-	std::string broadcast_msg,
-	std::vector<uint8_t>& received_data,
-	std::string error_msg, 
-	int32_t length = 1024
-)
+// ----------------------------------------------------------------------------
+inline int32_t receive_udp_data(udp_info& info, std::vector<uint8_t>& data, int32_t length = 256)
 {
-
-	int32_t result = 0;
-	error_msg = "";
-	int32_t broadcast = 1;
-	udp_info broadcast_info;
-
-#if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
-	WSADATA wsaData;
-
-	// Initialize Winsock version 2.2
-	result = WSAStartup(MAKEWORD(2, 2), &wsaData);
-	if (result != 0)
-	{
-		error_msg = "Winsock startup failed. Error: " + std::to_string(result);
-		return WIN_START_ERR;
-	}
-#endif
-
-	//SOCKET sock;
-	//sock = socket(AF_INET, SOCK_DGRAM, 0);
-
-	broadcast_info.udp_sock = socket(AF_INET, SOCK_DGRAM, 0);
-
-	result = setsockopt(broadcast_info.udp_sock, SOL_SOCKET, SO_BROADCAST, (char*)&broadcast, sizeof(broadcast));
-
-	if (result < 0)
-	{
-		error_msg = "Error in setting Broadcast option.";
-		close_connection(broadcast_info.udp_sock, error_msg);
-		return SOCKET_CREATION_ERR;
-	}
-
-	//struct sockaddr_in read_addr;
-	//struct sockaddr_in write_addr;
-
-	//int len = sizeof(struct sockaddr_in);
-
-	//char sendMSG[] = "Broadcast message from SLAVE TAG";
-
-	//char recvbuff[50] = "";
-
-	//int recvbufflen = 50;
-
-	// set up the write object
-	broadcast_info.write_addr_obj.sin_family = AF_INET;
-	broadcast_info.write_addr_obj.sin_port = htons(send_to_port);
-	//broadcast_info.write_addr_obj.sin_addr.s_addr  = INADDR_BROADCAST; // this is equiv to 255.255.255.255
-	broadcast_info.write_addr_obj.sin_addr.s_addr = inet_addr(broadcast_address.c_str());
-
-	// set up the reader object
-	broadcast_info.read_addr_obj.sin_family = AF_INET;
-	broadcast_info.read_addr_obj.sin_port = htons(send_to_port);
-	broadcast_info.read_addr_obj.sin_addr.s_addr = INADDR_ANY;
-
-	result = send_udp_data(broadcast_info, broadcast_msg);
-
-	result = receive_udp_data(broadcast_info, received_data, length);
-
-	result = close_connection(broadcast_info.udp_sock, error_msg);
+	int32_t result = receive_udp_data(info.udp_sock, info.read_addr_obj, data, length);
 
 	return result;
 
-}	// end of udp_broadcast
+}	// end of receive_udp_data
 
+// ----------------------------------------------------------------------------
+int32_t init_udp_broadcast(SOCKET &sock,
+	struct sockaddr_in &sock_addr,
+	std::string host_ip_address,
+	std::string broadcast_address,
+	uint16_t broadcast_port,
+	std::string &error_msg,
+	uint32_t recv_timeout_ms = 2000,
+	uint32_t send_timeout_ms = 1000
+)
+{
+	int32_t result = 0;
+	int32_t broadcast = 1;
+
+	// initialize socket for listening and/or sending braodcast messages
+	sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+	if (sock == INVALID_SOCKET)
+	{
+		error_msg = "Error configuring socket.  Socket Invalid";
+		return -1;
+	}
+
+	// initialize the sockaddr_in struct
+	memset(&sock_addr, 0, sizeof(sock_addr));
+	sock_addr.sin_family = AF_INET;
+	sock_addr.sin_port = htons(broadcast_port);
+	sock_addr.sin_addr.s_addr = inet_addr(host_ip_address.c_str());
+
+	// bind the socket
+	bind(sock, (struct sockaddr*)&sock_addr, sizeof(sock_addr));
+
+	// switch over to the broadcast address
+	sock_addr.sin_addr.s_addr = inet_addr(broadcast_address.c_str());
+
+	// set the socket options
+	result = 0;
+	result |= setsockopt(sock, SOL_SOCKET, SO_BROADCAST, (char*)&broadcast, sizeof(broadcast));
+	result |= setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&recv_timeout_ms, sizeof(recv_timeout_ms));
+	result |= setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, (char*)&send_timeout_ms, sizeof(send_timeout_ms));
+	result |= setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char*)&broadcast, sizeof(broadcast));
+
+	if (result != 0)
+	{
+		error_msg = "Error configuring setsockopt: " + std::to_string(result);
+	}
+
+	return result;
+}	// end of init_udp_broadcast
+
+int32_t init_udp_broadcast(udp_info& info,
+	std::string host_ip_address,
+	std::string broadcast_address,
+	uint16_t broadcast_port,
+	std::string& error_msg,
+	uint32_t recv_timeout_ms = 2000,
+	uint32_t send_timeout_ms = 1000
+)
+{
+	return init_udp_broadcast(info.udp_sock, info.read_addr_obj, host_ip_address, broadcast_address, broadcast_port, error_msg, recv_timeout_ms, send_timeout_ms);
+}	// end of init_udp_broadcast
+
+// ----------------------------------------------------------------------------
+int32_t receive_broadcast_response(SOCKET& sock,
+	struct sockaddr_in& sock_addr,
+	char *data,
+	uint32_t length
+	//int32_t &num_found	//std::string& error_msg
+)
+{
+	int32_t result = 0;
+	int32_t num_found = 0;
+
+	fd_set read_fds;
+
+	FD_ZERO(&read_fds);
+	FD_SET(sock, &read_fds);
+
+	struct timeval timeout;
+	timeout.tv_sec = 1;
+	timeout.tv_usec = 0;
+
+	num_found = select(0, &read_fds, 0, 0, &timeout);
+	if (num_found <= 0)
+	{
+		return -1;
+	}
+
+	// got something
+	result = FD_ISSET(sock, &read_fds);
+
+	if (result) 
+	{
+		FD_CLR(sock, &read_fds);
+		result = recvfrom(sock, data, length, 0, 0, 0);
+	}
+
+	return result;
+	
+}	// end of receive_broadcast_response
+
+// ----------------------------------------------------------------------------
 
 #endif  // _UDP_NETWORK_FUNCTIONS_H
