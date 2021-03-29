@@ -87,6 +87,7 @@ int main(int argc, char** argv)
     int32_t read_result, write_result;
     std::string host_ip_address;
     std::vector<uint8_t> rx_data;
+    std::vector<SO::discover_info> disc_info;
 
     // opencv variables to display the video feed
     std::string window_name = "Video Feed";
@@ -150,8 +151,12 @@ int main(int argc, char** argv)
     std::cout << "------------------------------------------------------------------" << std::endl << std::endl;
 
     // try to do a discovery before connecting to the camera and initializing
-    uint32_t ip_32 = vinden.discover(host_ip_address, camera_ip_address);
+    result = vinden.discover(host_ip_address, disc_info);
 
+    for (idx = 0; idx < disc_info.size(); ++idx)
+    {
+        std::cout << disc_info[idx] << std::endl;
+    }
 
     try
     {

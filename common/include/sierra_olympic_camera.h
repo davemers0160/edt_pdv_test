@@ -163,6 +163,25 @@ namespace SO
         char name[32];              /**< Human Readable name of sender */
         uint16_t videoPort;         /**< Port number where images are sent */
         uint16_t comsPort;          /**< Input command port number (new in 2.17, assume 14001 if not present) */
+
+        //-----------------------------------------------------------------------------    
+        inline friend std::ostream& operator<< (
+            std::ostream& out,
+            const discover_info& item
+            )
+        {
+            //out << "Camera:" << std::endl;
+            out << "Discover Protocol: " << (uint32_t)item.major_version << "." << (uint32_t)item.minor_version << std::endl;
+            out << "Board Type:        " << (uint32_t)item.board_type << std::endl;
+            out << "MAC Address:       " << std::string(item.mac_address) << std::endl;
+            out << "IP Address:        " << std::string(item.ip_address) << std::endl;
+            out << "Net Mask:          " << std::string(item.netmask) << std::endl;
+            out << "Video Port:        " << (uint32_t)item.videoPort << std::endl;
+            out << "Comms Port:        " << (uint32_t)item.comsPort << std::endl;
+
+            return out;
+        }
+
     } discover_info;
 
 
@@ -1144,7 +1163,7 @@ namespace SO
         */
         //uint32_t discover(std::string host_ip_address, uint16_t read_port)
         uint32_t discover(std::string host_ip_address,
-            std::string &device_ip_address,
+            std::vector<discover_info> &disc_info,
             uint32_t recv_timeout_ms = 2000,
             uint32_t send_timeout_ms = 1000
         )
@@ -1153,9 +1172,8 @@ namespace SO
             std::string error_msg;
             uint16_t broadcast_port = 51000;
             int32_t discover_len = 104;
-            int32_t num_found = 0;
+            int32_t bytes_received = 0;
 
-            discover_info disc_info;
             udp_info info;
 
             bool valid_data = false;
@@ -1163,6 +1181,8 @@ namespace SO
             std::string broadcast_msg = "SLDISCOVER";
             std::string broadcast_address = "255.255.255.255";
             //std::string broadcast_address = "192.168.1.255";
+
+            disc_info.clear();
 
             // initialize winsock for windows
             result = winsock_init(error_msg);
@@ -1184,13 +1204,38 @@ namespace SO
             // wait for a return message
             while (valid_data == false)
             {
-                memset(&disc_info, 0, sizeof(disc_info));
-                result = receive_broadcast_response(info.udp_sock, info.read_addr_obj, (char*)&disc_info, sizeof(disc_info));
+                discover_info tmp_dsc_info;
+                memset(&tmp_dsc_info, 0, sizeof(tmp_dsc_info));
+                int32_t num_found = receive_broadcast_response(info.udp_sock, info.read_addr_obj, (char*)&tmp_dsc_info, sizeof(tmp_dsc_info), bytes_received);
 
                 // Check if this is a valid info return
-                if ((result == sizeof(disc_info)) & (disc_info.magic == SL_MAGIC_NUMBER))
+                if ((bytes_received == sizeof(tmp_dsc_info)) & (tmp_dsc_info.magic == SL_MAGIC_NUMBER))
                 {
-                    valid_data = true;
+                    // don't include potential duplicates found
+                    bool duplicate = false;
+                    
+                    if (disc_info.size() > 0)
+                    {
+                        for (uint32_t idx = 0; idx < disc_info.size(); ++idx)
+                        {
+
+                            if (strcmp(disc_info[idx].ip_address, tmp_dsc_info.ip_address) == 0)
+                            {
+                                duplicate = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (duplicate == false)
+                    {
+                        disc_info.push_back(tmp_dsc_info);
+                    }
+                }
+
+                if (num_found <= 0)
+                {
+                    break;
                 }
             }
 
@@ -1204,7 +1249,6 @@ namespace SO
             //    return -1;
             //}
 
-            device_ip_address = disc_info.ip_address;
 
             result = close_connection(info.udp_sock, error_msg);
 

@@ -344,8 +344,8 @@ int32_t init_udp_broadcast(udp_info& info,
 int32_t receive_broadcast_response(SOCKET& sock,
 	struct sockaddr_in& sock_addr,
 	char *data,
-	uint32_t length
-	//int32_t &num_found	//std::string& error_msg
+	uint32_t length,
+	int32_t &bytes_received	//std::string& error_msg
 )
 {
 	int32_t result = 0;
@@ -357,7 +357,7 @@ int32_t receive_broadcast_response(SOCKET& sock,
 	FD_SET(sock, &read_fds);
 
 	struct timeval timeout;
-	timeout.tv_sec = 1;
+	timeout.tv_sec = 2;
 	timeout.tv_usec = 0;
 
 	num_found = select(0, &read_fds, 0, 0, &timeout);
@@ -372,10 +372,10 @@ int32_t receive_broadcast_response(SOCKET& sock,
 	if (result) 
 	{
 		FD_CLR(sock, &read_fds);
-		result = recvfrom(sock, data, length, 0, 0, 0);
+		bytes_received = recvfrom(sock, data, length, 0, 0, 0);
 	}
 
-	return result;
+	return num_found;
 	
 }	// end of receive_broadcast_response
 
