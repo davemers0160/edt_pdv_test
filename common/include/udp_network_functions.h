@@ -333,7 +333,7 @@ int32_t init_udp_broadcast(SOCKET &sock,
 	{
 		error_msg = "Error setting SO_REUSEADDR: " + std::string(strerror(errno)) + ". result: " + std::to_string(result) + ".\n";
 	}
-
+/*
 	result |= setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&recv_timeout_ms, sizeof(recv_timeout_ms));
 	if (result != 0)
 	{
@@ -345,7 +345,7 @@ int32_t init_udp_broadcast(SOCKET &sock,
 	{
 		error_msg = "Error setting SO_SNDTIMEO: " + std::string(strerror(errno)) + ". result: " + std::to_string(result) + ".\n ";
 	}
-
+*/
 	return result;
 }	// end of init_udp_broadcast
 
