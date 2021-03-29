@@ -146,6 +146,7 @@ int main(int argc, char** argv)
     // the this machines local IP address
     get_local_ip(host_ip_address, error_msg);
 
+    std::cout << std::endl;
     std::cout << "------------------------------------------------------------------" << std::endl;
     std::cout << "host IP address: " << host_ip_address << std::endl;
     std::cout << "------------------------------------------------------------------" << std::endl << std::endl;
@@ -158,7 +159,7 @@ int main(int argc, char** argv)
         std::cout << disc_info[idx] << std::endl;
     }
 
-    std::cout << "discovery Complete!  Press Enter to continue..." << std::endl;
+    std::cout << "Discovery Complete!  Press Enter to continue..." << std::endl;
     std::cin.ignore();
 
     try

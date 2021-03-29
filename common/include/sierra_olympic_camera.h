@@ -1179,8 +1179,8 @@ namespace SO
             bool valid_data = false;
 
             std::string broadcast_msg = "SLDISCOVER";
-            std::string broadcast_address = "255.255.255.255";
-            //std::string broadcast_address = "192.168.1.255";
+            //std::string broadcast_address = "255.255.255.255";
+            std::string broadcast_address = "192.168.1.255";
 
             disc_info.clear();
 
@@ -1192,7 +1192,7 @@ namespace SO
 
             if (result != 0)
             {
-                std::cout << "error_msg: " << error_msg << std::endl;
+                std::cout << "error_msg: " << std::endl << error_msg << std::endl;
                 return result;
             }
 
@@ -1207,6 +1207,7 @@ namespace SO
             // wait for a return message
             while (valid_data == false)
             {
+
                 discover_info tmp_dsc_info;
                 memset(&tmp_dsc_info, 0, sizeof(tmp_dsc_info));
                 int32_t num_found = receive_broadcast_response(info.udp_sock, info.read_addr_obj, (char*)&tmp_dsc_info, sizeof(tmp_dsc_info), bytes_received, error_msg);
@@ -1238,7 +1239,7 @@ namespace SO
 
                 if (num_found <= 0)
                 {
-                    std::cout << "error_msg: " << error_msg << std::endl;
+                    //std::cout << "error_msg: " << std::endl << error_msg << std::endl;
                     break;
                 }
             }

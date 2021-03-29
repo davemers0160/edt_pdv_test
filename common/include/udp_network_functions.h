@@ -331,21 +331,23 @@ int32_t init_udp_broadcast(SOCKET &sock,
 	result |= setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char*)&broadcast, sizeof(broadcast));
 	if (result != 0)
 	{
-		error_msg = "Error setting SO_REUSEADDR: " + std::string(strerror(errno)) + ". result: " + std::to_string(result) + ".\n";
+		error_msg += "Error setting SO_REUSEADDR: " + std::string(strerror(errno)) + ". result: " + std::to_string(result) + ".\n";
 	}
-/*
+
+#if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
 	result |= setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&recv_timeout_ms, sizeof(recv_timeout_ms));
 	if (result != 0)
 	{
-		error_msg = "Error setting SO_RCVTIMEO: " + std::string(strerror(errno)) + ". result: " + std::to_string(result) + ".\n";
+		error_msg += "Error setting SO_RCVTIMEO: " + std::string(strerror(errno)) + ". result: " + std::to_string(result) + ".\n";
 	}
 
 	result |= setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, (char*)&send_timeout_ms, sizeof(send_timeout_ms));
 	if (result != 0)
 	{
-		error_msg = "Error setting SO_SNDTIMEO: " + std::string(strerror(errno)) + ". result: " + std::to_string(result) + ".\n ";
+		error_msg += "Error setting SO_SNDTIMEO: " + std::string(strerror(errno)) + ". result: " + std::to_string(result) + ".\n ";
 	}
-*/
+#endif
+
 	return result;
 }	// end of init_udp_broadcast
 
@@ -382,10 +384,15 @@ int32_t receive_broadcast_response(SOCKET& sock,
 	timeout.tv_sec = 2;
 	timeout.tv_usec = 0;
 
+#if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
 	num_found = select(0, &read_fds, 0, 0, &timeout);
+#else
+	num_found = select(sock+1, &read_fds, NULL, NULL, &timeout);
+#endif
+
 	if (num_found <= 0)
 	{
-		error_msg = "Error with select: Nothing found.\n";
+		error_msg = "Error with select: Number of connections found: " + std::to_string(num_found) + "\n";
 		return -1;
 	}
 
