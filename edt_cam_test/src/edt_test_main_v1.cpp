@@ -158,6 +158,9 @@ int main(int argc, char** argv)
         std::cout << disc_info[idx] << std::endl;
     }
 
+    std::cout << "discovery Complete!  Press Enter to continue..." << std::endl;
+    std::cin.ignore();
+
     try
     {
         // initialize the EDT device

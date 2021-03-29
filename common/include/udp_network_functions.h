@@ -308,7 +308,14 @@ int32_t init_udp_broadcast(SOCKET &sock,
 	sock_addr.sin_addr.s_addr = inet_addr(host_ip_address.c_str());
 
 	// bind the socket
-	bind(sock, (struct sockaddr*)&sock_addr, sizeof(sock_addr));
+	result = bind(sock, (struct sockaddr*)&sock_addr, sizeof(sock_addr));
+	if (result)
+	{
+		close_connection(sock, error_msg);
+		sock = INVALID_SOCKET;
+		error_msg = "Failed to bind to port " + std::to_string(broadcast_port) + ", result: " + std::to_string(result);
+		return -1;
+	}
 
 	// switch over to the broadcast address
 	sock_addr.sin_addr.s_addr = inet_addr(broadcast_address.c_str());
@@ -316,13 +323,27 @@ int32_t init_udp_broadcast(SOCKET &sock,
 	// set the socket options
 	result = 0;
 	result |= setsockopt(sock, SOL_SOCKET, SO_BROADCAST, (char*)&broadcast, sizeof(broadcast));
-	result |= setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&recv_timeout_ms, sizeof(recv_timeout_ms));
-	result |= setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, (char*)&send_timeout_ms, sizeof(send_timeout_ms));
-	result |= setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char*)&broadcast, sizeof(broadcast));
-
 	if (result != 0)
 	{
-		error_msg = "Error configuring setsockopt: " + std::to_string(result);
+		error_msg += "Error configuring setsockopt(SO_BROADCAST): " + std::to_string(result) + ".  ";
+	}
+
+	result |= setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char*)&broadcast, sizeof(broadcast));
+	if (result != 0)
+	{
+		error_msg = "Error configuring setsockopt(SO_REUSEADDR): " + std::to_string(result) + ".  ";
+	}
+
+	result |= setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&recv_timeout_ms, sizeof(recv_timeout_ms));
+	if (result != 0)
+	{
+		error_msg = "Error configuring setsockopt(SO_RCVTIMEO): " + std::to_string(result) + ".  ";
+	}
+
+	result |= setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, (char*)&send_timeout_ms, sizeof(send_timeout_ms));
+	if (result != 0)
+	{
+		error_msg = "Error configuring setsockopt(SO_SNDTIMEO): " + std::to_string(result) + ".  ";
 	}
 
 	return result;

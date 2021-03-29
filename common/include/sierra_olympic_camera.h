@@ -1191,7 +1191,10 @@ namespace SO
             result = init_udp_broadcast(info, host_ip_address, broadcast_address, broadcast_port, error_msg, recv_timeout_ms, send_timeout_ms);
 
             if (result != 0)
+            {
+                std::cout << "result: " << result << ", error_msg: " << error_msg << std::endl;
                 return result;
+            }
 
             // send the broadcast message
             result = sendto(info.udp_sock, (char*)broadcast_msg.c_str(), (int32_t)broadcast_msg.length(), 0, (struct sockaddr*)&info.read_addr_obj, sizeof(struct sockaddr_in));
