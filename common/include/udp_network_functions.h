@@ -325,25 +325,25 @@ int32_t init_udp_broadcast(SOCKET &sock,
 	result |= setsockopt(sock, SOL_SOCKET, SO_BROADCAST, (char*)&broadcast, sizeof(broadcast));
 	if (result != 0)
 	{
-		error_msg += "Error configuring setsockopt(SO_BROADCAST): " + std::to_string(result) + ".  ";
+		error_msg += "Error setting SO_BROADCAST: " + std::string(strerror(errno)) + ". result: " + std::to_string(result) + ".\n";
 	}
 
 	result |= setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char*)&broadcast, sizeof(broadcast));
 	if (result != 0)
 	{
-		error_msg = "Error configuring setsockopt(SO_REUSEADDR): " + std::to_string(result) + ".  ";
+		error_msg = "Error setting SO_REUSEADDR: " + std::string(strerror(errno)) + ". result: " + std::to_string(result) + ".\n";
 	}
 
 	result |= setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&recv_timeout_ms, sizeof(recv_timeout_ms));
 	if (result != 0)
 	{
-		error_msg = "Error configuring setsockopt(SO_RCVTIMEO): " + std::to_string(result) + ".  ";
+		error_msg = "Error setting SO_RCVTIMEO: " + std::string(strerror(errno)) + ". result: " + std::to_string(result) + ".\n";
 	}
 
 	result |= setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, (char*)&send_timeout_ms, sizeof(send_timeout_ms));
 	if (result != 0)
 	{
-		error_msg = "Error configuring setsockopt(SO_SNDTIMEO): " + std::to_string(result) + ".  ";
+		error_msg = "Error setting SO_SNDTIMEO: " + std::string(strerror(errno)) + ". result: " + std::to_string(result) + ".\n ";
 	}
 
 	return result;
@@ -366,7 +366,8 @@ int32_t receive_broadcast_response(SOCKET& sock,
 	struct sockaddr_in& sock_addr,
 	char *data,
 	uint32_t length,
-	int32_t &bytes_received	//std::string& error_msg
+	int32_t &bytes_received,
+	std::string& error_msg
 )
 {
 	int32_t result = 0;
@@ -384,6 +385,7 @@ int32_t receive_broadcast_response(SOCKET& sock,
 	num_found = select(0, &read_fds, 0, 0, &timeout);
 	if (num_found <= 0)
 	{
+		error_msg = "Error with select: Nothing found.\n";
 		return -1;
 	}
 
@@ -394,6 +396,10 @@ int32_t receive_broadcast_response(SOCKET& sock,
 	{
 		FD_CLR(sock, &read_fds);
 		bytes_received = recvfrom(sock, data, length, 0, 0, 0);
+	}
+	else
+	{
+		error_msg = "Error with FD_ISSET: " + std::to_string(result) + ".\n ";
 	}
 
 	return num_found;

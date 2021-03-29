@@ -1192,7 +1192,7 @@ namespace SO
 
             if (result != 0)
             {
-                std::cout << "result: " << result << ", error_msg: " << error_msg << std::endl;
+                std::cout << "error_msg: " << error_msg << std::endl;
                 return result;
             }
 
@@ -1200,7 +1200,7 @@ namespace SO
             result = sendto(info.udp_sock, (char*)broadcast_msg.c_str(), (int32_t)broadcast_msg.length(), 0, (struct sockaddr*)&info.read_addr_obj, sizeof(struct sockaddr_in));
             if (result != broadcast_msg.length())
             {
-                error_msg = "Error sending data: expected sent bytes = " + std::to_string(broadcast_msg.length()) + ", actual bytes sent = " + std::to_string(result);
+                std::cout << "Error sending data: expected sent bytes = " << std::to_string(broadcast_msg.length()) << ", actual bytes sent = " << std::to_string(result) << std::endl;
                 return -1;
             }
 
@@ -1209,7 +1209,7 @@ namespace SO
             {
                 discover_info tmp_dsc_info;
                 memset(&tmp_dsc_info, 0, sizeof(tmp_dsc_info));
-                int32_t num_found = receive_broadcast_response(info.udp_sock, info.read_addr_obj, (char*)&tmp_dsc_info, sizeof(tmp_dsc_info), bytes_received);
+                int32_t num_found = receive_broadcast_response(info.udp_sock, info.read_addr_obj, (char*)&tmp_dsc_info, sizeof(tmp_dsc_info), bytes_received, error_msg);
 
                 // Check if this is a valid info return
                 if ((bytes_received == sizeof(tmp_dsc_info)) & (tmp_dsc_info.magic == SL_MAGIC_NUMBER))
@@ -1238,25 +1238,15 @@ namespace SO
 
                 if (num_found <= 0)
                 {
+                    std::cout << "error_msg: " << error_msg << std::endl;
                     break;
                 }
             }
 
-            //result = SLADiscover(host_ip_address, broadcast_address, 51000, sl_discover);
-            // udp_broadcast(host_ip_address, broadcast_address, 51000, sl_discover, rx_data, error_msg, discover_len);
-
-
-            //if (result != 0)
-            //{
-            //    std::cout << error_msg << std::endl;
-            //    return -1;
-            //}
-
-
             result = close_connection(info.udp_sock, error_msg);
 
             return 0;
-        }
+        }   // end of discover
 
         //-----------------------------------------------------------------------------
         /**
