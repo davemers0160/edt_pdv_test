@@ -42,24 +42,35 @@ inline uint16_t read2(const uint8_t* ptr)
 namespace SO
 {
 
+    /**
+    Network modes
+    */
+    enum network_modes {
+        DHCP = 0x00,        /**< Use DHCP addressing */
+        STATIC = 0x01       /**< Use static IP address */
+    };
+
     //-----------------------------------------------------------------------------
     /**
     System Commands
 
     These are the system command IDs to interact with the camera.  These apply to the Sightline board
     */
-    enum system_command {
+    enum system_commands {
 
+        RESET_CAM = 0x01,               /**< Reset the SLA camera board */
+
+
+        SET_NETWORK_PARAMS = 0x1C,      /**< Set Network IP Address */
+        SAVE_PARAMS = 0x25              /**< Save Network Parameters */
+
+    };
+
+    enum camera_commands {
         SO_ERROR_RESPONSE = 0x00,       /**< Error responce command ID */
-
         GET_CAMERA_VER = 0x01,          /**< Camera version command ID */
-
         END_CAMERA_CTRL = 0x02,         /**< End camera control command ID */
-
         GET_CAMERA_SN = 0x05,           /**< Camera serial number command ID */
-
-        SET_NETWORK_PARAMS = 0x1C       /**< Set Static Network IP Address */
-
     };
 
     /**
@@ -67,7 +78,7 @@ namespace SO
 
     These are the command IDs to interact with the camera lens
     */
-    enum lens_command {
+    enum lens_commands {
 
         LENS_VERSION = 0x41,       /**< Lens version command ID */
         LENS_READY = 0x42,       /**< Lens ready command ID */
@@ -101,7 +112,7 @@ namespace SO
 
     These are the command IDs to interact with the camera sensor
     */
-    enum sensor_command {
+    enum sensor_commands {
         SENSOR_VERSION = 0x81,       /**< Get sensor version command ID */
 
         FLAT_FIELD_CORR = 0x82,       /**< Perform flat field correction command ID */
@@ -1179,8 +1190,8 @@ namespace SO
             bool valid_data = false;
 
             std::string broadcast_msg = "SLDISCOVER";
-            //std::string broadcast_address = "255.255.255.255";
-            std::string broadcast_address = "192.168.1.255";
+            std::string broadcast_address = "255.255.255.255";
+            //std::string broadcast_address = "192.168.1.255";
 
             disc_info.clear();
 
@@ -1264,7 +1275,7 @@ namespace SO
         */
         void set_network_params(uint8_t mode, uint32_t ip_address, uint32_t gateway, uint32_t subnet = 0xFFFFFF00)
         {
-            fip_protocol fp = fip_protocol(SET_NETWORK_PARAMS, { 0x01 });
+            fip_protocol fp = fip_protocol(SET_NETWORK_PARAMS, { mode });
             fp.add_data(ip_address);        // ip_address
             fp.add_data(subnet);            // subnet
             fp.add_data(gateway);           // gateway
@@ -1275,6 +1286,14 @@ namespace SO
             fp.add_data((uint8_t)0x00);     // hostName.len
 
             int32_t write_result = send_udp_data(udp_camera_info, fp.to_vector());
+
+            // save the params
+            fp = fip_protocol(SAVE_PARAMS);
+            write_result = send_udp_data(udp_camera_info, fp.to_vector());
+
+            // reset the camera board
+            fp = fip_protocol(RESET_CAM, { 2 });
+            write_result = send_udp_data(udp_camera_info, fp.to_vector());
 
         }   // end of set_network_params
 

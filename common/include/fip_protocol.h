@@ -24,7 +24,7 @@ public:
     fip_protocol(uint8_t t_) : type(t_)
     {
         data.clear();
-        length = 3;
+        length = 2;
         checksum = calc_checksum();
     }
 

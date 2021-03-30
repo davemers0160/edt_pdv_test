@@ -92,9 +92,7 @@ int main(int argc, char** argv)
     auto start_time = std::chrono::system_clock::now();
     auto stop_time = std::chrono::system_clock::now();
     auto elapsed_time = std::chrono::duration_cast<d_sec>(stop_time - start_time);
-
-
-    
+        
     // IP based comms
     std::string video_cap_address;
 
@@ -115,6 +113,26 @@ int main(int argc, char** argv)
         return 0;
     }
 
+    //51ac 28 1c 01 c0a80119 ffffff00 c0a80101 36b2 00000100 36b1 36b3 0e 534c41313530305f303930313433c6
+
+    fip_protocol fp = fip_protocol(SO::system_commands::SET_NETWORK_PARAMS, { 1 });
+    fp.add_data((uint32_t)0xc0a80119);        // ip_address
+    fp.add_data((uint32_t)0xffffff00);            // subnet
+    fp.add_data((uint32_t)0xc0a80101);           // gateway
+    fp.add_data((uint16_t)0x36B2);    // c2replyPort
+    fp.add_data((uint32_t)0x00000100);    // reserved
+    fp.add_data((uint16_t)0x36b1);    // listenPort
+    fp.add_data((uint16_t)0x36b3);    // listenPort2
+    fp.add_data((uint8_t)0x00);     // hostName.len
+
+    auto fp0 = fp.to_vector();
+
+    // save the params
+    auto fp1 = fip_protocol(SO::system_commands::SAVE_PARAMS).to_vector();
+
+    // reset the camera board
+    auto fp2 = fip_protocol(SO::system_commands::RESET_CAM, { 2 }).to_vector();
+
     try
     {
     
@@ -128,7 +146,25 @@ int main(int argc, char** argv)
         std::cout << "host IP address: " << host_ip_address << std::endl;
         std::cout << "------------------------------------------------------------------" << std::endl << std::endl;
 
+        // run the discovery code to find the cameras
+        std::vector<SO::discover_info> disc_info;
+        so_cam.discover(host_ip_address, disc_info);
+
+        for (idx = 0; idx < disc_info.size(); ++idx)
+        {
+            std::cout << disc_info[idx] << std::endl;
+        }
+
+        std::cout << "Discovery Complete!  Press Enter to continue..." << std::endl << std::endl;
+
+        // initialize the camera with the supplied ip address
         init();
+
+        // try to set the IP as static
+        std::string static_ip = "192.168.1.25";
+
+        so_cam.set_network_params(SO::network_modes::STATIC, inet_addr(static_ip.c_str()), inet_addr("192.168.1.1"));
+
 
         // load the param gui to control focus and zoom
         load_param_gui(so_cam.udp_camera_info);
