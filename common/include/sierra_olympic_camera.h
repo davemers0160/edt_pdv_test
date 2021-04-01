@@ -1273,28 +1273,43 @@ namespace SO
 
         @note No return data is expected.
         */
-        void set_network_params(uint8_t mode, uint32_t ip_address, uint32_t gateway, uint32_t subnet = 0xFFFFFF00)
+        bool set_network_params(uint8_t mode, 
+            std::string ip_address, 
+            std::string gateway, 
+            std::string subnet = "255.255.255.0",
+            uint16_t c2_port = 14002,
+            uint16_t c2_inbound1 = 14001,
+            uint16_t c2_inbound2 = 14003 
+        )
         {
+            bool status = true;
+
             fip_protocol fp = fip_protocol(SET_NETWORK_PARAMS, { mode });
-            fp.add_data(ip_address);        // ip_address
-            fp.add_data(subnet);            // subnet
-            fp.add_data(gateway);           // gateway
-            fp.add_data((uint16_t)0x00);    // c2replyPort
-            fp.add_data((uint32_t)0x00);    // reserved
-            fp.add_data((uint16_t)0x00);    // listenPort
-            fp.add_data((uint16_t)0x00);    // listenPort2
-            fp.add_data((uint8_t)0x00);     // hostName.len
+            fp.add_data((uint32_t)inet_addr(ip_address.c_str()));       // ip_address
+            fp.add_data((uint32_t)inet_addr(subnet.c_str()));           // subnet
+            fp.add_data((uint32_t)inet_addr(gateway.c_str()));          // gateway
+            fp.add_data((uint16_t)htons(c2_port));                      // c2replyPort
+            fp.add_data((uint16_t)0x00);                                // telemetryReplyPort
+            fp.add_data((uint8_t)0x01);                                 // modes
+            fp.add_data((uint8_t)0x00);                                 // index
+            fp.add_data((uint16_t)htons(c2_inbound1));                  // listenPort1
+            fp.add_data((uint16_t)htons(c2_inbound2));                  // listenPort2
+            fp.add_data((uint8_t)0x00);                                 // hostName.len
 
             int32_t write_result = send_udp_data(udp_camera_info, fp.to_vector());
-
-            // save the params
+            status &= (write_result == fp.to_vector().size()) ? true : false;
+                
+            // save the params: 51,AC,02,25,42
             fp = fip_protocol(SAVE_PARAMS);
             write_result = send_udp_data(udp_camera_info, fp.to_vector());
+            status &= (write_result == fp.to_vector().size()) ? true : false;
 
-            // reset the camera board
+            // reset the camera board:  51,AC,03,01,02,BC
             fp = fip_protocol(RESET_CAM, { 2 });
             write_result = send_udp_data(udp_camera_info, fp.to_vector());
+            status &= (write_result == fp.to_vector().size()) ? true : false;
 
+            return status;
         }   // end of set_network_params
 
         //-----------------------------------------------------------------------------

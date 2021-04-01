@@ -30,8 +30,9 @@
 // ----------------------------------------------------------------------------
 std::string host_ip_address;
 int32_t result = 0;
-uint16_t read_port = 14002;
-uint16_t write_port = 14001;
+uint16_t read_port = 14002;                 // c2replyPort
+uint16_t write_port = 14001;                // listenPort1
+uint16_t c2_inbound2 = 14003;               // listenPort2
 uint16_t video_port = 15004;
 
 // Sierra-Olympic specific variables
@@ -113,31 +114,11 @@ int main(int argc, char** argv)
         return 0;
     }
 
-    //51ac 28 1c 01 c0a80119 ffffff00 c0a80101 36b2 00000100 36b1 36b3 0e 534c41313530305f303930313433c6
-
-    fip_protocol fp = fip_protocol(SO::system_commands::SET_NETWORK_PARAMS, { 1 });
-    fp.add_data((uint32_t)0xc0a80119);        // ip_address
-    fp.add_data((uint32_t)0xffffff00);            // subnet
-    fp.add_data((uint32_t)0xc0a80101);           // gateway
-    fp.add_data((uint16_t)0x36B2);    // c2replyPort
-    fp.add_data((uint32_t)0x00000100);    // reserved
-    fp.add_data((uint16_t)0x36b1);    // listenPort
-    fp.add_data((uint16_t)0x36b3);    // listenPort2
-    fp.add_data((uint8_t)0x00);     // hostName.len
-
-    auto fp0 = fp.to_vector();
-
-    // save the params
-    auto fp1 = fip_protocol(SO::system_commands::SAVE_PARAMS).to_vector();
-
-    // reset the camera board
-    auto fp2 = fip_protocol(SO::system_commands::RESET_CAM, { 2 }).to_vector();
-
     try
     {
     
         camera_ip_address = argv[1];
-        video_cap_address = "udp://" + camera_ip_address + ":" + std::to_string(video_port);
+        //video_cap_address = "udp://" + camera_ip_address + ":" + std::to_string(video_port);
 
         // the this machines local IP address
         get_local_ip(host_ip_address, error_msg);
@@ -159,12 +140,6 @@ int main(int argc, char** argv)
 
         // initialize the camera with the supplied ip address
         init();
-
-        // try to set the IP as static
-        std::string static_ip = "192.168.1.25";
-
-        so_cam.set_network_params(SO::network_modes::STATIC, inet_addr(static_ip.c_str()), inet_addr("192.168.1.1"));
-
 
         // load the param gui to control focus and zoom
         load_param_gui(so_cam.udp_camera_info);
