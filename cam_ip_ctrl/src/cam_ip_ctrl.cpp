@@ -86,6 +86,8 @@ int main(int argc, char** argv)
     uint8_t mode = 0;
     std::string new_ip_address;
     std::string gateway_address;
+
+    SO::network_parameters net_params;
     
     try
     {
@@ -127,6 +129,11 @@ int main(int argc, char** argv)
 
         // initialize the camera with the supplied ip address
         init();
+
+
+        so_cam.get_network_params(net_params);
+
+        std::cout << net_params << std::endl;
 
         // get the mode
         std::cout << "Select which mode to put the camera into (0 - DHCP, 1 - Static IP): ";

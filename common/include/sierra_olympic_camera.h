@@ -60,8 +60,8 @@ namespace SO
 
         RESET_CAM = 0x01,               /**< Reset the SLA camera board */
 
-
-        SET_NETWORK_PARAMS = 0x1C,      /**< Set Network IP Address */
+        SET_NETWORK_PARAMS = 0x1C,      /**< Set Network Parameters */
+        GET_NETWORK_PARAMS = 0x1D,      /**< Get Network Parameters */
         SAVE_PARAMS = 0x25              /**< Save Network Parameters */
 
     };
@@ -195,6 +195,97 @@ namespace SO
 
     } discover_info;
 
+    typedef struct network_parameters {
+        uint8_t mode;
+        std::string ip_address;                    // big endian
+        std::string subnet;                        // big endian
+        std::string gateway;                       // big endian
+        uint16_t c2_reply_port;                 // big endian
+        uint16_t telemetry_port;                // big endian
+        uint8_t modes;
+        uint8_t index;
+        uint16_t telemetry_listen_port1;        // big endian
+        uint16_t telemetry_listen_port2;        // big endian
+        uint8_t length;
+        std::string camera_name;
+
+
+        //-----------------------------------------------------------------------------    
+        network_parameters()
+        {
+            mode = 0;
+            ip_address = "0.0.0.0";
+            subnet = "0.0.0.0";
+            gateway = "0.0.0.0";
+
+            c2_reply_port = 0;
+            telemetry_port = 0;
+
+            modes = 0;
+            index = 0;
+
+            telemetry_listen_port1 = 0;
+            telemetry_listen_port2 = 0;
+
+            length = 0;
+
+            camera_name = "";
+
+        }
+
+        network_parameters(fip_protocol& fp)
+        {
+            mode = fp.data[0];
+            ip_address = std::to_string(fp.data[1]) + "." + std::to_string(fp.data[2]) + "." + std::to_string(fp.data[3]) + "." + std::to_string(fp.data[4]);
+            subnet = std::to_string(fp.data[5]) + "." + std::to_string(fp.data[6]) + "." + std::to_string(fp.data[7]) + "." + std::to_string(fp.data[8]);
+            gateway = std::to_string(fp.data[9]) + "." + std::to_string(fp.data[10]) + "." + std::to_string(fp.data[11]) + "." + std::to_string(fp.data[12]);
+
+            c2_reply_port = (fp.data[13] << 8) | fp.data[14];
+            telemetry_port = (fp.data[15] << 8) | fp.data[16];
+
+            modes = fp.data[17];
+            index = fp.data[18];
+
+            telemetry_listen_port1 = (fp.data[19] << 8) | fp.data[20];
+            telemetry_listen_port2 = (fp.data[21] << 8) | fp.data[22];
+
+            length = fp.data[23];
+
+            char *cn = new char[length+1];
+
+            for (uint32_t idx = 0; idx < length; ++idx)
+            {
+                cn[idx] =  fp.data[24 + idx];
+            }
+            cn[length] = 0;
+            
+            camera_name = std::string(cn);
+
+            delete cn;
+        }
+
+        //-----------------------------------------------------------------------------    
+        inline friend std::ostream& operator<< (
+            std::ostream& out,
+            const network_parameters& item
+            )
+        {
+            out << "Network Parameters:" << std::endl;
+            out << "  Mode:                   " << (uint32_t)item.mode << std::endl;
+            out << "  IP Address:             " << item.ip_address << std::endl;
+            out << "  Subnet:                 " << item.subnet << std::endl;
+            out << "  Gateway:                " << item.gateway << std::endl;
+            out << "  C2 Reply Port:          " << (uint32_t)item.c2_reply_port << std::endl;
+            out << "  Telemetry Port:         " << (uint32_t)item.telemetry_port << std::endl;
+            out << "  telemetry_listen_port1: " << (uint32_t)item.telemetry_listen_port1 << std::endl;
+            out << "  telemetry_listen_port2: " << (uint32_t)item.telemetry_listen_port2 << std::endl;
+            out << "  Camera Name:            " << item.camera_name << std::endl;
+
+            return out;
+        }
+
+
+    } network_parameters;
 
     //-----------------------------------------------------------------------------
     /** @brief Sierra Olympic Lens Class
@@ -1259,6 +1350,39 @@ namespace SO
 
             return 0;
         }   // end of discover
+
+        //-----------------------------------------------------------------------------
+                /**
+        @brief Set the network parameters on the SLA board.
+
+        This function builds a fip protocol packet to set the network parameters for the SLA board.
+
+        @param[in] mode : the ip assignement mode: 0 = Use DHCP, 1 = Use specified Static IP address
+        @param[in] ip_address : ip address to set teh SLA board to; use inet_addr to convert string address to 32-bits
+        @param[in] gateway : ip gateway
+        @param[in] subnet : ip subnet; default = 255.255.255.0
+
+        @note No return data is expected.
+        */
+        int32_t get_network_params(network_parameters &net_params)
+        {
+            uint8_t index = 0;
+            int32_t result;
+            std::vector<uint8_t> rx_data;
+
+            // create the network parameters request: 51,AC,03,1D,00,A1
+            fip_protocol fp = fip_protocol(GET_NETWORK_PARAMS, { index });
+
+            // send and receive
+            result = send_udp_data(udp_camera_info, fp.to_vector());
+            result = receive_udp_data(udp_camera_info, rx_data);
+            fp = fip_protocol(rx_data);
+
+            net_params = network_parameters(fp);
+
+            return result;
+
+        }   // end of get_network_params
 
         //-----------------------------------------------------------------------------
         /**

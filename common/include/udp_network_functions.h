@@ -215,24 +215,24 @@ inline int32_t send_udp_data(udp_info& info, std::string data)
 }
 
 // ----------------------------------------------------------------------------
-int32_t receive_udp_data(SOCKET udp_sock, struct sockaddr_in read_addr_obj, std::vector<uint8_t>& data, int32_t length=256)
+int32_t receive_udp_data(SOCKET udp_sock, struct sockaddr_in read_addr_obj, char *data, int32_t length)
 {
 	int32_t result;
 	int32_t error = 10060L;		// WIN32 -> WSAETIMEDOUT
 	int32_t retry_count = 1;
 	int test = 0;
 
-	std::vector<uint8_t> d1(length);
+	//std::vector<uint8_t> d1(length);
 
-	data.clear();
+	//data.clear();
 	
 #if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
 
 	int32_t addr_length = sizeof(read_addr_obj);
 	
-	// receive up to 256 bytes
+	// receive up to length bytes
 	do {
-		result = recvfrom(udp_sock, (char*)d1.data(), length, 0, (sockaddr*)&read_addr_obj, &addr_length);
+		result = recvfrom(udp_sock, data, length, 0, (sockaddr*)&read_addr_obj, &addr_length);
 		if (result == -1)
 		{
 
@@ -251,7 +251,7 @@ int32_t receive_udp_data(SOCKET udp_sock, struct sockaddr_in read_addr_obj, std:
 	
 	// receive up to length number of bytes
 	do {
-		result = recvfrom(udp_sock, (char*)d1.data(), length, 0, (sockaddr*)&read_addr_obj, &addr_length);
+		result = recvfrom(udp_sock, data, length, 0, (sockaddr*)&read_addr_obj, &addr_length);
 		if (result == -1)
 		{
 		    std::cout << "recvfrom error: " << strerror(errno) << std::endl;
@@ -261,6 +261,26 @@ int32_t receive_udp_data(SOCKET udp_sock, struct sockaddr_in read_addr_obj, std:
 
 #endif
 
+	//if (result > 0)
+	//{
+	//	data.resize(result);
+	//	std::copy(d1.begin(), d1.begin() + result, data.begin());
+	//}
+
+	return result;
+}	// end of receive_udp_data
+
+
+int32_t receive_udp_data(SOCKET udp_sock, struct sockaddr_in read_addr_obj, std::vector<uint8_t>& data, int32_t length = 256)
+{
+	int32_t result;
+
+	std::vector<uint8_t> d1(length);
+
+	data.clear();
+
+	result = receive_udp_data(udp_sock, read_addr_obj, (char*)d1.data(), length);
+
 	if (result > 0)
 	{
 		data.resize(result);
@@ -268,7 +288,7 @@ int32_t receive_udp_data(SOCKET udp_sock, struct sockaddr_in read_addr_obj, std:
 	}
 
 	return result;
-}	// end of receive_udp_data
+}
 
 // ----------------------------------------------------------------------------
 inline int32_t receive_udp_data(udp_info& info, std::vector<uint8_t>& data, int32_t length = 256)
