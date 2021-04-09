@@ -60,10 +60,10 @@ void init(void)
 // ----------------------------------------------------------------------------
 void close_thread()
 {
-    std::cout << std::endl << "Closing the UDP connection to the camera..." << std::endl;
     result = so_cam.close();
+    std::cout << std::endl << "Closing the UDP connection to the camera..." << std::endl;
 
-    std::cout << "close result: " << result << std::endl;
+    //std::cout << "close result: " << result << std::endl;
 }
 
 
@@ -86,6 +86,7 @@ int main(int argc, char** argv)
     uint8_t mode = 0;
     std::string new_ip_address;
     std::string gateway_address;
+    std::string subnet_address;
 
     SO::network_parameters net_params;
     
@@ -130,7 +131,6 @@ int main(int argc, char** argv)
         // initialize the camera with the supplied ip address
         init();
 
-
         so_cam.get_network_params(net_params);
 
         std::cout << net_params << std::endl;
@@ -144,25 +144,36 @@ int main(int argc, char** argv)
         {
         case 0:
             new_ip_address = camera_ip_address;
+            gateway_address = net_params.gateway;
+            subnet_address = net_params.subnet;
             break;
             
         case 1:
-            std::cout << "Enter IP Address (192.168.1.25): ";
+            std::cout << "Enter the IP Address (192.168.1.25): ";
             std::getline(std::cin, console_input);
             new_ip_address = console_input;
+
+            // get the gateway address
+            std::cout << "Enter the Gateway Address (192.168.1.1): ";
+            std::getline(std::cin, console_input);
+            gateway_address = console_input;
+
+            // get the gateway address
+            std::cout << "Enter the Subnet Address (255.255.255.0): ";
+            std::getline(std::cin, console_input);
+            subnet_address = console_input;
+
+            break;
+
         default:
-            std::cout << "Mode selected is not valid!  Exiting." << std::endl;
-            return 1; 
+            std::cout << "Mode selected is not valid!  Press Enter to close." << std::endl;
+            std::cin.ignore(); 
+            return 1;
             break;            
         }
-        
-        // get the gateway address
-        std::cout << "Enter Gateway Address (192.168.1.1): ";
-        std::getline(std::cin, console_input);
-        gateway_address = console_input;
 
         // setting the new mode using default ports
-        bool status = so_cam.set_network_params(mode, new_ip_address, gateway_address, "255.255.255.0");
+        bool status = so_cam.set_network_params(mode, new_ip_address, gateway_address, subnet_address);
 
         if(status)
             std::cout << "Setting network parameters successful!" << std::endl;
