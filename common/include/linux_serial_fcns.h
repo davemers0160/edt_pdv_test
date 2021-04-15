@@ -31,7 +31,7 @@ private:
     struct termios settings;
 
 //-----------------------------------------------------------------------------
-    void config(uint32_t baud_rate, uint32_t wait_time)
+    void config(uint32_t baud_rate, uint32_t wait_time, uint32_t data_bits = CS8, uint32_t stop_bits = CSTOPB, uint32_t parity = PARENB)
     {
         struct serial_struct serial; 
         //ioctl(fd, TIOCGSERIAL, &serial); 
@@ -52,10 +52,10 @@ private:
 
         // set the control mode flags
         // http://kirste.userpage.fu-berlin.de/chemnet/use/info/libc/libc_12.html#SEC237
-        settings.c_cflag &= ~PARENB;        // No Parity
-        settings.c_cflag &= ~CSTOPB;        // Stop bits = 1
+        settings.c_cflag &= ~parity;        // No Parity
+        settings.c_cflag &= ~stop_bits;     // Stop bits = 1
         settings.c_cflag &= ~CSIZE;         // Clears the Mask
-        settings.c_cflag |=  CS8;           // Set the data bits = 8       
+        settings.c_cflag |= data_bits;      // Set the data bits = 8       
         settings.c_cflag &= ~CRTSCTS;       // Turn off hardware based flow control (RTS/CTS).
         settings.c_cflag |= (CREAD | CLOCAL);// Turn on the receiver of the serial port (CREAD), other wise reading from the serial port will not work.
 
@@ -89,7 +89,7 @@ public:
     serial_port() = default;
 
 //-----------------------------------------------------------------------------
-    void open_port(std::string named_port, uint32_t baud_rate, uint32_t wait_time)
+    void open_port(std::string named_port, uint32_t baud_rate, uint32_t wait_time, uint32_t data_bits = CS8, uint32_t stop_bits = CSTOPB, uint32_t parity = PARENB)
     {
         //port = open(named_port.c_str(), O_RDWR | O_NOCTTY);
         port = open(named_port.c_str(), O_RDWR | O_NOCTTY);
@@ -100,7 +100,7 @@ public:
             return;
         }
 
-        config(baud_rate, wait_time);
+        config(baud_rate, wait_time, data_bits, stop_bits, parity);
         
         flush_port();
 

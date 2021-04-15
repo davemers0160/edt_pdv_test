@@ -19,7 +19,7 @@ private:
     DCB settings = {0};
     
 //-----------------------------------------------------------------------------
-    void config(uint32_t baud_rate, uint32_t wait_time)
+    void config(uint32_t baud_rate, uint32_t wait_time, uint32_t data_bits = 8, uint32_t stop_bits = ONESTOPBIT, uint32_t parity = NOPARITY)
     {
         settings.DCBlength = sizeof(settings);
 
@@ -28,9 +28,9 @@ private:
 
         // set the values for Baud rate, Byte size, Number of start/Stop bits etc.
         settings.BaudRate = baud_rate;                              // Setting BaudRate
-        settings.ByteSize = 8;                                      // Setting ByteSize = 8
-        settings.StopBits = ONESTOPBIT;                             // Setting StopBits = 1
-        settings.Parity = NOPARITY;                                 // Setting Parity = None
+        settings.ByteSize = data_bits;                              // Setting ByteSize = 8
+        settings.StopBits = stop_bits;                              // Setting StopBits = 1
+        settings.Parity = parity;                                   // Setting Parity = None
         
         COMMTIMEOUTS timeouts = { 0 };
         timeouts.ReadIntervalTimeout = wait_time*100;               // in milliseconds
@@ -49,7 +49,7 @@ public:
     serial_port() = default;
     
 //-----------------------------------------------------------------------------
-    void open_port(std::string named_port, uint32_t baud_rate, uint32_t wait_time)
+    void open_port(std::string named_port, uint32_t baud_rate, uint32_t wait_time, uint32_t data_bits = 8, uint32_t stop_bits = ONESTOPBIT, uint32_t parity = NOPARITY)
     {
         //  Open a handle to the specified com port: expect COMX
         named_port = "\\\\.\\" + named_port;
@@ -67,7 +67,7 @@ public:
             return;
         }
 
-        config(baud_rate, wait_time);
+        config(baud_rate, wait_time, data_bits, stop_bits, parity);
 
     }   // end of open_port
 
