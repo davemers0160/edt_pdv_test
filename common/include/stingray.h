@@ -22,6 +22,30 @@ const uint16_t zoom_max = 10000;
 const uint8_t iris_min = 0;
 const uint8_t iris_max = 100;
 
+void parse_response(std::string response, std::vector<std::string>& params)
+{
+    int32_t start = 0, end = 0;
+    const std::string CRLF = "\r\n";
+    params.clear();
+
+    while (end != std::string::npos)
+    {
+        end = response.find(CRLF.c_str(), start, 2);
+        if (end != std::string::npos)
+        {
+            params.push_back(response.substr(start, end - start));
+            start = end + 2;
+        }
+        else if (start < response.length())
+        {
+            params.push_back(response.substr(start, response.length() - start));
+        }
+    }
+
+}   // end of parse_response
+
+
+
 //-----------------------------------------------------------------------------
 class stingray_lens
 {  
@@ -37,7 +61,7 @@ public:
     {
         port_name = "";
         wait_time = 10;
-        baud_rate = 38400;
+        baud_rate = 115200;
         connected = false;
     }
 
@@ -97,6 +121,7 @@ public:
         std::string rx_msg;
         uint64_t bytes_to_read = 37;
         std::string tx_msg = "STATUS\r\n";
+        std::vector<std::string> params;
 
         // send and receive data
         result = txrx_data(tx_msg, rx_msg, bytes_to_read);
@@ -108,12 +133,14 @@ public:
         }
         else if (result == 0)
         {
+            parse_response(rx_msg, params);
+
             // parse the data
-            focus = (uint16_t)std::stoi(rx_msg.substr(2, 4));
-            zoom = (uint16_t)std::stoi(rx_msg.substr(10, 4));
-            iris = (uint8_t)std::stoi(rx_msg.substr(18, 3));
-            athermal_mode = (uint8_t)std::stoi(rx_msg.substr(25, 1));
-            temp = std::stof(rx_msg.substr(30, 5));
+            focus = (uint16_t)std::stoi(params[0].substr(2, std::string::npos));
+            zoom = (uint16_t)std::stoi(params[1].substr(2, std::string::npos));
+            iris = (uint8_t)std::stoi(params[2].substr(2, std::string::npos));
+            at_mode = (uint8_t)std::stoi(params[3].substr(2, std::string::npos));
+            temp = std::stof(params[4].substr(2, std::string::npos));
         }
         else
         {
@@ -238,9 +265,9 @@ public:
         out << "  wait time:   " << item.wait_time << std::endl;
         out << "  focus step:  " << item.focus << std::endl;
         out << "  zoom step:   " << item.zoom << std::endl;
-        out << "  iris:        " << item.iris << std::endl;
+        out << "  iris:        " << (uint32_t)item.iris << std::endl;
         out << "  temperature: " << item.temp << std::endl;
-        out << "  athermal:    " << item.athermal_mode << std::endl;
+        out << "  athermal:    " << (uint32_t)item.at_mode << std::endl;
 
         return out;
     }   // end of operator<<
@@ -250,7 +277,7 @@ private:
     uint16_t focus;
     uint16_t zoom;
     uint8_t iris;
-    uint8_t athermal_mode;
+    uint8_t at_mode;
     float temp;
 
 
