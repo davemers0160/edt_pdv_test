@@ -22,29 +22,6 @@ const uint16_t zoom_max = 10000;
 const uint8_t iris_min = 0;
 const uint8_t iris_max = 100;
 
-void parse_response(std::string response, std::vector<std::string>& params)
-{
-    int32_t start = 0, end = 0;
-    const std::string CRLF = "\r\n";
-    params.clear();
-
-    while (end != std::string::npos)
-    {
-        end = response.find(CRLF.c_str(), start, 2);
-        if (end != std::string::npos)
-        {
-            params.push_back(response.substr(start, end - start));
-            start = end + 2;
-        }
-        else if (start < response.length())
-        {
-            params.push_back(response.substr(start, response.length() - start));
-        }
-    }
-
-}   // end of parse_response
-
-
 
 //-----------------------------------------------------------------------------
 class stingray_lens
@@ -92,7 +69,6 @@ public:
     {
         uint64_t result;
         std::string read_bufffer;
-        uint64_t bytes_to_read = 37; 
         std::string msg = "CV" + std::to_string(level) + "\r\n";
 
         if (connected)
@@ -119,7 +95,7 @@ public:
         // T = XX.XX
         int32_t result;
         std::string rx_msg;
-        uint64_t bytes_to_read = 37;
+        uint64_t bytes_to_read = 39;
         std::string tx_msg = "STATUS\r\n";
         std::vector<std::string> params;
 
@@ -155,6 +131,7 @@ public:
         int32_t result;
         std::string rx_msg;
         uint64_t bytes_to_read = 10;
+        std::vector<std::string> params;
 
         value = check_limits(value, focus_min, focus_max);
 
@@ -171,7 +148,8 @@ public:
         else if (result == 0)
         {
             // parse the data
-            focus = (uint16_t)std::stoi(rx_msg.substr(2, 4));
+            parse_response(rx_msg, params);
+            focus = (uint16_t)std::stoi(params[0].substr(2, std::string::npos));
         }
         else
         {
@@ -186,6 +164,7 @@ public:
         int32_t result;
         std::string rx_msg;
         uint64_t bytes_to_read = 10;
+        std::vector<std::string> params;
 
         value = check_limits(value, zoom_min, zoom_max);
 
@@ -202,7 +181,8 @@ public:
         else if (result == 0)
         {
             // parse the data
-            zoom = (uint16_t)std::stoi(rx_msg.substr(2, 4));
+            parse_response(rx_msg, params);
+            zoom = (uint16_t)std::stoi(params[0].substr(2, std::string::npos));
         }
         else
         {
@@ -216,7 +196,8 @@ public:
     {
         int32_t result;
         std::string rx_msg;
-        uint64_t bytes_to_read = 9;
+        uint64_t bytes_to_read = 8;
+        std::vector<std::string> params;
 
         value = check_limits(value, iris_min, iris_max);
 
@@ -233,7 +214,8 @@ public:
         else if (result == 0)
         {
             // parse the data
-            iris = (uint8_t)std::stoi(rx_msg.substr(2, 3));
+            parse_response(rx_msg, params);
+            iris = (uint8_t)std::stoi(params[0].substr(2, std::string::npos));
         }
         else
         {
@@ -345,6 +327,29 @@ private:
 
         return result;
     }   // end of poll_lens
+
+    //-----------------------------------------------------------------------------
+    void parse_response(std::string response, std::vector<std::string>& params)
+    {
+        int32_t start = 0, end = 0;
+        const std::string CRLF = "\r\n";
+        params.clear();
+
+        while (end != std::string::npos)
+        {
+            end = response.find(CRLF.c_str(), start, 2);
+            if (end != std::string::npos)
+            {
+                params.push_back(response.substr(start, end - start));
+                start = end + 2;
+            }
+            else if (start < response.length())
+            {
+                params.push_back(response.substr(start, response.length() - start));
+            }
+        }
+
+    }   // end of parse_response
 
 };  // end of stringray_lens
 

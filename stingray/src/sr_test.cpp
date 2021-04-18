@@ -99,17 +99,6 @@ int main(int argc, char** argv)
         std::string err = "ERROR3\r\n";
         std::vector<std::string> params;
 
-        parse_response(status, params);
-
-        // parse the data
-        uint16_t focus = (uint16_t)std::stoi(params[0].substr(2, std::string::npos));
-        uint16_t zoom = (uint16_t)std::stoi(params[1].substr(2, std::string::npos));
-        uint8_t iris = (uint8_t)std::stoi(params[2].substr(2, std::string::npos));
-        uint8_t athermal_mode = (uint8_t)std::stoi(params[3].substr(2, std::string::npos));
-        float temp = std::stof(params[4].substr(2, std::string::npos));
-
-
-        parse_response(err, params);
 
         //sr.connect();
 
