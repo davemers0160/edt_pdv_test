@@ -2,11 +2,13 @@
 #define _STINGRAY_PROTOCOL_H_
 
 #include <cstdint>
+#include <ctime>
 #include <vector>
 
 
 #if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
 #include "win_serial_fcns.h"
+#include <windows.h>
 
 #elif defined(__linux__)
 #include <sys/ioctl.h>
@@ -48,6 +50,12 @@ public:
     }
 
     //-----------------------------------------------------------------------------
+    uint16_t get_focus() { return focus; }
+    uint16_t get_zoom() { return zoom; }
+    uint8_t get_iris() { return iris; }
+
+
+    //-----------------------------------------------------------------------------
     uint32_t connect()
     {
         if (port_name.empty())
@@ -59,7 +67,10 @@ public:
         sp.open_port(port_name, baud_rate, wait_time);
         connected = true;
 
+        sleep_ms(50);
         set_verbose_level(1);
+
+        sleep_ms(50);
         get_status();
 
         return 1;
@@ -126,11 +137,21 @@ public:
     }   // end of get_status
 
     //-----------------------------------------------------------------------------
+    float get_temp() 
+    { 
+
+
+
+
+        return temp; 
+    }   // end of get_temp
+
+    //-----------------------------------------------------------------------------
     void set_focus(uint16_t value)
     {
         int32_t result;
         std::string rx_msg;
-        uint64_t bytes_to_read = 10;
+        uint64_t bytes_to_read = 4 + count_digits(value); //10;
         std::vector<std::string> params;
 
         value = check_limits(value, focus_min, focus_max);
@@ -163,7 +184,7 @@ public:
     {
         int32_t result;
         std::string rx_msg;
-        uint64_t bytes_to_read = 10;
+        uint64_t bytes_to_read = 4 + count_digits(value);   //10;
         std::vector<std::string> params;
 
         value = check_limits(value, zoom_min, zoom_max);
@@ -196,7 +217,7 @@ public:
     {
         int32_t result;
         std::string rx_msg;
-        uint64_t bytes_to_read = 8;
+        uint64_t bytes_to_read = 4 + count_digits(value);  //8;
         std::vector<std::string> params;
 
         value = check_limits(value, iris_min, iris_max);
@@ -350,6 +371,35 @@ private:
         }
 
     }   // end of parse_response
+
+    //-----------------------------------------------------------------------------
+    // create a sleep function that can be used in both Windows and Linux
+    void sleep_ms(uint32_t value)
+    {
+
+#if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
+        Sleep(value);
+#else
+        const timespec delay[] = { 0, (uint32_t)(value * 1000000) };
+        nanosleep(delay, NULL);
+#endif
+
+    }   // end of sleep_ms
+
+
+    //-----------------------------------------------------------------------------
+    template<typename T>
+    uint16_t count_digits(T n)
+    {
+        uint16_t count = 0;
+        while (n != 0)
+        {
+            n = n / 10;
+            ++count;
+        }
+        return count;
+    }   // end of count_digits
+
 
 };  // end of stringray_lens
 

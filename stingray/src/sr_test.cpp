@@ -77,8 +77,8 @@ int main(int argc, char** argv)
     //}
     
 #if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
-    wait_time = 10;
-    port_name = "COM8";
+    wait_time = 5;
+    port_name = "COM4";
 
 #elif defined(__linux__)
     wait_time = 5;
@@ -91,16 +91,19 @@ int main(int argc, char** argv)
     try
     {
 
+        sr.connect();
+
         std::cout << sr << std::endl;
 
+        sr.set_focus(0);
+        sr.set_zoom(0);
+        sr.set_iris(0);
 
-        // test of finding the CRLF in a string
-        std::string status = "F=0\r\nZ=1000\r\nI=100\r\nCA0\r\nT=23.30\r\n";
-        std::string err = "ERROR3\r\n";
-        std::vector<std::string> params;
-
-
-        //sr.connect();
+        std::cout << "Focus: " << sr.get_focus() << std::endl;
+        std::cout << "Zoom: " << sr.get_zoom() << std::endl;
+        std::cout << "Iris: " << (uint32_t)sr.get_iris() << std::endl;
+        std::cout << "Temp: " << sr.get_temp() << std::endl;
+        std::cout << std::endl;
 
         int bp = 1;
     }
