@@ -123,11 +123,11 @@ public:
             parse_response(rx_msg, params);
 
             // parse the data
-            focus = str2int<uint16_t>(params[0].substr(2, std::string::npos));      // (uint16_t)std::stoi(params[0].substr(2, std::string::npos));
-            zoom = str2int<uint16_t>(params[1].substr(2, std::string::npos));      // (uint16_t)std::stoi(params[1].substr(2, std::string::npos));
-            iris = str2int<uint8_t>(params[2].substr(2, std::string::npos));      // (uint8_t)std::stoi(params[2].substr(2, std::string::npos));
-            at_mode = str2int<uint8_t>(params[3].substr(2, std::string::npos));      // (uint8_t)std::stoi(params[3].substr(2, std::string::npos));
-            temp = str2float(params[4].substr(2, std::string::npos));      // std::stof(params[4].substr(2, std::string::npos));
+            focus = str2int<uint16_t>(params[0].substr(2, std::string::npos));      // Expecting "F=X\r\n", X ranges from 1-5 digits 
+            zoom = str2int<uint16_t>(params[1].substr(2, std::string::npos));       // Expecting "Z=nX\r\n", X ranges from 1-5 digits 
+            iris = str2int<uint8_t>(params[2].substr(2, std::string::npos));        // Expecting "I=nX\r\n", X ranges from 1-3 digits 
+            at_mode = str2int<uint8_t>(params[3].substr(2, std::string::npos));     // Expecting "CAX\r\n"
+            temp = str2float(params[4].substr(2, std::string::npos));               // Expecting "T=XX.XX\r\n" 
         }
         else
         {
@@ -141,7 +141,7 @@ public:
     { 
         int32_t result;
         std::string rx_msg;
-        uint64_t bytes_to_read = 9;
+        uint64_t bytes_to_read = 7;
         std::vector<std::string> params;
 
         std::string tx_msg = "T\r\n";
@@ -156,9 +156,9 @@ public:
         }
         else if (result == 0)
         {
-            // parse the data.  Expecting "T=XX.XX\r\n"
+            // parse the data.  Expecting "T=XX.XX\r\n", but what we actually get is "XX.XX\r\n"
             parse_response(rx_msg, params);
-            temp = str2float(params[0].substr(2, std::string::npos));         //(uint16_t)std::stoi(params[0].substr(2, std::string::npos));
+            temp = str2float(params[0].substr(0, std::string::npos));         //(uint16_t)std::stoi(params[0].substr(2, std::string::npos));
         }
         else
         {
@@ -190,7 +190,7 @@ public:
         }
         else if (result == 0)
         {
-            // parse the data. Expecting "F=X\r\n"
+            // parse the data. Expecting "F=X\r\n", X ranges from 1-5 digits 
             parse_response(rx_msg, params);
             focus = str2int<uint16_t>(params[0].substr(2, std::string::npos));         //(uint16_t)std::stoi(params[0].substr(2, std::string::npos));
         }
@@ -223,7 +223,7 @@ public:
         }
         else if (result == 0)
         {
-            // parse the data. Expecting "Z=X\r\n"
+            // parse the data. Expecting "Z=X\r\n", X ranges from 1-5 digits 
             parse_response(rx_msg, params);
             zoom = str2int<uint16_t>(params[0].substr(2, std::string::npos));   // (uint16_t)std::stoi(params[0].substr(2, std::string::npos));
         }
@@ -256,7 +256,7 @@ public:
         }
         else if (result == 0)
         {
-            // parse the data. Expecting "I=X\r\n"
+            // parse the data. Expecting "I=X\r\n", X ranges from 1-3 digits 
             parse_response(rx_msg, params);
             iris = str2int<uint8_t>(params[0].substr(2, std::string::npos));   // (uint8_t)std::stoi(params[0].substr(2, std::string::npos));
         }
@@ -290,7 +290,7 @@ public:
         out << "  wait time:   " << item.wait_time << std::endl;
         out << "  focus step:  " << item.focus << std::endl;
         out << "  zoom step:   " << item.zoom << std::endl;
-        out << "  iris:        " << (uint32_t)item.iris << std::endl;
+        out << "  iris step:   " << (uint32_t)item.iris << std::endl;
         out << "  temperature: " << item.temp << std::endl;
         out << "  athermal:    " << (uint32_t)item.at_mode << std::endl;
 

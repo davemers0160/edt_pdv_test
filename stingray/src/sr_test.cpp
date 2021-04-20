@@ -95,9 +95,9 @@ int main(int argc, char** argv)
 
         std::cout << sr << std::endl;
 
-        sr.set_focus(0);
-        sr.set_zoom(0);
-        sr.set_iris(0);
+        sr.set_focus(5000);
+        sr.set_zoom(4000);
+        sr.set_iris(60);
 
         std::cout << "Focus: " << sr.get_focus() << std::endl;
         std::cout << "Zoom: " << sr.get_zoom() << std::endl;
