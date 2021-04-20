@@ -123,11 +123,11 @@ public:
             parse_response(rx_msg, params);
 
             // parse the data
-            focus = (uint16_t)std::stoi(params[0].substr(2, std::string::npos));
-            zoom = (uint16_t)std::stoi(params[1].substr(2, std::string::npos));
-            iris = (uint8_t)std::stoi(params[2].substr(2, std::string::npos));
-            at_mode = (uint8_t)std::stoi(params[3].substr(2, std::string::npos));
-            temp = std::stof(params[4].substr(2, std::string::npos));
+            focus = str2int<uint16_t>(params[0].substr(2, std::string::npos));      // (uint16_t)std::stoi(params[0].substr(2, std::string::npos));
+            zoom = str2int<uint16_t>(params[1].substr(2, std::string::npos));      // (uint16_t)std::stoi(params[1].substr(2, std::string::npos));
+            iris = str2int<uint8_t>(params[2].substr(2, std::string::npos));      // (uint8_t)std::stoi(params[2].substr(2, std::string::npos));
+            at_mode = str2int<uint8_t>(params[3].substr(2, std::string::npos));      // (uint8_t)std::stoi(params[3].substr(2, std::string::npos));
+            temp = str2float<float>(params[4].substr(2, std::string::npos));      // std::stof(params[4].substr(2, std::string::npos));
         }
         else
         {
@@ -139,9 +139,31 @@ public:
     //-----------------------------------------------------------------------------
     float get_temp() 
     { 
+        int32_t result;
+        std::string rx_msg;
+        uint64_t bytes_to_read = 9;
+        std::vector<std::string> params;
 
+        std::string tx_msg = "T\r\n";
 
+        // send and receive data
+        result = txrx_data(tx_msg, rx_msg, bytes_to_read);
 
+        // check result
+        if (result < 0)
+        {
+            std::cout << "Error getting data.  Most likely not connected!" << std::endl;
+        }
+        else if (result == 0)
+        {
+            // parse the data
+            parse_response(rx_msg, params);
+            temp = str2float<float>(params[0].substr(2, std::string::npos));         //(uint16_t)std::stoi(params[0].substr(2, std::string::npos));
+        }
+        else
+        {
+            std::cout << error_codes[result] << std::endl;
+        }
 
         return temp; 
     }   // end of get_temp
@@ -170,7 +192,7 @@ public:
         {
             // parse the data
             parse_response(rx_msg, params);
-            focus = (uint16_t)std::stoi(params[0].substr(2, std::string::npos));
+            focus = str2int<uint16_t>(params[0].substr(2, std::string::npos));         //(uint16_t)std::stoi(params[0].substr(2, std::string::npos));
         }
         else
         {
@@ -203,7 +225,7 @@ public:
         {
             // parse the data
             parse_response(rx_msg, params);
-            zoom = (uint16_t)std::stoi(params[0].substr(2, std::string::npos));
+            zoom = str2int<uint16_t>(params[0].substr(2, std::string::npos));   // (uint16_t)std::stoi(params[0].substr(2, std::string::npos));
         }
         else
         {
@@ -236,7 +258,7 @@ public:
         {
             // parse the data
             parse_response(rx_msg, params);
-            iris = (uint8_t)std::stoi(params[0].substr(2, std::string::npos));
+            iris = str2int<uint8_t>(params[0].substr(2, std::string::npos));   // (uint8_t)std::stoi(params[0].substr(2, std::string::npos));
         }
         else
         {
@@ -400,6 +422,55 @@ private:
         return count;
     }   // end of count_digits
 
+    //-----------------------------------------------------------------------------
+    template<typename T>
+    T str2int(std::string str)
+    {
+        size_t index = 0;
+        T num = 0;
+        try {
+            num = (T)std::stoi(str, &index);
+        }
+        catch (std::exception& e)
+        {
+            if (index == 0)
+            {
+                num = 0;
+                std::cout << "error converting string to number" << std::endl;
+            }
+            else
+            {
+                std::cout << "error converting string to number: " << e.what() << std::endl;
+            }
+        }
+        
+        return num;
+    }   // end of str2int
+
+    //-----------------------------------------------------------------------------
+    template<typename T>
+    T str2float(std::string str)
+    {
+        size_t index = 0;
+        T num = 0;
+        try {
+            num = (T)std::stoi(str, &index);
+        }
+        catch (std::exception& e)
+        {
+            if (index == 0)
+            {
+                num = 0;
+                std::cout << "error converting string to number" << std::endl;
+            }
+            else
+            {
+                std::cout << "error converting string to number: " << e.what() << std::endl;
+            }
+        }
+
+        return num;
+    }   // end of str2float
 
 };  // end of stringray_lens
 
