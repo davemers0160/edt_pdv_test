@@ -127,7 +127,7 @@ public:
             zoom = str2int<uint16_t>(params[1].substr(2, std::string::npos));      // (uint16_t)std::stoi(params[1].substr(2, std::string::npos));
             iris = str2int<uint8_t>(params[2].substr(2, std::string::npos));      // (uint8_t)std::stoi(params[2].substr(2, std::string::npos));
             at_mode = str2int<uint8_t>(params[3].substr(2, std::string::npos));      // (uint8_t)std::stoi(params[3].substr(2, std::string::npos));
-            temp = str2float<float>(params[4].substr(2, std::string::npos));      // std::stof(params[4].substr(2, std::string::npos));
+            temp = str2float(params[4].substr(2, std::string::npos));      // std::stof(params[4].substr(2, std::string::npos));
         }
         else
         {
@@ -156,9 +156,9 @@ public:
         }
         else if (result == 0)
         {
-            // parse the data
+            // parse the data.  Expecting "T=XX.XX\r\n"
             parse_response(rx_msg, params);
-            temp = str2float<float>(params[0].substr(2, std::string::npos));         //(uint16_t)std::stoi(params[0].substr(2, std::string::npos));
+            temp = str2float(params[0].substr(2, std::string::npos));         //(uint16_t)std::stoi(params[0].substr(2, std::string::npos));
         }
         else
         {
@@ -190,7 +190,7 @@ public:
         }
         else if (result == 0)
         {
-            // parse the data
+            // parse the data. Expecting "F=X\r\n"
             parse_response(rx_msg, params);
             focus = str2int<uint16_t>(params[0].substr(2, std::string::npos));         //(uint16_t)std::stoi(params[0].substr(2, std::string::npos));
         }
@@ -223,7 +223,7 @@ public:
         }
         else if (result == 0)
         {
-            // parse the data
+            // parse the data. Expecting "Z=X\r\n"
             parse_response(rx_msg, params);
             zoom = str2int<uint16_t>(params[0].substr(2, std::string::npos));   // (uint16_t)std::stoi(params[0].substr(2, std::string::npos));
         }
@@ -256,7 +256,7 @@ public:
         }
         else if (result == 0)
         {
-            // parse the data
+            // parse the data. Expecting "I=X\r\n"
             parse_response(rx_msg, params);
             iris = str2int<uint8_t>(params[0].substr(2, std::string::npos));   // (uint8_t)std::stoi(params[0].substr(2, std::string::npos));
         }
@@ -433,14 +433,14 @@ private:
         }
         catch (std::exception& e)
         {
+            num = 0;
             if (index == 0)
             {
-                num = 0;
-                std::cout << "error converting string to number" << std::endl;
+                std::cout << "error converting string '" << str << "' to number" << std::endl;
             }
             else
             {
-                std::cout << "error converting string to number: " << e.what() << std::endl;
+                std::cout << "error converting string '" << str << "' to number: " << e.what() << std::endl;
             }
         }
         
@@ -448,24 +448,24 @@ private:
     }   // end of str2int
 
     //-----------------------------------------------------------------------------
-    template<typename T>
-    T str2float(std::string str)
+    float str2float(std::string str)
     {
         size_t index = 0;
-        T num = 0;
+        float num = 0.0;
         try {
-            num = (T)std::stoi(str, &index);
+            num = std::stof(str, &index);
         }
         catch (std::exception& e)
         {
+            num = 0.0;
             if (index == 0)
             {
-                num = 0;
-                std::cout << "error converting string to number" << std::endl;
+                
+                std::cout << "error converting string '" << str << "' to number." << std::endl;
             }
             else
             {
-                std::cout << "error converting string to number: " << e.what() << std::endl;
+                std::cout << "error converting string '" << str << "' to number: " << e.what() << std::endl;
             }
         }
 
