@@ -34,24 +34,26 @@ message("PR_ROOT:" ${PR_ROOT})
 #include(${PR_ROOT}/../common/cmake_utils/use_sse_avx.cmake)
 
 # look for any *.c and *.cpp files
-file(GLOB SOURCES "src/*.c*"
+file(GLOB PROJECT_SOURCES "src/*.cpp"
+    "src/*.ui"
+    "include/sr_control.h"
     )
 
 set(project_includes
     "include"
-    "${PR_ROOT}/../common/include"
+    "${PR_ROOT}/common/include"
     )
 
 
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets REQUIRED)
 
-set(PROJECT_SOURCES
-        main.cpp
-        sr_control.cpp
-        sr_control.h
-        sr_control.ui
-)
+# set(PROJECT_SOURCES
+        # main.cpp
+        # sr_control.cpp
+        # sr_control.h
+        # sr_control.ui
+# )
 
 include_directories(${project_includes})
 
