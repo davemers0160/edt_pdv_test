@@ -97,7 +97,7 @@ void SR::on_focus_slider_change()
     // send focus value to the lens
     if(connected)
     {
-
+        sr.set_focus((uint16_t)ui->focus_slider->value());
     }
 
 }   // end of on_focus_slider_change
@@ -117,7 +117,7 @@ void SR::on_focus_spinner_change()
     // send focus value to the lens
     if(connected)
     {
-
+        sr.set_focus((uint16_t)ui->focus_spinner->value());
     }
 
 }   // end of on_focus_spinner_change
@@ -137,7 +137,7 @@ void SR::on_zoom_slider_change()
     // send focus value to the lens
     if(connected)
     {
-
+        sr.set_zoom((uint16_t)ui->zoom_slider->value());
     }
 
 }   // end of on_zoom_slider_change
@@ -157,7 +157,7 @@ void SR::on_zoom_spinner_change()
     // send focus value to the lens
     if(connected)
     {
-
+        sr.set_zoom((uint16_t)ui->zoom_spinner->value());
     }
 
 }   // end of on_zoom_spinner_change
@@ -177,7 +177,7 @@ void SR::on_iris_slider_change()
     // send focus value to the lens
     if(connected)
     {
-
+        sr.set_iris((uint8_t)ui->iris_slider->value());
     }
 
 }   // end of on_iris_slider_change
@@ -197,7 +197,7 @@ void SR::on_iris_spinner_change()
     // send focus value to the lens
     if(connected)
     {
-
+        sr.set_iris((uint8_t)ui->iris_spinner->value());
     }
 
 }   // end of on_iris_spinner_change
