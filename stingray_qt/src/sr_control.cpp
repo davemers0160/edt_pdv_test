@@ -92,7 +92,7 @@ void SR::on_focus_slider_change()
     ui->focus_spinner->setValue(ui->focus_slider->value());
 
     // remove the block
-    ui->focus_spinner-> blockSignals(false);
+    ui->focus_spinner->blockSignals(false);
 
     // send focus value to the lens
     if(connected)
@@ -112,7 +112,7 @@ void SR::on_focus_spinner_change()
     ui->focus_slider->setValue(ui->focus_spinner->value());
 
     // remove the block
-    ui->focus_slider-> blockSignals(false);
+    ui->focus_slider->blockSignals(false);
 
     // send focus value to the lens
     if(connected)
@@ -132,7 +132,7 @@ void SR::on_zoom_slider_change()
     ui->zoom_spinner->setValue(ui->zoom_slider->value());
 
     // remove the block
-    ui->zoom_spinner-> blockSignals(false);
+    ui->zoom_spinner->blockSignals(false);
 
     // send focus value to the lens
     if(connected)
@@ -152,7 +152,7 @@ void SR::on_zoom_spinner_change()
     ui->zoom_slider->setValue(ui->zoom_spinner->value());
 
     // remove the block
-    ui->zoom_slider-> blockSignals(false);
+    ui->zoom_slider->blockSignals(false);
 
     // send focus value to the lens
     if(connected)
@@ -172,7 +172,7 @@ void SR::on_iris_slider_change()
     ui->iris_spinner->setValue(ui->iris_slider->value());
 
     // remove the block
-    ui->iris_spinner-> blockSignals(false);
+    ui->iris_spinner->blockSignals(false);
 
     // send focus value to the lens
     if(connected)
@@ -192,7 +192,7 @@ void SR::on_iris_spinner_change()
     ui->iris_slider->setValue(ui->iris_spinner->value());
 
     // remove the block
-    ui->iris_slider-> blockSignals(false);
+    ui->iris_slider->blockSignals(false);
 
     // send focus value to the lens
     if(connected)
