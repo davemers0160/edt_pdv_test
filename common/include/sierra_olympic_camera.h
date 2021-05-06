@@ -2,6 +2,7 @@
 #define _SO_CAM_COMMANDS_H_
 
 #include <cstdint>
+#include <iostream>
 
 // include the functions needed for udp comms
 #include "udp_network_functions.h"
@@ -1562,7 +1563,17 @@ namespace SO
         */
         int32_t set_focus_position(uint16_t value)
         {
+            std::vector<uint8_t> rx_data;
+
+            // set the value
             int32_t result = send_udp_data(udp_camera_info, lens.set_focus_position(value).to_vector());
+
+            // get the value
+            result = send_udp_data(udp_camera_info,lens.get_focus_position().to_vector());
+            result = receive_udp_data(udp_camera_info, rx_data);
+            wind_protocol wind_data = wind_protocol(rx_data);
+            lens.focus_position = wind_data.payload[0] | wind_data.payload[1]<<8;
+
             return result;
         }   // end of set_focus_position
 
@@ -1579,6 +1590,7 @@ namespace SO
         int32_t set_zoom_index(uint16_t value)
         {
             int32_t result = send_udp_data(udp_camera_info, lens.set_zoom_index(value).to_vector());
+
             return result;
         }   // end of set_zoom_index
 

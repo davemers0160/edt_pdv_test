@@ -51,6 +51,8 @@ private:
     // Sierra-Olympic specific variables
     SO::camera so_cam;
     std::string camera_ip_address;
+    std::string error_msg;
+
     bool connected = false;
 
 };

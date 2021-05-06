@@ -20,7 +20,7 @@ SO_GUI::SO_GUI(QWidget *parent)
     connect(ui->zoom_spinner, SIGNAL(valueChanged(int)), this, SLOT(on_zoom_spinner_change()));
 
     connect(ui->connect_btn, SIGNAL(clicked()), this, SLOT(button_click()));
-
+    statusBar()->showMessage("Ready", 2000);
 }
 
 SO_GUI::~SO_GUI()
@@ -32,37 +32,46 @@ SO_GUI::~SO_GUI()
 // ----------------------------------------------------------------------------
 void SO_GUI::button_click()
 {
-    uint32_t wait_time = 5;
-    uint32_t baud_rate = 115200;
 
     if(ui->ip_address_tb->text().isEmpty())
     {
+        statusBar()->showMessage("Enter an IP Address!", 10000);
         return;
     }
 
+    camera_ip_address = ui->ip_address_tb->text().toStdString();
+
     if(connected)
     {
-        // disconnect from the lens
-//        sr.close();
+        // disconnect from the camera
+        so_cam.close();
 
         ui->connect_btn->setText("Connect");
         connected = false;
     }
     else
     {
-        // connect to the lens
-        //sr = stingray_lens(ui->comm_port->text().toStdString(), baud_rate, wait_time);
-        //sr.connect();
+        // configure the UDP info
+        so_cam.udp_camera_info = udp_info(write_port, read_port);
+
+        // initialize camera
+        result = so_cam.init_camera(camera_ip_address, error_msg);
+
+        if(result != 0)
+        {
+            statusBar()->showMessage(QString::fromStdString(error_msg), 10000);
+            return;
+        }
 
         ui->focus_spinner->blockSignals(true);
         ui->focus_slider->blockSignals(true);
         ui->zoom_spinner->blockSignals(true);
         ui->zoom_slider->blockSignals(true);
 
-//        ui->focus_slider->setValue(sr.get_focus());
-//        ui->focus_spinner->setValue(sr.get_focus());
-//        ui->zoom_slider->setValue(sr.get_zoom());
-//        ui->zoom_spinner->setValue(sr.get_zoom());
+        ui->focus_slider->setValue(so_cam.lens.focus_position);
+        ui->focus_spinner->setValue(so_cam.lens.focus_position);
+        ui->zoom_slider->setValue(so_cam.lens.zoom_index);
+        ui->zoom_spinner->setValue(so_cam.lens.zoom_index);
 
         ui->focus_spinner->blockSignals(false);
         ui->focus_slider->blockSignals(false);
