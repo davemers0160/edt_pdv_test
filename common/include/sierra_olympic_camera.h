@@ -1030,6 +1030,16 @@ namespace SO
 
         //-----------------------------------------------------------------------------
         /**
+        @brief Get the camera serial number.
+
+        This function returns the serial number captured from the camera when the connection is first established.
+
+        @return sn : camera serial number.
+        */
+        std::string get_sn() { return sn; }
+
+        //-----------------------------------------------------------------------------
+        /**
         @brief Set the camera wind version.
 
         This function takes a wind_protocol from the get_version function to set the wind protocol version variables in the class.
@@ -1445,21 +1455,25 @@ namespace SO
 
         @param[in] ip_address : ip address of the receiving device in 32-bit notation use inet_addr to convert string address to 32-bits
         @param[in] port : port of the receiving device
-        @return fip_protocol that contains the structure to set the ethernet display parameter.
-
-        @note Return data will be a fip_protocol packet that contains the Ethernet display parameters.
+        @return result of setting the ethernet display parameter (0 -> success, -1 -> failure).
 
         @sa fip_protocol
         */
-        fip_protocol set_ethernet_display_parameter(uint32_t ip_address, uint16_t port = 15004)
+        int32_t set_ethernet_display_parameter(uint32_t host_ip_address, uint16_t port = 15004)
         {
+            int32_t status;
+
             // build a fip packet: 0x51 0xAC 0x0B 0x29 0x03 [0x0A 0x7F 0x01 0x0C] [0x9C 0x3A] [0x30 0x00] 0x72
             fip_protocol fp = fip_protocol(0x29, { 0x03 });
-            fp.add_data(ip_address);
+            fp.add_data(host_ip_address);
             fp.add_data(port);
             fp.add_data((uint16_t)(0x03));
 
-            return fp;
+            int32_t write_result = send_udp_data(udp_camera_info, fp.to_vector());
+            status = (write_result == fp.to_vector().size()) ? 0 : -1;
+
+            return status;
+
         }   // end of set_ethernet_display_parameter
 
         //-----------------------------------------------------------------------------
@@ -1517,18 +1531,23 @@ namespace SO
         This function builds a fip protocol packet to configure the streaming control and set how the video streams from the SLA board.
 
         @param[in] value Table Number : (1 -> turn on streaming,  256 -> turn streaming off)
-        @return fip_protocol that contains the structure to set the ethernet display parameter.
-
-        @note No return data is expected.
+        @return result of setting the ethernet display parameter (0 -> success, -1 -> failure).
 
         @sa fip_protocol
         */
-        fip_protocol config_streaming_control(uint16_t value)
+        int32_t config_streaming_control(uint16_t value)
         {
+            int32_t status;
+
             // build a fip packet: 0x51 0xAC 0x04 0x90 [0x01 0x00] 0x47
             fip_protocol fp = fip_protocol(0x90);
             fp.add_data(value);
-            return fp;
+
+            int32_t write_result = send_udp_data(udp_camera_info, fp.to_vector());
+            status = (write_result == fp.to_vector().size()) ? 0 : -1;
+
+            return status;
+
         }   // end of config_streaming_control
 
         //-----------------------------------------------------------------------------
@@ -1557,6 +1576,7 @@ namespace SO
 
         This function sets the lens focus position.
 
+        @param[in] value : position to set the focus motor to
         @return int32_t result of setting the focus position.
 
         @sa lens
@@ -1569,13 +1589,41 @@ namespace SO
             int32_t result = send_udp_data(udp_camera_info, lens.set_focus_position(value).to_vector());
 
             // get the value
-            result = send_udp_data(udp_camera_info,lens.get_focus_position().to_vector());
-            result = receive_udp_data(udp_camera_info, rx_data);
-            wind_protocol wind_data = wind_protocol(rx_data);
-            lens.focus_position = wind_data.payload[0] | wind_data.payload[1]<<8;
+//            result = send_udp_data(udp_camera_info,lens.get_focus_position().to_vector());
+//            result = receive_udp_data(udp_camera_info, rx_data);
+//            wind_protocol wind_data = wind_protocol(rx_data);
+//            lens.focus_position =  read2(&wind_data.payload[0]);
 
             return result;
         }   // end of set_focus_position
+
+        //-----------------------------------------------------------------------------
+        /**
+        @brief Get the lens focus position.
+
+        This function sets the lens focus position.
+
+        @param[out] value : position of the focus motor
+        @return int32_t result of getting the focus position.
+
+        @sa lens
+        */
+        int32_t get_focus_position(uint16_t &value)
+        {
+            std::vector<uint8_t> rx_data;
+
+            // get the value
+            int32_t result = send_udp_data(udp_camera_info,lens.get_focus_position().to_vector());
+            result = receive_udp_data(udp_camera_info, rx_data);
+            wind_protocol wind_data = wind_protocol(rx_data);
+            if(wind_data.payload.size() > 0)
+            {
+                lens.focus_position =  read2(&wind_data.payload[0]);
+                value = lens.focus_position;
+            }
+
+            return result;
+        }   // end of get_focus_position
 
         //-----------------------------------------------------------------------------
         /**
@@ -1583,16 +1631,45 @@ namespace SO
 
         This function sets the lens zoom index.
 
+        @param[in] value : position to set the zoom motor to
         @return int32_t result of setting the zoom index.
 
         @sa lens
         */
         int32_t set_zoom_index(uint16_t value)
         {
+            std::vector<uint8_t> rx_data;
+
             int32_t result = send_udp_data(udp_camera_info, lens.set_zoom_index(value).to_vector());
+
+            // get the intial value for the zoom index
+            result = send_udp_data(udp_camera_info, lens.get_zoom_index().to_vector());
+//            result = receive_udp_data(udp_camera_info, rx_data);
+//            wind_protocol wind_data = wind_protocol(rx_data);
+//            lens.zoom_index = read2(&wind_data.payload[0]);
 
             return result;
         }   // end of set_zoom_index
+
+        //-----------------------------------------------------------------------------
+        /**
+        @brief Start the len autofocus mode.
+
+        This function starts the lens autofocus mode.
+
+        @param[in] mode : autofocus mode (0 -> non-blocking, 1 -> blocking)
+        @return int32_t result of setting the zoom index.
+
+        @sa lens
+        */
+        int32_t start_auto_focus(uint8_t mode)
+        {
+            std::vector<uint8_t> rx_data;
+
+            int32_t result = send_udp_data(udp_camera_info, lens.start_autofocus(mode).to_vector());
+
+            return result;
+        }   // end of start_auto_focus
 
         //-----------------------------------------------------------------------------
         /**

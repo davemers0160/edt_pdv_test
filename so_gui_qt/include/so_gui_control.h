@@ -7,6 +7,7 @@
 #include <iostream>
 
 #include <QMainWindow>
+#include <Qthread>
 
 #include "ip_helper.h"
 
@@ -36,6 +37,9 @@ public slots:
 
     // connect button
     void button_click();
+
+    // autofocus buttun
+    void af_btn_click();
 
 private:
     Ui::SO_GUI *ui;

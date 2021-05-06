@@ -46,6 +46,8 @@ std::string cfg_file;
 
 // opencv globals
 cv::Mat frame;
+std::string video_cap_address;
+uint16_t video_port = 15004;
 
 // EDT PDV specific variable
 int32_t edt_unit;
@@ -199,22 +201,19 @@ void init()
 void update()
 {
    
+#ifdef USE_UDP_VIDEO
+
+    cap >> frame;
+    cv::cvtColor(frame, frame, cv::COLOR_BGR2GRAY);
+
+#else
+
     // get the image and immediately start the next one (if not the last time through the 
     // loop). Processing (saving to a file in this case) can then occur in parallel with 
     // the next acquisition
     image_p = (uint16_t*)pdv_wait_image(pdv_p);
 
     frame = cv::Mat(edt_height, edt_width, CV_16UC1, image_p);
-
-    cv::normalize(frame, frame, 0, 255, cv::NORM_MINMAX, CV_8UC1);
-
-    // check to see if we're tracking
-    if (tracker_status())
-    {
-        update_tracker(frame.ptr<uint8_t>(0), edt_height, edt_width, 1, &target);
-        cv::Rect r(target.x, target.y, target.w, target.h);
-        cv::rectangle(frame, r, cv::Scalar(255), 2, 1);
-    }
 
     pdv_start_image(pdv_p);
 
@@ -237,6 +236,17 @@ void update()
         std::cout << "restarted...." << std::endl;
     }
 
+#endif
+
+    cv::normalize(frame, frame, 0, 255, cv::NORM_MINMAX, CV_8UC1);
+
+    // check to see if we're tracking
+    if (tracker_status())
+    {
+        update_tracker(frame.ptr<uint8_t>(0), edt_height, edt_width, 1, &target);
+        cv::Rect r(target.x, target.y, target.w, target.h);
+        cv::rectangle(frame, r, cv::Scalar(255), 2, 1);
+    }
 }   // end of update
 
 
@@ -320,6 +330,9 @@ int main(int argc, char** argv)
     {
      
         init();
+
+        std::string camera_ip_address = argv[1];
+        video_cap_address = "udp://" + camera_ip_address + ":" + std::to_string(video_port);
 
         while (key != 'q')
         {

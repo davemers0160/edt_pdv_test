@@ -70,7 +70,7 @@
         <number>65534</number>
        </property>
        <property name="pageStep">
-        <number>50</number>
+        <number>200</number>
        </property>
        <property name="tracking">
         <bool>false</bool>
@@ -233,7 +233,7 @@
         <number>18</number>
        </property>
        <property name="pageStep">
-        <number>50</number>
+        <number>1</number>
        </property>
        <property name="tracking">
         <bool>false</bool>
@@ -245,7 +245,7 @@
         <enum>QSlider::TicksBelow</enum>
        </property>
        <property name="tickInterval">
-        <number>500</number>
+        <number>1</number>
        </property>
       </widget>
      </item>
@@ -279,13 +279,13 @@
      </item>
     </layout>
    </widget>
-   <widget class="QCheckBox" name="af_cb">
+   <widget class="QPushButton" name="af_btn">
     <property name="geometry">
      <rect>
-      <x>610</x>
-      <y>75</y>
-      <width>81</width>
-      <height>17</height>
+      <x>617</x>
+      <y>72</y>
+      <width>75</width>
+      <height>23</height>
      </rect>
     </property>
     <property name="text">
