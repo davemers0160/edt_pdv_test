@@ -1,4 +1,20 @@
+# ----------------------------------------------------------------------------
+# To perform an out of source build do the following on the command line:
+# 1. navigate to the root project directory (in this case DfD2)
+# 2. mkdir build
+# 3. cd build
+# 4. depending on your system (windows/linux) type the following
+# Example CMake build line for windows & VS2015
+# windows: cmake -G "Visual Studio 14 2015 Win64" -DUSE_AVX_INSTRUCTIONS=ON ..
+# linux: cmake -DUSE_AVX_INSTRUCTIONS=ON ..
+#
+# 5. To compile:
+# windows: cmake --build . --config Release
+# linux: cmake --build . --config Release -- -j4
+# ----------------------------------------------------------------------------
+
 cmake_minimum_required(VERSION 3.5)
+set(exe_name "so_gui_qt")
 
 project(so_gui_qt LANGUAGES CXX)
 
@@ -30,9 +46,6 @@ string(SUBSTRING ${PROJECT_SOURCE_DIR} 0 ${INDEX} PR_ROOT)
 
 message("PR_ROOT:" ${PR_ROOT})
 
-#include(${PR_ROOT}/../../common/cmake_utils/use_cpp_11.cmake)
-#include(${PR_ROOT}/../common/cmake_utils/use_sse_avx.cmake)
-
 # look for any *.c and *.cpp files
 file(GLOB PROJECT_SOURCES "src/*.cpp"
     "src/*.ui"
@@ -48,12 +61,6 @@ set(project_includes
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets REQUIRED)
 
-# set(PROJECT_SOURCES
-        # main.cpp
-        # sr_control.cpp
-        # sr_control.h
-        # sr_control.ui
-# )
 
 include_directories(${project_includes})
 
@@ -71,19 +78,19 @@ message(" ")
 
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
-    qt_add_executable(so_gui_qt
+    qt_add_executable(${exe_name}
         ${PROJECT_SOURCES}
     )
 else()
     if(ANDROID)
-        add_library(so_gui_qt SHARED
+        add_library(${exe_name} SHARED
             ${PROJECT_SOURCES}
         )
     else()
-        add_executable(so_gui_qt
+        add_executable(${exe_name}
             ${PROJECT_SOURCES}
         )
     endif()
 endif()
 
-target_link_libraries(so_gui_qt PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+target_link_libraries(${exe_name} PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
