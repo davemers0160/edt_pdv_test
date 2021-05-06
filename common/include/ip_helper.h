@@ -27,7 +27,7 @@
 #include <cstdint>
 #include <string>
 #include <vector>
-
+#include <iostream>
 
 // ----------------------------------------------------------------------------------------
 /*
@@ -86,7 +86,7 @@ void get_ip_address(std::vector<std::string> &data, std::string &error_msg)
 */
 
 
-int32_t get_local_ip(std::string &ip_address, std::string& error_msg)
+inline int32_t get_local_ip(std::string &ip_address, std::string& error_msg)
 {
     int32_t result = 0;
 

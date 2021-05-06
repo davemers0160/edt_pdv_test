@@ -1,3 +1,5 @@
+#define _CRT_SECURE_NO_WARNINGS
+
 #ifndef _UDP_NETWORK_FUNCTIONS_H
 #define _UDP_NETWORK_FUNCTIONS_H
 
@@ -81,7 +83,7 @@ enum socket_errors {
 };
 
 // ----------------------------------------------------------------------------
-int32_t winsock_init(std::string &error_msg)
+inline int32_t winsock_init(std::string &error_msg)
 {
 	int32_t result = 0;
 
@@ -101,7 +103,7 @@ int32_t winsock_init(std::string &error_msg)
 }	// end of winsock_init
 
 // ----------------------------------------------------------------------------
-int32_t close_connection(SOCKET& s, std::string& error_msg)
+inline int32_t close_connection(SOCKET& s, std::string& error_msg)
 {
 	int32_t result = 0;
 
@@ -123,7 +125,7 @@ int32_t close_connection(SOCKET& s, std::string& error_msg)
 
 
 // ----------------------------------------------------------------------------
-int32_t bind_udp_server(udp_info &info, std::string &error_msg)
+inline int32_t bind_udp_server(udp_info &info, std::string &error_msg)
 {
 	int32_t result = SUCCESS;
 
@@ -178,7 +180,7 @@ int32_t bind_udp_server(udp_info &info, std::string &error_msg)
 }	// end of bind_udp_server
 
 // ----------------------------------------------------------------------------
-int32_t init_udp_socket(udp_info &info, std::string& error_msg)
+inline int32_t init_udp_socket(udp_info &info, std::string& error_msg)
 {
 
 	int32_t result = 0;
@@ -215,7 +217,7 @@ inline int32_t send_udp_data(udp_info& info, std::string data)
 }
 
 // ----------------------------------------------------------------------------
-int32_t receive_udp_data(SOCKET udp_sock, struct sockaddr_in read_addr_obj, char *data, int32_t length)
+inline int32_t receive_udp_data(SOCKET udp_sock, struct sockaddr_in read_addr_obj, char *data, int32_t length)
 {
 	int32_t result;
 	int32_t error = 10060L;		// WIN32 -> WSAETIMEDOUT
@@ -271,7 +273,7 @@ int32_t receive_udp_data(SOCKET udp_sock, struct sockaddr_in read_addr_obj, char
 }	// end of receive_udp_data
 
 
-int32_t receive_udp_data(SOCKET udp_sock, struct sockaddr_in read_addr_obj, std::vector<uint8_t>& data, int32_t length = 256)
+inline int32_t receive_udp_data(SOCKET udp_sock, struct sockaddr_in read_addr_obj, std::vector<uint8_t>& data, int32_t length = 256)
 {
 	int32_t result;
 
@@ -300,7 +302,7 @@ inline int32_t receive_udp_data(udp_info& info, std::vector<uint8_t>& data, int3
 }	// end of receive_udp_data
 
 // ----------------------------------------------------------------------------
-int32_t init_udp_broadcast(SOCKET &sock,
+inline int32_t init_udp_broadcast(SOCKET &sock,
 	struct sockaddr_in &sock_addr,
 	std::string host_ip_address,
 	std::string broadcast_address,
@@ -371,7 +373,7 @@ int32_t init_udp_broadcast(SOCKET &sock,
 	return result;
 }	// end of init_udp_broadcast
 
-int32_t init_udp_broadcast(udp_info& info,
+inline int32_t init_udp_broadcast(udp_info& info,
 	std::string host_ip_address,
 	std::string broadcast_address,
 	uint16_t broadcast_port,
@@ -384,7 +386,7 @@ int32_t init_udp_broadcast(udp_info& info,
 }	// end of init_udp_broadcast
 
 // ----------------------------------------------------------------------------
-int32_t receive_broadcast_response(SOCKET& sock,
+inline int32_t receive_broadcast_response(SOCKET& sock,
 	struct sockaddr_in& sock_addr,
 	char *data,
 	uint32_t length,
