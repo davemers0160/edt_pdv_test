@@ -64,7 +64,7 @@ public:
     
     c10_protocol(uint8_t id_) : id(id_)
     {
-        size = 0;
+        length = 0;
         data.clear();
         checksum = calc_checksum();
         checksum_valid = true;

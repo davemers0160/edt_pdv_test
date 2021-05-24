@@ -114,7 +114,7 @@ namespace FLS
         serial_port sp;
         std::string port_name;
         uint32_t wait_time;
-        uint32_t baud_rate;
+        
         
         lens() = default;
 
@@ -125,146 +125,64 @@ namespace FLS
         }
 
         //-----------------------------------------------------------------------------
-        /**
-        @brief Get the camera serial number.
+        uint16_t get_focus() { return focus; }
+        uint16_t get_zoom() { return zoom; }
+        uint16_t get_iris() { return iris; }
+        
 
-        This function returns the serial number captured from the camera when the connection is first established.
+        //-----------------------------------------------------------------------------
+        uint32_t connect()
+        {
+            int32_t result = 0;
+            std::vector<uint8_t> rx_data;
+            uint64_t data_length = 3;
+            
+            if (port_name.empty())
+            {
+                std::cout << "port_name is empty" << std::endl;
+                return 0;
+            }
 
-        @return sn : camera serial number.
-        */
-        std::string get_sn() { return sn; }
+            // open up the serial port and connect
+            sp.open_port(port_name, baud_rate, wait_time);
+            connected = true;
 
+            // send the connection request to the lens
+            c10_protocol tx(FUNCTION_CODES::CONNECT);
+            result = txrx_data(tx.to_vector(), rx_data, data_length);
+            c10_protocol rx(rx_data);
+            
+            // check  for a valid return message
+            if(rx.checksum_valid == true)
+            {
+                // get the name of the lens
+                data_length = 15;
+                
+                tx = c10_protocol(FUNCTION_CODES::LENS_NAME1);
+                result = txrx_data(tx.to_vector(), rx_data, data_length);
+                rx = c10_protocol(rx_data);
+                
+                name = std::string(rx.data->begin(), rx.data->end());
+                
+                // check the size of the returned data
+                if(rx.length == 15)
+                {
+                    // read in the second half of the name
+                    c10_protocol tx(FUNCTION_CODES::LENS_NAME2);           
+                    result = txrx_data(tx.to_vector(), rx_data, data_length);
+                    rx = c10_protocol(rx_data);
+                    
+                    name += std::string(rx.data->begin(), rx.data->end());                   
+                }
+            }
+
+            return 1;
+        }   // end of connect
        
         //-----------------------------------------------------------------------------
-        /**
-        @brief Initialize the camera and get the current parameters.
-
-        This function initializes the UDP connection to the camera for control and gets the relevant parameters of the camera.
-
-        @return int32_t result of the connection attempt.
-        */
-        int32_t init(std::string ip_address, std::string& error_msg)
-        {
-
-            int32_t result;
-            int32_t read_result, write_result;
-            std::vector<uint8_t> rx_data;
-            wind_protocol wind_data;
-            fip_protocol fip_data;
-
-            // init the read portion of the UDP socket
-            result = init_udp_socket(udp_camera_info, error_msg);
-
-            if (result == 0)
-            {
-                // init the write portion of the UDP socket
-                udp_camera_info.ip_address = ip_address;
-                udp_camera_info.read_addr_obj.sin_addr.s_addr = inet_addr(udp_camera_info.ip_address.c_str());
-
-                udp_camera_info.write_addr_obj.sin_addr.s_addr = inet_addr(udp_camera_info.ip_address.c_str());
-                udp_camera_info.write_addr_obj.sin_port = htons(udp_camera_info.write_port);
-                udp_camera_info.write_addr_obj.sin_family = AF_INET;
-
-                // get the SLA board version number
-                write_result = send_udp_data(udp_camera_info, get_sla_board_version().to_vector());
-                read_result = receive_udp_data(udp_camera_info, rx_data);
-                fip_data = fip_protocol(rx_data);
-
-                // get the image size
-                write_result = send_udp_data(udp_camera_info, get_sla_image_size().to_vector());
-                read_result = receive_udp_data(udp_camera_info, rx_data);
-                fip_data = fip_protocol(rx_data);
-                set_image_size(read2(&fip_data.data[2]), read2(&fip_data.data[0]));
-
-                // get the camera wind version number
-                write_result = send_udp_data(udp_camera_info, get_version().to_vector());
-                read_result = receive_udp_data(udp_camera_info, rx_data);
-                wind_data = wind_protocol(rx_data);
-                set_version(wind_data);
-
-                // get the camera serial number
-                write_result = send_udp_data(udp_camera_info, get_serial_number().to_vector());
-                read_result = receive_udp_data(udp_camera_info, rx_data);
-                wind_data = wind_protocol(rx_data);
-                set_sn(wind_data);
-
-                // get the camera lens version
-                write_result = send_udp_data(udp_camera_info, lens.get_version().to_vector());
-                read_result = receive_udp_data(udp_camera_info, rx_data);
-                wind_data = wind_protocol(rx_data);
-                lens.set_version(wind_data);
-
-                // ----------------------------------------------------------------------------
-                // get the camera lens zoom index
-                write_result = send_udp_data(udp_camera_info, lens.get_zoom_index().to_vector());
-                read_result = receive_udp_data(udp_camera_info, rx_data);
-                wind_data = wind_protocol(rx_data);
-                lens.zoom_index = read2(&wind_data.payload[0]);
-
-                // get the camera lens zoom position
-                write_result = send_udp_data(udp_camera_info, lens.get_zoom_position().to_vector());
-                read_result = receive_udp_data(udp_camera_info, rx_data);
-                wind_data = wind_protocol(rx_data);
-                lens.zoom_position = read2(&wind_data.payload[0]);
-
-                // get the camera lens zoom speed
-                write_result = send_udp_data(udp_camera_info, lens.get_zoom_speed().to_vector());
-                read_result = receive_udp_data(udp_camera_info, rx_data);
-                wind_data = wind_protocol(rx_data);
-                lens.zoom_speed = (wind_data.payload[0]);
-
-                // get the camera lens focus position
-                write_result = send_udp_data(udp_camera_info, lens.get_focus_position().to_vector());
-                read_result = receive_udp_data(udp_camera_info, rx_data);
-                wind_data = wind_protocol(rx_data);
-                lens.focus_position = read2(&wind_data.payload[0]);
-
-                // get the camera lens focus speed
-                write_result = send_udp_data(udp_camera_info, lens.get_focus_speed().to_vector());
-                read_result = receive_udp_data(udp_camera_info, rx_data);
-                wind_data = wind_protocol(rx_data);
-                lens.focus_speed = (wind_data.payload[0]);
-
-                // ----------------------------------------------------------------------------
-                // get the sensor version number
-                write_result = send_udp_data(udp_camera_info, sensor.get_version().to_vector());
-                read_result = receive_udp_data(udp_camera_info, rx_data);
-                wind_data = wind_protocol(rx_data);
-                sensor.set_version(wind_data);
-
-                // get the FFC period
-                write_result = send_udp_data(udp_camera_info, sensor.get_auto_ffc_period().to_vector());
-                read_result = receive_udp_data(udp_camera_info, rx_data);
-                wind_data = wind_protocol(rx_data);
-                sensor.ffc_period = read2(&wind_data.payload[0]);
-
-                // get the FFC mode
-                write_result = send_udp_data(udp_camera_info, sensor.get_auto_ffc_mode().to_vector());
-                read_result = receive_udp_data(udp_camera_info, rx_data);
-                wind_data = wind_protocol(rx_data);
-                sensor.ffc_mode = wind_data.payload[0];
-
-                // get the current display parameter settings
-                write_result = send_udp_data(udp_camera_info, get_display_parameters().to_vector());
-                read_result = receive_udp_data(udp_camera_info, rx_data);
-                fip_data = fip_protocol(rx_data);
-
-                // ----------------------------------------------------------------------------
-                // remove the zoom
-                write_result = send_udp_data(udp_camera_info, set_display_parameters(0x01, 0x4D).to_vector());
-
-            }
-            else
-            {
-                std::cout << "result: " << result << std::endl;
-                std::cout << "error msg: " << error_msg << std::endl;
-            }
-
-            return result;
-
-        }	// end of init_camera
-
-
+        std::string get_name() { return name; }
+        
+        
         //-----------------------------------------------------------------------------
         /**
         @brief Set the lens focus position.
@@ -278,10 +196,16 @@ namespace FLS
         */
         int32_t set_focus_position(uint16_t value)
         {
+            int32_t result = 0;
             std::vector<uint8_t> rx_data;
+            
+            c10_protocol tx(FUNCTION_CODES::SET_FOCUS_POS, value);
+            result = txrx_data(tx.to_vector(), rx_data, 3);
 
-            // set the value
-            int32_t result = send_udp_data(udp_camera_info, lens.set_focus_position(value).to_vector());
+            if(rx_data[1] == FUNCTION_CODES::SET_FOCUS_POS)
+            {
+                result = 1;
+            }
 
             return result;
         }   // end of set_focus_position
@@ -295,20 +219,21 @@ namespace FLS
         @param[out] value : position of the focus motor
         @return int32_t result of getting the focus position.
 
-        @sa lens
+        @sa c10_protocol
         */
-        int32_t get_focus_position(uint16_t &value)
+        int32_t get_focus_position()
         {
+            int32_t result = 0;
             std::vector<uint8_t> rx_data;
+            
+            c10_protocol tx(FUNCTION_CODES::GET_FOCUS_POS, value);
+            result = txrx_data(tx.to_vector(), rx_data, 3);
+            c10_protocol rx(rx_data);
 
-            // get the value
-            int32_t result = send_udp_data(udp_camera_info,lens.get_focus_position().to_vector());
-            result = receive_udp_data(udp_camera_info, rx_data);
-            wind_protocol wind_data = wind_protocol(rx_data);
-            if(wind_data.payload.size() > 0)
+            if(rx.code == FUNCTION_CODES::SET_FOCUS_POS)
             {
-                lens.focus_position =  read2(&wind_data.payload[0]);
-                value = lens.focus_position;
+                focus = to_uint16(rx.data);
+                result = 1;
             }
 
             return result;
@@ -316,27 +241,118 @@ namespace FLS
 
         //-----------------------------------------------------------------------------
         /**
-        @brief Set the zoom index.
+        @brief Set the zoom position.
 
-        This function sets the lens zoom index.
+        This function sets the lens zoom position.
 
         @param[in] value : position to set the zoom motor to
-        @return int32_t result of setting the zoom index.
+        @return int32_t result of setting the zoom position.
 
-        @sa lens
+        @sa c10_protocol
         */
-        int32_t set_zoom_index(uint16_t value)
+        int32_t set_zoom_position(uint16_t value)
         {
+            int32_t result = 0;
             std::vector<uint8_t> rx_data;
+            
+            c10_protocol tx(FUNCTION_CODES::SET_ZOOM_POS, value);
+            result = txrx_data(tx.to_vector(), rx_data, 3);
 
-            int32_t result = send_udp_data(udp_camera_info, lens.set_zoom_index(value).to_vector());
-
-            // get the intial value for the zoom index
-            result = send_udp_data(udp_camera_info, lens.get_zoom_index().to_vector());
+            if(rx_data[1] == FUNCTION_CODES::SET_FOCUS_POS)
+            {
+                result = 1;
+            }
 
             return result;
-        }   // end of set_zoom_index
+        }   // end of set_zoom_position
 
+        //-----------------------------------------------------------------------------
+        /**
+        @brief Get the lens zoom position.
+
+        This function sets the lens zoom position.
+
+        @param[out] value : position of the zoom motor
+        @return int32_t result of getting the zoom position.
+
+        @sa c10_protocol
+        */
+        int32_t get_zoom_position()
+        {
+            int32_t result = 0;
+            std::vector<uint8_t> rx_data;
+            
+            c10_protocol tx(FUNCTION_CODES::GET_FOCUS_POS, value);
+            result = txrx_data(tx.to_vector(), rx_data, 3);
+            c10_protocol rx(rx_data);
+
+            if(rx.code == FUNCTION_CODES::GET_FOCUS_POS)
+            {
+                zoom = to_uint16(rx.data);
+                result = 1;
+            }
+
+            return result;
+        }   // end of get_zoom_position
+        
+        //-----------------------------------------------------------------------------
+        /**
+        @brief Set the iris position.
+
+        This function sets the lens iris position.
+
+        @param[in] value : position to set the iris motor to
+        @return int32_t result of setting the iris position.
+
+        @sa c10_protocol
+        */
+        int32_t set_iris_position(uint16_t value)
+        {
+            int32_t result = 0;
+            std::vector<uint8_t> rx_data;
+            
+            c10_protocol tx(FUNCTION_CODES::SET_IRIS_POS, value);
+            result = txrx_data(tx.to_vector(), rx_data, 3);
+
+            if(rx_data[1] == FUNCTION_CODES::SET_IRIS_POS)
+            {
+                result = 1;
+            }
+
+            return result;
+        }   // end of set_iris_position
+
+        //-----------------------------------------------------------------------------
+        /**
+        @brief Get the lens iris position.
+
+        This function sets the lens iris position.
+
+        @param[out] value : position of the iris motor
+        @return int32_t result of getting the iris position.
+
+        @sa c10_protocol
+        */
+        int32_t get_iris_position()
+        {
+            int32_t result = 0;
+            std::vector<uint8_t> rx_data;
+            
+            c10_protocol tx(FUNCTION_CODES::GET_IRIS_POS, value);
+            result = txrx_data(tx.to_vector(), rx_data, 3);
+            c10_protocol rx(rx_data);
+
+            if(rx.code == FUNCTION_CODES::GET_IRIS_POS)
+            {
+                iris = to_uint16(rx.data);
+                result = 1;
+            }
+
+            return result;
+        }   // end of get_iris_position
+        
+        
+        
         //-----------------------------------------------------------------------------
         /**
         @brief Start the len autofocus mode.
@@ -395,12 +411,52 @@ namespace FLS
 
     private:
 
-    std::string name;
-    
-    bool connected = false;
-    uint16_t focus;
-    uint16_t zoom;
-    uint16_t iris;
+        std::string name;
+        
+        bool connected = false;
+        uint16_t focus;
+        uint16_t zoom;
+        uint16_t iris;
+        
+        uint32_t baud_rate = 38400;
+        
+        //-----------------------------------------------------------------------------
+        inline int32_t txrx_data(std::vector<uint8_t> tx_data, std::vector<uint8_t> &rx_data, uint64_t bytes_to_read)
+        {
+            int32_t result = -1;
+            
+            if (connected)
+            {
+                rx_data.clear();
+                
+                // flush teh serial port to remove any unwanted data
+                sp.flush_port();
+
+                // send the status message to trigger the kens to return status info
+                result = (int32_t)sp.write_port(tx_data);
+
+                // get the returned string from the lens
+                result = (int32_t)sp.read_port(rx_data, bytes_to_read);
+
+                // check the error code returned
+                //result = (int32_t)get_error_code(rx_msg);
+            }
+
+            return result;
+        }   // end of txrx_data
+        
+        //-----------------------------------------------------------------------------
+        inline uint16_t to_uint16(std::vector<uint8_t> d)
+        {
+            uint16_t v;
+
+            if(d.size > 1)
+            {
+                v = d[0] << 8 | d[1];
+            }
+            
+            return v;
+        }   // end of to_uint16
 
 
     };  // end camera class
