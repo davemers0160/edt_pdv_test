@@ -158,7 +158,7 @@ namespace FLS
             c10_protocol rx(rx_data);
             
             // check  for a valid return message
-            if(rx.checksum_valid == true)
+            if(rx.valid_checksum() == true)
             {
                 // get the name of the lens
                 data_length = 15;
@@ -167,7 +167,7 @@ namespace FLS
                 result = txrx_data(tx.to_vector(), rx_data, data_length);
                 rx = c10_protocol(rx_data);
                 
-                name = std::string(rx.data->begin(), rx.data->end());
+                name = std::string(rx.data.begin(), rx.data.end());
                 
                 // check the size of the returned data
                 if(rx.length == 15)
@@ -177,7 +177,7 @@ namespace FLS
                     result = txrx_data(tx.to_vector(), rx_data, data_length);
                     rx = c10_protocol(rx_data);
                     
-                    name += std::string(rx.data->begin(), rx.data->end());                   
+                    name += std::string(rx.data.begin(), rx.data.end());                   
                 }
             }
 
@@ -232,7 +232,7 @@ namespace FLS
             int32_t result = 0;
             std::vector<uint8_t> rx_data;
             
-            c10_protocol tx(FUNCTION_CODES::GET_FOCUS_POS, value);
+            c10_protocol tx(FUNCTION_CODES::GET_FOCUS_POS);
             result = txrx_data(tx.to_vector(), rx_data, 5);
             c10_protocol rx(rx_data);
 
@@ -289,7 +289,7 @@ namespace FLS
             int32_t result = 0;
             std::vector<uint8_t> rx_data;
             
-            c10_protocol tx(FUNCTION_CODES::GET_ZOOM_POS, value);
+            c10_protocol tx(FUNCTION_CODES::GET_ZOOM_POS);
             result = txrx_data(tx.to_vector(), rx_data, 5);
             c10_protocol rx(rx_data);
 
@@ -346,7 +346,7 @@ namespace FLS
             int32_t result = 0;
             std::vector<uint8_t> rx_data;
             
-            c10_protocol tx(FUNCTION_CODES::GET_IRIS_POS, value);
+            c10_protocol tx(FUNCTION_CODES::GET_IRIS_POS);
             result = txrx_data(tx.to_vector(), rx_data, 5);
             c10_protocol rx(rx_data);
 
@@ -403,7 +403,7 @@ namespace FLS
             int32_t result = 0;
             std::vector<uint8_t> rx_data;
             
-            c10_protocol tx(FUNCTION_CODES::GET_SWITCH_0, value);
+            c10_protocol tx(FUNCTION_CODES::GET_SWITCH_0);
             result = txrx_data(tx.to_vector(), rx_data, 4);
             c10_protocol rx(rx_data);
 
@@ -420,10 +420,8 @@ namespace FLS
         @brief Close the connection.
 
         This function closes the serial port connection to the lens.
-
-        @return int32_t result with the status of closing.
         */
-        int32_t close()
+        void close()
         {
             if (connected)
             {
@@ -435,17 +433,17 @@ namespace FLS
         //-----------------------------------------------------------------------------    
         inline friend std::ostream& operator<< (
             std::ostream& out,
-            const camera& item
+            const fujinon_lens& item
             )
         {
-            out << "Camera:" << std::endl;
-            out << "  Serial Number:    " << item.sn << std::endl;
-            out << "  Firmware Version: " << (uint32_t)item.maj_rev << "." << (uint32_t)item.min_rev << "." << (uint32_t)item.build_num << "." << (uint32_t)item.camera_type << std::endl;
-            out << "  Image size (h x w): " << item.height << " x " << item.width << std::endl;
             out << "Lens:" << std::endl;
-            out << item.lens;
-            out << "Sensor:" << std::endl;
-            out << item.sensor << std::endl;
+            out << "  Name:       " << item.name << std::endl;
+            out << "  port name:  " << item.port_name << std::endl;
+            out << "  baud rate:  " << item.baud_rate << std::endl;
+            out << "  wait time:  " << item.wait_time << std::endl;
+            out << "  focus step: " << item.focus << std::endl;
+            out << "  zoom step:  " << item.zoom << std::endl;
+            out << "  iris step:  " << item.iris << std::endl;
             return out;
         }
 
@@ -490,7 +488,7 @@ namespace FLS
         {
             uint16_t v;
 
-            if(d.size > 1)
+            if(d.size() > 1)
             {
                 v = d[0] << 8 | d[1];
             }
@@ -501,8 +499,8 @@ namespace FLS
         //-----------------------------------------------------------------------------
         inline float to_float(uint16_t value)
         {
-            float v = (float)(v & 0x0FFF);
-            int8_t expo = (int8_t)((int16_t)v >> 11);
+            float v = (float)(value & 0x0FFF);
+            int8_t expo = (int8_t)((int16_t)value >> 11);
             return (float) v * (10^expo);
         }
 

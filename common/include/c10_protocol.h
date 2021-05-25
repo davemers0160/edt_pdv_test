@@ -22,7 +22,7 @@ public:
     
     c10_protocol() = default;
     
-    c10_protocol(uint8_t id_) : id(id_)
+    c10_protocol(uint8_t code_) : code(code_)
     {
         length = 0;
         data.clear();
@@ -30,7 +30,7 @@ public:
         checksum_valid = true;
     }
     
-    c10_protocol(uint8_t code_, std::vector<uint8_t> data_) : code(id_)
+    c10_protocol(uint8_t code_, std::vector<uint8_t> data_) : code(code_)
     {
         data = data_;
         length = (uint8_t)data.size();
@@ -39,21 +39,21 @@ public:
     }
 
     
-    c10_protocol(uint8_t code_, uint8_t data_) : code(id_)
+    c10_protocol(uint8_t code_, uint8_t data_) : code(code_)
     {
         data.clear();
-        data.pushback(data_);
+        data.push_back(data_);
         
         length = (uint8_t)data.size();
         checksum = calc_checksum();
         checksum_valid = true;
     }
     
-    c10_protocol(uint8_t code_, uint16_t data_) : code(id_)
+    c10_protocol(uint8_t code_, uint16_t data_) : code(code_)
     {
         data.clear();
-        data.pushback((data_ >> 8) | 0x00FF);
-        data.pushback((data_ | 0x00FF);
+        data.push_back((data_ >> 8) & 0x00FF);
+        data.push_back(data_ & 0x00FF);
         
         length = (uint8_t)data.size();
         checksum = calc_checksum();
@@ -84,6 +84,9 @@ public:
         }
     }
    
+    //-----------------------------------------------------------------------------
+    inline bool valid_checksum() { return checksum_valid; }
+
     //-----------------------------------------------------------------------------
     /**
     @brief Update data.

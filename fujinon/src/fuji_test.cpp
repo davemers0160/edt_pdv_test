@@ -86,7 +86,7 @@ int main(int argc, char** argv)
     
 #endif
 
-    fj = fujinon_lens(port_name, wait_time);
+    fj = FLS::fujinon_lens(port_name, wait_time);
 
 
     try
@@ -96,14 +96,13 @@ int main(int argc, char** argv)
 
         std::cout << fj << std::endl;
 
-        fj.set_focus(5000);
-        fj.set_zoom(4000);
-        fj.set_iris(60);
+        fj.set_focus_position(5000);
+        fj.set_zoom_position(4000);
+        fj.set_iris_position(60);
 
         std::cout << "Focus: " << fj.get_focus() << std::endl;
         std::cout << "Zoom: " << fj.get_zoom() << std::endl;
-        std::cout << "Iris: " << (uint32_t)fj.get_iris() << std::endl;
-        std::cout << "Temp: " << fj.get_temp() << std::endl;
+        std::cout << "Iris: " << fj.get_iris() << std::endl;
         std::cout << std::endl;
 
         int bp = 1;
