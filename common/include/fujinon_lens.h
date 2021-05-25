@@ -107,21 +107,26 @@ namespace FLS
 
     This class build the packets in the to communicate with the camera.
     */
-    class lens {
+    class fujinon_lens {
 
     public:
     
         serial_port sp;
         std::string port_name;
         uint32_t wait_time;
-        
-        
-        lens() = default;
 
-        lens(uint8_t maj_rev_, uint8_t min_rev_, uint16_t bn, uint16_t ct) : maj_rev(maj_rev_), min_rev(min_rev_), build_num(bn), camera_type(ct)
+        //-----------------------------------------------------------------------------
+        fujinon_lens()
         {
+            port_name = "";
+            wait_time = 5;
+            baud_rate = 38400;
+            connected = false;
+        }
 
-
+        fujinon_lens(std::string pn, uint32_t wt) : port_name(pn), wait_time(wt)
+        {
+            connected = false;
         }
 
         //-----------------------------------------------------------------------------
@@ -204,6 +209,7 @@ namespace FLS
 
             if(rx_data[1] == FUNCTION_CODES::SET_FOCUS_POS)
             {
+                get_focus_position();
                 result = 1;
             }
 
@@ -227,10 +233,10 @@ namespace FLS
             std::vector<uint8_t> rx_data;
             
             c10_protocol tx(FUNCTION_CODES::GET_FOCUS_POS, value);
-            result = txrx_data(tx.to_vector(), rx_data, 3);
+            result = txrx_data(tx.to_vector(), rx_data, 5);
             c10_protocol rx(rx_data);
 
-            if(rx.code == FUNCTION_CODES::SET_FOCUS_POS)
+            if(rx.code == FUNCTION_CODES::GET_FOCUS_POS)
             {
                 focus = to_uint16(rx.data);
                 result = 1;
@@ -258,8 +264,9 @@ namespace FLS
             c10_protocol tx(FUNCTION_CODES::SET_ZOOM_POS, value);
             result = txrx_data(tx.to_vector(), rx_data, 3);
 
-            if(rx_data[1] == FUNCTION_CODES::SET_FOCUS_POS)
+            if(rx_data[1] == FUNCTION_CODES::SET_ZOOM_POS)
             {
+                get_zoom_position();
                 result = 1;
             }
 
@@ -282,11 +289,11 @@ namespace FLS
             int32_t result = 0;
             std::vector<uint8_t> rx_data;
             
-            c10_protocol tx(FUNCTION_CODES::GET_FOCUS_POS, value);
-            result = txrx_data(tx.to_vector(), rx_data, 3);
+            c10_protocol tx(FUNCTION_CODES::GET_ZOOM_POS, value);
+            result = txrx_data(tx.to_vector(), rx_data, 5);
             c10_protocol rx(rx_data);
 
-            if(rx.code == FUNCTION_CODES::GET_FOCUS_POS)
+            if(rx.code == FUNCTION_CODES::GET_ZOOM_POS)
             {
                 zoom = to_uint16(rx.data);
                 result = 1;
@@ -316,6 +323,7 @@ namespace FLS
 
             if(rx_data[1] == FUNCTION_CODES::SET_IRIS_POS)
             {
+                get_iris_position();
                 result = 1;
             }
 
@@ -339,7 +347,7 @@ namespace FLS
             std::vector<uint8_t> rx_data;
             
             c10_protocol tx(FUNCTION_CODES::GET_IRIS_POS, value);
-            result = txrx_data(tx.to_vector(), rx_data, 3);
+            result = txrx_data(tx.to_vector(), rx_data, 5);
             c10_protocol rx(rx_data);
 
             if(rx.code == FUNCTION_CODES::GET_IRIS_POS)
@@ -352,44 +360,76 @@ namespace FLS
         }   // end of get_iris_position
         
         
-        
         //-----------------------------------------------------------------------------
         /**
-        @brief Start the len autofocus mode.
+        @brief Set the switch 0 value.
 
-        This function starts the lens autofocus mode.
+        This function sets the lens switch 0 value.
 
-        @param[in] mode : autofocus mode (0 -> non-blocking, 1 -> blocking)
-        @return int32_t result of setting the zoom index.
+        @param[in] value : switch 0 value to set.
+        @return int32_t result of setting the switch 0 value.
 
-        @sa lens
+        @sa c10_protocol
         */
-        int32_t start_auto_focus(uint8_t mode)
+        int32_t set_switch_0(uint8_t value)
         {
+            int32_t result = 0;
             std::vector<uint8_t> rx_data;
+            
+            c10_protocol tx(FUNCTION_CODES::SET_SWITCH_0, value);
+            result = txrx_data(tx.to_vector(), rx_data, 3);
 
-            int32_t result = send_udp_data(udp_camera_info, lens.start_autofocus(mode).to_vector());
+            if(rx_data[1] == FUNCTION_CODES::SET_SWITCH_0)
+            {
+                result = 1;
+            }
 
             return result;
-        }   // end of start_auto_focus
+        }   // end of set_switch_0
 
+        //-----------------------------------------------------------------------------
+        /**
+        @brief Get the lens switch 0 value.
 
+        This function sets the lens switch 0 value.
 
+        @param[out] value : switch 0 value
+        @return int32_t result of getting the switch 0 value.
+
+        @sa c10_protocol
+        */
+        int32_t get_switch_0()
+        {
+            int32_t result = 0;
+            std::vector<uint8_t> rx_data;
+            
+            c10_protocol tx(FUNCTION_CODES::GET_SWITCH_0, value);
+            result = txrx_data(tx.to_vector(), rx_data, 4);
+            c10_protocol rx(rx_data);
+
+            if(rx.code == FUNCTION_CODES::GET_SWITCH_0)
+            {
+                result = 1;
+            }
+
+            return result;
+        }   // end of get_switch_0
+        
         //-----------------------------------------------------------------------------    
         /**
-        @brief Close the UDP connection.
+        @brief Close the connection.
 
-        This function closes the UDP connection to the camera.
+        This function closes the serial port connection to the lens.
 
         @return int32_t result with the status of closing.
         */
         int32_t close()
         {
-            std::string error_msg;
-
-            int32_t result = close_connection(udp_camera_info.udp_sock, error_msg);
-
-            return result;
+            if (connected)
+            {
+                sp.close_port();
+                connected = false;
+            }
         }   // end of close
 
         //-----------------------------------------------------------------------------    
@@ -458,6 +498,13 @@ namespace FLS
             return v;
         }   // end of to_uint16
 
+        //-----------------------------------------------------------------------------
+        inline float to_float(uint16_t value)
+        {
+            float v = (float)(v & 0x0FFF);
+            int8_t expo = (int8_t)((int16_t)v >> 11);
+            return (float) v * (10^expo);
+        }
 
     };  // end camera class
 
