@@ -14,8 +14,6 @@
 #include <algorithm>
 #include <thread>
 
-
-
 // Project Includes
 #include "fuji_test.h"
 #include "fujinon_lens.h"
@@ -64,7 +62,7 @@ int main(int argc, char** argv)
     uint32_t baud_rate = 115200;
     
     std::string error_msg;
-    int32_t write_result;
+    //int32_t write_result;
     std::vector<uint8_t> rx_data;
 
     FLS::fujinon_lens fj;
@@ -87,7 +85,6 @@ int main(int argc, char** argv)
 #endif
 
     fj = FLS::fujinon_lens(port_name, wait_time);
-
 
     try
     {

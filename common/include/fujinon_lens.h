@@ -33,16 +33,16 @@ namespace FLS
 
     These are the command codes to interact with the lens
     */
-    enum FUNCTION_CODES {
+    enum class FUNCTION_CODE {
 
         CONNECT         = 0x01,     /**< Connection request */
         LENS_NAME1      = 0x11,     /**< Request for the first half of the lens name */
         LENS_NAME2      = 0x12,     /**< Request for the second half of the lens name */
 
-        OPEN_FNUM       = 0x13,     /**< Request for Open F num */
-        FL_TELE_END     = 0x14,     /**< Request for Tele-end focal length */
-        FL_WIDE_END     = 0x15,     /**< Request for Wide-end focal length */
-        MOD             = 0x16,     /**< Request for MOD */
+        GET_FNUM        = 0x13,     /**< Request for Open F num */
+        GET_TELE_END    = 0x14,     /**< Request for Tele-end focal length */
+        GET_WIDE_END    = 0x15,     /**< Request for Wide-end focal length */
+        GET_MOD         = 0x16,     /**< Request for MOD */
 
         SET_IRIS_POS    = 0x20,     /**< Set iris position -> 0x0000 - 0xFFFF */
         GET_IRIS_POS    = 0x30,     /**< Get iris position -> 0x0000 - 0xFFFF */
@@ -75,37 +75,127 @@ namespace FLS
 
     //-----------------------------------------------------------------------------
     /**
+    Switch 0 Codes for lower 4-bits
+
+    These are the switch 0 codes for the lower 4-bits of the switch 0 input. This code should be OR'd with the SWITCH0_CODE_HIGH value.
+    */  
+    enum class SWITCH0_LOW
+    {
+        IR_950      = 0x0C,         /**< n-IR 950nm */
+        IR_880      = 0x0D,         /**< n-IR 880nm */
+        IR_850      = 0x0E,         /**< n-IR 850nm */
+        NO_EFFECT   = 0x0F          /**< no effect */
+    };
+
+    /**
+    Switch 0 Codes for higher 4-bits
+
+    These are the switch 0 codes for the higher 4-bits of the switch 0 input.  This code should be OR'd with the SWITCH0_CODE_LOW value.
+    */
+    enum class SWITCH0_HIGH
+    {
+        FILTER_4    = 0x0C,         /**< Filter type 4 */
+        FILTER_3    = 0x0D,         /**< Filter type 3 */
+        FILTER_2    = 0x0E,         /**< Filter type 2 */
+        FILTER_1    = 0x0F          /**< Filter type 1 */
+    };
+
+    //-----------------------------------------------------------------------------
+    /**
+    Switch 2 Codes
+
+    These are the switch 2 codes
+    */
+    enum class SWITCH2
+    {
+        AUTO_IRIS   = 0xCF,         /**< auto iris control */
+        REMOTE_IRIS = 0xDF          /**< remote iris control */
+    };
+
+    //-----------------------------------------------------------------------------
+    /**
+    Switch 3 Codes
+
+    These are the switch 3 codes
+    */
+    enum class SWITCH3
+    {
+        MAG_X2  = 0xFE,         /**< Magnification = x1.0 */
+        MAG_X1  = 0xFF          /**< Magnification = x2.0 */
+    };
+
+    //-----------------------------------------------------------------------------
+    /**
+    Switch 6 Codes
+
+    These are the switch 6 codes
+    */
+    enum class SWITCH6
+    {
+        ON      = 0x00,         /**< Stabilizer on */
+        OFF     = 0x01          /**< Stabilizer off */
+    };
+
+
+    //-----------------------------------------------------------------------------
+    /**
+    Auto Focus Switch 0 Codes
+
+    These are the lower 4-bits for the auto focus switch 0 codes
+    */
+    enum class AF_SWITCH0
+    {
+        ON      = 0x00,         /**< Auto Focus on */
+        OFF     = 0x01          /**< Auto Focus off */
+    };
+
+    //-----------------------------------------------------------------------------
+    /**
+    Auto Focus Switch 0 Search Codes
+
+    These are the higher 4-bits for the auto focus switch 0 input.  This code should be OR'd with the AF_SWITCH0_CODE value.
+    */
+    enum class AF_SWITCH0_SEARCH
+    {
+        FULL            = 0x00,         /**< Full Range Search */
+        HALF            = 0x10,         /**< 1/2 Range Search */
+        QUARTER         = 0x20,         /**< 1/4 Range Search */
+        EIGHTH          = 0x30,         /**< 1/8 Range Search */
+        SIXTEENTH       = 0x40,         /**< 1/16 Range Search */
+        THIRTYSECOND    = 0x50,         /**< 1/32 Range Search */
+        SIXTYFOURTH     = 0x60          /**< 1/64 Range Search */
+    };
+
+
+    //-----------------------------------------------------------------------------
+    /**
     Error Codes
 
     These are the string error codes returned by the error response packet
     */
-    const std::vector<std::string> error_codes = {
-        "None",
-        "Wrong command ID",
-        "Wrond data size",
-        "Argument out of range",
-        "Wrong checksum",
-        "Receive buffer full",
-        "Communication timeout",
-        "Boot up error",
-        "Error while writing",
-        "Error while reading",
-        "Lens serial 1 commincation issue",
-        "Sensor serial 2 commincation issue",
-        "Command not implemented",
-        "Telemtry error",
-        "Undefined camera model",
-        "Autofocus running"
-    };
-
-    const uint8_t STREAM_ON = 1;
-    const uint8_t STREAM_OFF = 256;
-
+    //const std::vector<std::string> error_codes = {
+    //    "None",
+    //    "Wrong command ID",
+    //    "Wrond data size",
+    //    "Argument out of range",
+    //    "Wrong checksum",
+    //    "Receive buffer full",
+    //    "Communication timeout",
+    //    "Boot up error",
+    //    "Error while writing",
+    //    "Error while reading",
+    //    "Lens serial 1 commincation issue",
+    //    "Sensor serial 2 commincation issue",
+    //    "Command not implemented",
+    //    "Telemtry error",
+    //    "Undefined camera model",
+    //    "Autofocus running"
+    //};
 
     //-----------------------------------------------------------------------------
     /** @brief Fujinon Lens System Class
 
-    This class build the packets in the to communicate with the camera.
+    This class builds the required packets to communicate with the Fujinon lens.
     */
     class fujinon_lens {
 
@@ -122,11 +212,20 @@ namespace FLS
             wait_time = 5;
             baud_rate = 38400;
             connected = false;
+
+            focus = 0;
+            zoom = 0;
+            iris = 0;
         }
 
         fujinon_lens(std::string pn, uint32_t wt) : port_name(pn), wait_time(wt)
         {
+            baud_rate = 38400;
             connected = false;
+
+            focus = 0;
+            zoom = 0;
+            iris = 0;
         }
 
         //-----------------------------------------------------------------------------
@@ -140,7 +239,7 @@ namespace FLS
         {
             int32_t result = 0;
             std::vector<uint8_t> rx_data;
-            uint64_t data_length = 3;
+            uint64_t rx_length = 3;
             
             if (port_name.empty())
             {
@@ -153,35 +252,53 @@ namespace FLS
             connected = true;
 
             // send the connection request to the lens
-            c10_protocol tx(FUNCTION_CODES::CONNECT);
-            result = txrx_data(tx.to_vector(), rx_data, data_length);
-            c10_protocol rx(rx_data);
-            
-            // check  for a valid return message
-            if(rx.valid_checksum() == true)
+            c10_protocol tx((uint8_t)FUNCTION_CODE::CONNECT);
+            result = txrx_data(tx.to_vector(), rx_data, rx_length);
+
+            // check for the right number of received bytes and that the returned code is as expected
+            if ((result >= rx_length) && (rx_data[1] == (uint8_t)FUNCTION_CODE::CONNECT))
             {
-                // get the name of the lens
-                data_length = 15;
-                
-                tx = c10_protocol(FUNCTION_CODES::LENS_NAME1);
-                result = txrx_data(tx.to_vector(), rx_data, data_length);
-                rx = c10_protocol(rx_data);
-                
-                name = std::string(rx.data.begin(), rx.data.end());
-                
-                // check the size of the returned data
-                if(rx.length == 15)
+                c10_protocol rx(rx_data);
+
+                // check  for a valid return message
+                if (rx.valid_checksum() == true)
                 {
-                    // read in the second half of the name
-                    c10_protocol tx(FUNCTION_CODES::LENS_NAME2);           
-                    result = txrx_data(tx.to_vector(), rx_data, data_length);
-                    rx = c10_protocol(rx_data);
-                    
-                    name += std::string(rx.data.begin(), rx.data.end());                   
+                    // get the name of the lens
+                    rx_length = 15;
+
+                    tx = c10_protocol((uint8_t)FUNCTION_CODE::LENS_NAME1);
+                    result = txrx_data(tx.to_vector(), rx_data, rx_length);
+
+                    if ((rx_data.size() > 0) && (rx_data[1] == (uint8_t)FUNCTION_CODE::LENS_NAME1))
+                    {
+                        rx = c10_protocol(rx_data);
+                        name = std::string(rx.data.begin(), rx.data.end());
+                        result = 1;
+                    }
+                    else
+                    {
+                        name = "";
+                        result = 0;
+                    }
+
+                    // check the size of the returned data
+                    if (rx.length == rx_length)
+                    {
+                        // read in the second half of the name
+                        c10_protocol tx((uint8_t)FUNCTION_CODE::LENS_NAME2);
+                        result = txrx_data(tx.to_vector(), rx_data, rx_length);
+                        
+                        if ((rx_data.size() > 0) && (rx_data[1] == (uint8_t)FUNCTION_CODE::LENS_NAME2))
+                        {
+                            rx = c10_protocol(rx_data);
+                            name += std::string(rx.data.begin(), rx.data.end());
+                            result = 1;
+                        }
+                    }
                 }
             }
 
-            return 1;
+            return result;
         }   // end of connect
        
         //-----------------------------------------------------------------------------
@@ -203,14 +320,20 @@ namespace FLS
         {
             int32_t result = 0;
             std::vector<uint8_t> rx_data;
-            
-            c10_protocol tx(FUNCTION_CODES::SET_FOCUS_POS, value);
-            result = txrx_data(tx.to_vector(), rx_data, 3);
+            uint8_t rx_length = 3;
 
-            if(rx_data[1] == FUNCTION_CODES::SET_FOCUS_POS)
+            c10_protocol tx((uint8_t)FUNCTION_CODE::SET_FOCUS_POS, value);
+            result = txrx_data(tx.to_vector(), rx_data, rx_length);
+
+            // check for the right number of received bytes and that the returned code is as expected
+            if ((result >= rx_length) && (rx_data[1] == (uint8_t)FUNCTION_CODE::SET_FOCUS_POS))
             {
                 get_focus_position();
                 result = 1;
+            }
+            else
+            {
+                result = 0;
             }
 
             return result;
@@ -220,7 +343,7 @@ namespace FLS
         /**
         @brief Get the lens focus position.
 
-        This function sets the lens focus position.
+        This function gets the lens focus position.
 
         @param[out] value : position of the focus motor
         @return int32_t result of getting the focus position.
@@ -231,15 +354,30 @@ namespace FLS
         {
             int32_t result = 0;
             std::vector<uint8_t> rx_data;
-            
-            c10_protocol tx(FUNCTION_CODES::GET_FOCUS_POS);
-            result = txrx_data(tx.to_vector(), rx_data, 5);
-            c10_protocol rx(rx_data);
+            uint8_t rx_length = 5;
 
-            if(rx.code == FUNCTION_CODES::GET_FOCUS_POS)
+            c10_protocol tx((uint8_t)FUNCTION_CODE::GET_FOCUS_POS);
+            result = txrx_data(tx.to_vector(), rx_data, rx_length);
+
+            // check for the right number of received bytes and that the returned code is as expected
+            if ((result >= rx_length) && (rx_data[1] == (uint8_t)FUNCTION_CODE::GET_FOCUS_POS))
             {
-                focus = to_uint16(rx.data);
-                result = 1;
+                c10_protocol rx(rx_data);
+
+                // checksum validation
+                if (rx.valid_checksum() == true)
+                {
+                    focus = to_uint16(rx.data);
+                    result = 1;
+                }
+                else
+                {
+                    result = 0;
+                }
+            }
+            else
+            {
+                result = 0;
             }
 
             return result;
@@ -260,14 +398,20 @@ namespace FLS
         {
             int32_t result = 0;
             std::vector<uint8_t> rx_data;
-            
-            c10_protocol tx(FUNCTION_CODES::SET_ZOOM_POS, value);
-            result = txrx_data(tx.to_vector(), rx_data, 3);
+            uint8_t rx_length = 3;
 
-            if(rx_data[1] == FUNCTION_CODES::SET_ZOOM_POS)
+            c10_protocol tx((uint8_t)FUNCTION_CODE::SET_ZOOM_POS, value);
+            result = txrx_data(tx.to_vector(), rx_data, rx_length);
+
+            // check for the right number of received bytes and that the returned code is as expected
+            if ((result >= rx_length) && (rx_data[1] == (uint8_t)FUNCTION_CODE::SET_ZOOM_POS))
             {
                 get_zoom_position();
                 result = 1;
+            }
+            else
+            {
+                result = 0;
             }
 
             return result;
@@ -277,7 +421,7 @@ namespace FLS
         /**
         @brief Get the lens zoom position.
 
-        This function sets the lens zoom position.
+        This function gets the lens zoom position.
 
         @param[out] value : position of the zoom motor
         @return int32_t result of getting the zoom position.
@@ -288,15 +432,30 @@ namespace FLS
         {
             int32_t result = 0;
             std::vector<uint8_t> rx_data;
-            
-            c10_protocol tx(FUNCTION_CODES::GET_ZOOM_POS);
-            result = txrx_data(tx.to_vector(), rx_data, 5);
-            c10_protocol rx(rx_data);
+            uint8_t rx_length = 5;
 
-            if(rx.code == FUNCTION_CODES::GET_ZOOM_POS)
+            c10_protocol tx((uint8_t)FUNCTION_CODE::GET_ZOOM_POS);
+            result = txrx_data(tx.to_vector(), rx_data, rx_length);
+
+            // check for the right number of received bytes and that the returned code is as expected
+            if ((result >= rx_length) && (rx_data[1] == (uint8_t)FUNCTION_CODE::GET_ZOOM_POS))
             {
-                zoom = to_uint16(rx.data);
-                result = 1;
+                c10_protocol rx(rx_data);
+
+                // checksum validation
+                if (rx.valid_checksum() == true)
+                {
+                    zoom = to_uint16(rx.data);
+                    result = 1;
+                }
+                else
+                {
+                    result = 0;
+                }
+            }
+            else
+            {
+                result = 0;
             }
 
             return result;
@@ -308,7 +467,7 @@ namespace FLS
 
         This function sets the lens iris position.
 
-        @param[in] value : position to set the iris motor to
+        @param[in] value : position to set the iris motor to.
         @return int32_t result of setting the iris position.
 
         @sa c10_protocol
@@ -317,14 +476,20 @@ namespace FLS
         {
             int32_t result = 0;
             std::vector<uint8_t> rx_data;
-            
-            c10_protocol tx(FUNCTION_CODES::SET_IRIS_POS, value);
-            result = txrx_data(tx.to_vector(), rx_data, 3);
+            uint8_t rx_length = 3;
 
-            if(rx_data[1] == FUNCTION_CODES::SET_IRIS_POS)
+            c10_protocol tx((uint8_t)FUNCTION_CODE::SET_IRIS_POS, value);
+            result = txrx_data(tx.to_vector(), rx_data, rx_length);
+
+            // check for the right number of received bytes and that the returned code is as expected
+            if ((result >= rx_length) && (rx_data[1] == (uint8_t)FUNCTION_CODE::SET_IRIS_POS))
             {
                 get_iris_position();
                 result = 1;
+            }
+            else
+            {
+                result = 0;
             }
 
             return result;
@@ -334,9 +499,8 @@ namespace FLS
         /**
         @brief Get the lens iris position.
 
-        This function sets the lens iris position.
+        This function gets the lens iris position.
 
-        @param[out] value : position of the iris motor
         @return int32_t result of getting the iris position.
 
         @sa c10_protocol
@@ -345,79 +509,365 @@ namespace FLS
         {
             int32_t result = 0;
             std::vector<uint8_t> rx_data;
-            
-            c10_protocol tx(FUNCTION_CODES::GET_IRIS_POS);
-            result = txrx_data(tx.to_vector(), rx_data, 5);
-            c10_protocol rx(rx_data);
+            uint8_t rx_length = 5;
 
-            if(rx.code == FUNCTION_CODES::GET_IRIS_POS)
+            c10_protocol tx((uint8_t)FUNCTION_CODE::GET_IRIS_POS);
+            result = txrx_data(tx.to_vector(), rx_data, rx_length);
+
+            // check for the right number of received bytes and that the returned code is as expected
+            if ((result >= rx_length) && (rx_data[1] == (uint8_t)FUNCTION_CODE::GET_IRIS_POS))
             {
-                iris = to_uint16(rx.data);
-                result = 1;
+                c10_protocol rx(rx_data);
+
+                // checksum validation
+                if (rx.valid_checksum() == true)
+                {
+                    iris = to_uint16(rx.data);
+                    result = 1;
+                }
+                else
+                {
+                    result = 0;
+                }
+            }
+            else
+            {
+                result = 0;
             }
 
             return result;
         }   // end of get_iris_position
         
-        
         //-----------------------------------------------------------------------------
         /**
-        @brief Set the switch 0 value.
+        @brief Set the auto iris parameter.
 
-        This function sets the lens switch 0 value.
+        This function sets the lens auto iris parameter.
 
-        @param[in] value : switch 0 value to set.
-        @return int32_t result of setting the switch 0 value.
+        @param[in] value : value to set the auto iris parameter to.
+        @return int32_t result of setting the auto iris parameter.
 
         @sa c10_protocol
         */
-        int32_t set_switch_0(uint8_t value)
+        int32_t set_auto_iris_param(uint8_t value)
         {
             int32_t result = 0;
             std::vector<uint8_t> rx_data;
-            
-            c10_protocol tx(FUNCTION_CODES::SET_SWITCH_0, value);
-            result = txrx_data(tx.to_vector(), rx_data, 3);
+            uint8_t rx_length = 3;
 
-            if(rx_data[1] == FUNCTION_CODES::SET_SWITCH_0)
+            // make sure that the input value is within the valid range for the lens
+            value = max(min(value, 0x64), 0x0A);
+
+            c10_protocol tx((uint8_t)FUNCTION_CODE::SET_AUTO_IRIS, value);
+            result = txrx_data(tx.to_vector(), rx_data, rx_length);
+
+            // check for the right number of received bytes and that the returned code is as expected
+            if ((result >= rx_length) && (rx_data[1] == (uint8_t)FUNCTION_CODE::SET_AUTO_IRIS))
             {
                 result = 1;
             }
+            else
+            {
+                result = 0;
+            }
 
             return result;
-        }   // end of set_switch_0
+        }   // end of set_auto_iris_param
 
         //-----------------------------------------------------------------------------
         /**
-        @brief Get the lens switch 0 value.
+        @brief Get the auto iris parameter.
 
-        This function sets the lens switch 0 value.
+        This function gets the lens auto iris parameter.
 
-        @param[out] value : switch 0 value
-        @return int32_t result of getting the switch 0 value.
+        @param[out] value : auto iris parameter.
+        @return int32_t result of getting the auto iris parameter.
 
         @sa c10_protocol
         */
-        int32_t get_switch_0()
+        int32_t get_auto_iris_param(uint8_t &value)
         {
             int32_t result = 0;
             std::vector<uint8_t> rx_data;
-            
-            c10_protocol tx(FUNCTION_CODES::GET_SWITCH_0);
-            result = txrx_data(tx.to_vector(), rx_data, 4);
-            c10_protocol rx(rx_data);
+            uint8_t rx_length = 4;
 
-            if(rx.code == FUNCTION_CODES::GET_SWITCH_0)
+            c10_protocol tx((uint8_t)FUNCTION_CODE::GET_AUTO_IRIS);
+            result = txrx_data(tx.to_vector(), rx_data, rx_length);
+
+            // check for the right number of received bytes and that the returned code is as expected
+            if ((result >= rx_length) && (rx_data[1] == (uint8_t)FUNCTION_CODE::GET_AUTO_IRIS))
             {
-                result = 1;
+                c10_protocol rx(rx_data);
+
+                // checksum validation
+                if (rx.valid_checksum() == true)
+                {
+                    value = rx.data[0];
+                    result = 1;
+                }
+                else
+                {
+                    result = 0;
+                }
+            }
+            else
+            {
+                result = 0;
             }
 
             return result;
-        }   // end of get_switch_0
+        }   // end of get_auto_iris_param
+
+        //-----------------------------------------------------------------------------
+        /**
+        @brief Set the switch X value.
+
+        This function sets the lens switch X value.
+
+        @param[in] sw : the switch number to set.
+        @param[in] value : the value to set.
+        @return int32_t result of setting the switch X value.
+
+        @sa c10_protocol
+        */
+        int32_t set_switch(uint8_t sw, uint8_t value)
+        {
+            int32_t result = 0;
+            std::vector<uint8_t> rx_data;
+            uint8_t rx_length = 3;
+            c10_protocol tx;
+            uint8_t code = 0;
+
+            switch (sw)
+            {
+            case 0:
+                code = (uint8_t)FUNCTION_CODE::SET_SWITCH_0;
+                break;
+
+            case 2:
+                code = (uint8_t)FUNCTION_CODE::SET_SWITCH_2;
+                break;
+
+            case 3:
+                code = (uint8_t)FUNCTION_CODE::SET_SWITCH_3;
+                break;
+
+            case 6:
+                code = (uint8_t)FUNCTION_CODE::SET_SWITCH_6;
+                break;
+            }
+
+            tx = c10_protocol(code, value);
+
+            result = txrx_data(tx.to_vector(), rx_data, rx_length);
+
+            // check for the right number of received bytes and that the returned code is as expected
+            if ((result >= rx_length) && (rx_data[1] == code))
+            {
+                result = 1;
+            }
+            else
+            {
+                result = 0;
+            }
+
+            return result;
+        }   // end of set_switch
+
+        //-----------------------------------------------------------------------------
+        /**
+        @brief Get the  switch X value from the lens.
+
+        This function gets the switch X value from the lens.
+
+        @param[in] sw : the switch number to get.
+        @param[out] value : switch X value
+        @return int32_t result of getting the switch X value.
+
+        @sa c10_protocol
+        */
+        int32_t get_switch_0(uint8_t sw, uint8_t &value)
+        {
+            int32_t result = 0;
+            std::vector<uint8_t> rx_data;
+            uint8_t rx_length = 4;
+            uint8_t code = 0;
+
+            switch (sw)
+            {
+            case 0:
+                code = (uint8_t)FUNCTION_CODE::SET_SWITCH_0;
+                break;
+
+            case 2:
+                code = (uint8_t)FUNCTION_CODE::SET_SWITCH_2;
+                break;
+
+            case 3:
+                code = (uint8_t)FUNCTION_CODE::SET_SWITCH_3;
+                break;
+
+            case 6:
+                code = (uint8_t)FUNCTION_CODE::SET_SWITCH_6;
+                break;
+            }
+
+            c10_protocol tx(code);
+            result = txrx_data(tx.to_vector(), rx_data, rx_length);
+
+            // check for the right number of received bytes and that the returned code is as expected
+            if ((result >= rx_length) && (rx_data[1] == code))
+            {
+                c10_protocol rx(rx_data);
+
+                // checksum validation
+                if (rx.valid_checksum() == true)
+                {
+                    value = rx.data[0];
+                    result = 1;
+                }
+                else
+                {
+                    result = 0;
+                }
+            }
+            else
+            {
+                result = 0;
+            }
+
+            return result;
+        }   // end of get_switch
         
+        //-----------------------------------------------------------------------------
+        /**
+        @brief Set the video delay parameter.
+
+        This function sets the video delay for the lens.
+
+        @param[in] value : value to set the video delay for the lens.
+        @return int32_t result of setting the video delay parameter.
+
+        @sa c10_protocol
+        */
+        int32_t set_video_delay(uint8_t value)
+        {
+            int32_t result = 0;
+            std::vector<uint8_t> rx_data;
+            uint8_t rx_length = 3;
+
+            // make sure that the input value is within the valid range for the lens
+            value = max(min(value, 0x80), 0x00);
+
+            c10_protocol tx((uint8_t)FUNCTION_CODE::SET_VIDEO_DELAY, value);
+            result = txrx_data(tx.to_vector(), rx_data, rx_length);
+
+            // check for the right number of received bytes and that the returned code is as expected
+            if ((result >= rx_length) && (rx_data[1] == (uint8_t)FUNCTION_CODE::SET_VIDEO_DELAY))
+            {
+                result = 1;
+            }
+            else
+            {
+                result = 0;
+            }
+
+            return result;
+        }   // end of set_video_delay
+
+
+        //-----------------------------------------------------------------------------
+        /**
+        @brief Get the video delay parameter.
+
+        This function gets the lens video delay parameter.
+
+        @param[out] value : video delay parameter.
+        @return int32_t result of getting the video delay parameter.
+
+        @sa c10_protocol
+        */
+        int32_t get_video_delay(uint8_t& value)
+        {
+            int32_t result = 0;
+            std::vector<uint8_t> rx_data;
+            uint8_t rx_length = 4;
+
+            c10_protocol tx((uint8_t)FUNCTION_CODE::GET_VIDEO_DELAY);
+            result = txrx_data(tx.to_vector(), rx_data, rx_length);
+
+            // check for the right number of received bytes and that the returned code is as expected
+            if ((result >= rx_length) && (rx_data[1] == (uint8_t)FUNCTION_CODE::GET_VIDEO_DELAY))
+            {
+                c10_protocol rx(rx_data);
+
+                // checksum validation
+                if (rx.valid_checksum() == true)
+                {
+                    value = rx.data[0];
+                    result = 1;
+                }
+                else
+                {
+                    result = 0;
+                }
+            }
+            else
+            {
+                result = 0;
+            }
+
+            return result;
+        }   // end of get_video_delay
+
+        //-----------------------------------------------------------------------------
+        /**
+        @brief Get the narrow end focal length of the lens.
+
+        This function gets the lens narrow end focal length.
+
+        @param[out] value : narrow end focal length.
+        @return int32_t result of getting the narrow end focal length.
+
+        @sa c10_protocol
+        */
+        int32_t get_narrow_focal_length(float& value)
+        {
+            int32_t result = 0;
+            std::vector<uint8_t> rx_data;
+            uint8_t rx_length = 5;
+
+            c10_protocol tx((uint8_t)FUNCTION_CODE::GET_TELE_END);
+            result = txrx_data(tx.to_vector(), rx_data, rx_length);
+
+            // check for the right number of received bytes and that the returned code is as expected
+            if ((result >= rx_length) && (rx_data[1] == (uint8_t)FUNCTION_CODE::GET_TELE_END))
+            {
+                c10_protocol rx(rx_data);
+
+                // checksum validation
+                if (rx.valid_checksum() == true)
+                {
+                    value = to_float(rx.data);
+                    result = 1;
+                }
+                else
+                {
+                    result = 0;
+                }
+            }
+            else
+            {
+                result = 0;
+            }
+
+            return result;
+        }   // end of get_narrow_focal_length
+
+
         //-----------------------------------------------------------------------------    
         /**
-        @brief Close the connection.
+        @brief Close the serial port connection.
 
         This function closes the serial port connection to the lens.
         */
@@ -437,7 +887,7 @@ namespace FLS
             )
         {
             out << "Lens:" << std::endl;
-            out << "  Name:       " << item.name << std::endl;
+            out << "  name:       " << item.name << std::endl;
             out << "  port name:  " << item.port_name << std::endl;
             out << "  baud rate:  " << item.baud_rate << std::endl;
             out << "  wait time:  " << item.wait_time << std::endl;
@@ -497,12 +947,33 @@ namespace FLS
         }   // end of to_uint16
 
         //-----------------------------------------------------------------------------
+        inline float to_float(std::vector<uint8_t> value)
+        {
+
+            float mant = 0.0;
+            int8_t expo = 0;
+            if (value.size() > 1)
+            {
+                mant = (float)((value[0] & 0x0F) << 8 | value[1]);
+
+                //expo = (int8_t)(((int16_t)value[0]) >> 4);
+                expo = (int8_t)(value[0] >> 4);
+                expo = (int8_t)((expo & 0x08) ? expo | 0xF0 : expo);
+            }
+            return (float)(mant * std::powf(10.0, expo));
+        }
+
+        //-----------------------------------------------------------------------------
         inline float to_float(uint16_t value)
         {
-            float v = (float)(value & 0x0FFF);
-            int8_t expo = (int8_t)((int16_t)value >> 11);
-            return (float) v * (10^expo);
+            float mant = (float)(value & 0x0FFF);
+
+            int8_t expo = (int8_t)(value >> 12);
+            expo = (int8_t)((expo & 0x08) ? expo | 0xF0 : expo);
+
+            return (float)(mant * std::powf(10.0, expo));
         }
+
 
     };  // end camera class
 
