@@ -25,8 +25,8 @@
 // ----------------------------------------------------------------------------
 void print_usage(void)
 {
-    std::cout << "Enter the ip address of the camera to connect:" << std::endl;
-    std::cout << "example: cam_test 192.168.0.10" << std::endl;
+    std::cout << "Enter the comm port name that the lens is connected to:" << std::endl;
+    std::cout << "example (Windows): COM4" << std::endl << "example (Linux): /dev/ttyS0" << std::endl;
 }
 
 // ----------------------------------------------------------------------------
@@ -59,7 +59,7 @@ int main(int argc, char** argv)
     //serial_port sp;
     std::string port_name;
     uint32_t wait_time = 5;
-    uint32_t baud_rate = 115200;
+    //uint32_t baud_rate = 38400;
     
     std::string error_msg;
     //int32_t write_result;
@@ -67,22 +67,24 @@ int main(int argc, char** argv)
 
     FLS::fujinon_lens fj;
 
-    //if (argc == 1)
-    //{
-    //    print_usage();
-    //    std::cin.ignore();
-    //    return 0;
-    //}
+    if (argc == 1)
+    {
+        print_usage();
+        std::cin.ignore();
+        return 0;
+    }
     
-#if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
-    wait_time = 5;
-    port_name = "COM4";
+    //wait_time = 5;
+    port_name = std::string(argv[1]);
 
-#elif defined(__linux__)
-    wait_time = 5;
-    port_name = "/dev/ttyS0";
-    
-#endif
+//#if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
+//
+//
+//#elif defined(__linux__)
+//    wait_time = 5;
+//    port_name = "/dev/ttyS0";
+//    
+//#endif
 
     fj = FLS::fujinon_lens(port_name, wait_time);
 
