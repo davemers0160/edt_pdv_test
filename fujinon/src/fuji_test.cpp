@@ -88,6 +88,9 @@ int main(int argc, char** argv)
 
     fj = FLS::fujinon_lens(port_name, wait_time);
 
+    c10_protocol tx((uint8_t)FLS::FUNCTION_CODE::SET_IRIS_POS, (uint16_t)0x8080);
+    auto tx_v = tx.to_vector();
+
     try
     {
 
