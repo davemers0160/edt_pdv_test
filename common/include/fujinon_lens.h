@@ -252,7 +252,7 @@ namespace FLS
             connected = true;
 
             // send the connection request to the lens
-            c10_protocol tx((uint8_t)FUNCTION_CODE::CONNECT);
+            c10_protocol tx((uint8_t)FUNCTION_CODE::GET_IRIS_POS);
             result = txrx_data(tx.to_vector(), rx_data, rx_length);
 
             // check for the right number of received bytes and that the returned code is as expected

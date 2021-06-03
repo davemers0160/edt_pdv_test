@@ -9,6 +9,7 @@
 #include <stdexcept>
 
 // https://www.codeguru.com/cpp/i-n/network/serialcommunications/article.php/c5425/Serial-Communication-in-Windows.htm
+// https://docs.microsoft.com/en-us/previous-versions/ms810467(v=msdn.10)?redirectedfrom=MSDN
 
 //-----------------------------------------------------------------------------
 class serial_port
@@ -31,6 +32,15 @@ private:
         settings.ByteSize = data_bits;                              // Setting ByteSize = 8
         settings.StopBits = stop_bits;                              // Setting StopBits = 1
         settings.Parity = parity;                                   // Setting Parity = None
+
+        //settings.fInX = 0;
+        //settings.fOutX = 0;
+        //settings.XonChar = 0x11;
+        //settings.XoffChar = 0x13;
+        //settings.XonLim = 200;
+        //settings.XoffLim = 200;
+        //settings.fRtsControl = RTS_CONTROL_ENABLE;
+        //settings.fDtrControl = DTR_CONTROL_ENABLE;
         
         COMMTIMEOUTS timeouts = { 0 };
         timeouts.ReadIntervalTimeout = wait_time*100;               // in milliseconds
