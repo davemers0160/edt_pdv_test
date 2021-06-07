@@ -17,7 +17,7 @@
 
 // include the protocol headers
 #include <c10_protocol.h>
-
+#include <pelco_d_protocol.h>
 
 /**
 @file
@@ -254,6 +254,10 @@ namespace FLS
             // send the connection request to the lens
             c10_protocol tx((uint8_t)FUNCTION_CODE::GET_IRIS_POS);
             result = txrx_data(tx.to_vector(), rx_data, rx_length);
+
+            //Zoom In:	Address	0x00	0x20	0x00	0x00	SUM
+            pelco_d_protocol pd(0x01, 0x00, 0x20, 0x00, 0x00);
+            result = txrx_data(pd.to_vector(), rx_data, 6);
 
             // check for the right number of received bytes and that the returned code is as expected
             if ((result >= rx_length) && (rx_data[1] == (uint8_t)FUNCTION_CODE::CONNECT))
