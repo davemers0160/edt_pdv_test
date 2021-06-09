@@ -63,6 +63,9 @@ public:
     c10_protocol(std::vector<uint8_t> d)
     {
         int32_t idx = 0;
+        int32_t offset = 2;
+
+        data.clear();
                
         if(d.size() >= 3)
         {
@@ -71,10 +74,10 @@ public:
             
             for(idx=0; idx<length; ++idx)
             {
-                data.push_back(d[idx+3]);
+                data.push_back(d[idx + offset]);
             }
             
-            checksum = d[idx+3];
+            checksum = d[idx + offset];
             
             checksum_valid = validate_checksum();
         }

@@ -62,7 +62,7 @@ int main(int argc, char** argv)
     //uint32_t baud_rate = 38400;
     
     std::string error_msg;
-    //int32_t write_result;
+    int32_t result;
     std::vector<uint8_t> rx_data;
 
     FLS::fujinon_lens fj;
@@ -98,9 +98,37 @@ int main(int argc, char** argv)
 
         std::cout << fj << std::endl;
 
-        fj.set_focus_position(5000);
-        fj.set_zoom_position(4000);
-        fj.set_iris_position(60);
+        result = fj.enable_auto_iris(false);
+
+        result = fj.set_focus_position(0x5400);
+        result = fj.set_zoom_position(0x7400);
+        result = fj.set_iris_position(0xDF9C);
+
+        result = fj.get_focus_position();
+        result = fj.get_zoom_position();
+        result = fj.get_zoom_position();
+
+        std::cout << "Focus: " << fj.get_focus() << std::endl;
+        std::cout << "Zoom: " << fj.get_zoom() << std::endl;
+        std::cout << "Iris: " << fj.get_iris() << std::endl;
+        std::cout << std::endl;
+
+        result = fj.set_focus_position(0xCC00);
+        result = fj.set_zoom_position(0xA000);
+        result = fj.set_iris_position(0x0000);
+
+        result = fj.get_focus_position();
+        result = fj.get_zoom_position();
+        result = fj.get_iris_position();
+
+        std::cout << "Focus: " << fj.get_focus() << std::endl;
+        std::cout << "Zoom: " << fj.get_zoom() << std::endl;
+        std::cout << "Iris: " << fj.get_iris() << std::endl;
+        std::cout << std::endl;
+
+        result = fj.get_focus_position();
+        result = fj.get_zoom_position();
+        result = fj.get_iris_position();
 
         std::cout << "Focus: " << fj.get_focus() << std::endl;
         std::cout << "Zoom: " << fj.get_zoom() << std::endl;

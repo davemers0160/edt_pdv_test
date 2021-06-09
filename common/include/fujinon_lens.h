@@ -94,10 +94,10 @@ namespace FLS
     */
     enum class SWITCH0_HIGH
     {
-        FILTER_4    = 0x0C,         /**< Filter type 4 */
-        FILTER_3    = 0x0D,         /**< Filter type 3 */
-        FILTER_2    = 0x0E,         /**< Filter type 2 */
-        FILTER_1    = 0x0F          /**< Filter type 1 */
+        FILTER_4    = 0xC0,         /**< Filter type 4 */
+        FILTER_3    = 0xD0,         /**< Filter type 3 */
+        FILTER_2    = 0xE0,         /**< Filter type 2 */
+        FILTER_1    = 0xF0          /**< Filter type 1 */
     };
 
     //-----------------------------------------------------------------------------
@@ -145,52 +145,18 @@ namespace FLS
     */
     enum class AF_SWITCH0
     {
-        ON      = 0x00,         /**< Auto Focus on */
-        OFF     = 0x01          /**< Auto Focus off */
-    };
+        ON              = 0x00,         /**< Auto Focus on */
+        OFF             = 0x01,         /**< Auto Focus off */
 
-    //-----------------------------------------------------------------------------
-    /**
-    Auto Focus Switch 0 Search Codes
-
-    These are the higher 4-bits for the auto focus switch 0 input.  This code should be OR'd with the AF_SWITCH0_CODE value.
-    */
-    enum class AF_SWITCH0_SEARCH
-    {
+        //  These are the higher 4-bits for the Auto Focus Switch 0 Search Codes. This code should be OR'd with the ON/OFF 
         FULL            = 0x00,         /**< Full Range Search */
         HALF            = 0x10,         /**< 1/2 Range Search */
         QUARTER         = 0x20,         /**< 1/4 Range Search */
         EIGHTH          = 0x30,         /**< 1/8 Range Search */
         SIXTEENTH       = 0x40,         /**< 1/16 Range Search */
         THIRTYSECOND    = 0x50,         /**< 1/32 Range Search */
-        SIXTYFOURTH     = 0x60          /**< 1/64 Range Search */
+        SIXTYFOURTH     = 0x60          /**< 1/64 Range Search */    
     };
-
-
-    //-----------------------------------------------------------------------------
-    /**
-    Error Codes
-
-    These are the string error codes returned by the error response packet
-    */
-    //const std::vector<std::string> error_codes = {
-    //    "None",
-    //    "Wrong command ID",
-    //    "Wrond data size",
-    //    "Argument out of range",
-    //    "Wrong checksum",
-    //    "Receive buffer full",
-    //    "Communication timeout",
-    //    "Boot up error",
-    //    "Error while writing",
-    //    "Error while reading",
-    //    "Lens serial 1 commincation issue",
-    //    "Sensor serial 2 commincation issue",
-    //    "Command not implemented",
-    //    "Telemtry error",
-    //    "Undefined camera model",
-    //    "Autofocus running"
-    //};
 
     //-----------------------------------------------------------------------------
     /** @brief Fujinon Lens System Class
@@ -252,12 +218,8 @@ namespace FLS
             connected = true;
 
             // send the connection request to the lens
-            c10_protocol tx((uint8_t)FUNCTION_CODE::GET_IRIS_POS);
+            c10_protocol tx((uint8_t)FUNCTION_CODE::CONNECT);
             result = txrx_data(tx.to_vector(), rx_data, rx_length);
-
-            //Zoom In:	Address	0x00	0x20	0x00	0x00	SUM
-            pelco_d_protocol pd(0x01, 0x00, 0x20, 0x00, 0x00);
-            result = txrx_data(pd.to_vector(), rx_data, 6);
 
             // check for the right number of received bytes and that the returned code is as expected
             if ((result >= rx_length) && (rx_data[1] == (uint8_t)FUNCTION_CODE::CONNECT))
@@ -268,37 +230,11 @@ namespace FLS
                 if (rx.valid_checksum() == true)
                 {
                     // get the name of the lens
-                    rx_length = 15;
+                    result = get_name();
 
-                    tx = c10_protocol((uint8_t)FUNCTION_CODE::LENS_NAME1);
-                    result = txrx_data(tx.to_vector(), rx_data, rx_length);
-
-                    if ((rx_data.size() > 0) && (rx_data[1] == (uint8_t)FUNCTION_CODE::LENS_NAME1))
-                    {
-                        rx = c10_protocol(rx_data);
-                        name = std::string(rx.data.begin(), rx.data.end());
-                        result = 1;
-                    }
-                    else
-                    {
-                        name = "";
-                        result = 0;
-                    }
-
-                    // check the size of the returned data
-                    if (rx.length == rx_length)
-                    {
-                        // read in the second half of the name
-                        c10_protocol tx((uint8_t)FUNCTION_CODE::LENS_NAME2);
-                        result = txrx_data(tx.to_vector(), rx_data, rx_length);
-                        
-                        if ((rx_data.size() > 0) && (rx_data[1] == (uint8_t)FUNCTION_CODE::LENS_NAME2))
-                        {
-                            rx = c10_protocol(rx_data);
-                            name += std::string(rx.data.begin(), rx.data.end());
-                            result = 1;
-                        }
-                    }
+                    result = get_focus_position();
+                    result = get_zoom_position();
+                    result = get_iris_position();
                 }
             }
 
@@ -306,7 +242,45 @@ namespace FLS
         }   // end of connect
        
         //-----------------------------------------------------------------------------
-        std::string get_name() { return name; }
+        int32_t get_name() 
+        { 
+            int32_t result = 0;
+            std::vector<uint8_t> rx_data;
+            uint64_t rx_length = 18;
+            c10_protocol rx;
+
+            c10_protocol tx((uint8_t)FUNCTION_CODE::LENS_NAME1);
+            result = txrx_data(tx.to_vector(), rx_data, rx_length);
+
+            if ((rx_data.size() > 2) && (rx_data[1] == (uint8_t)FUNCTION_CODE::LENS_NAME1))
+            {
+                rx = c10_protocol(rx_data);
+                name = std::string(rx.data.begin(), rx.data.end());
+                result = 1;
+            }
+            else
+            {
+                name = "";
+                result = 0;
+            }
+
+            // check the size of the returned data
+            if (rx.length == 15)
+            {
+                // read in the second half of the name
+                tx = c10_protocol((uint8_t)FUNCTION_CODE::LENS_NAME2);
+                result = txrx_data(tx.to_vector(), rx_data, rx_length);
+                        
+                if ((rx_data.size() > 2) && (rx_data[1] == (uint8_t)FUNCTION_CODE::LENS_NAME2))
+                {
+                    rx = c10_protocol(rx_data);
+                    name += std::string(rx.data.begin(), rx.data.end());
+                    result = 1;
+                }
+            }
+
+            return result; 
+        }
         
         
         //-----------------------------------------------------------------------------
@@ -332,8 +306,7 @@ namespace FLS
             // check for the right number of received bytes and that the returned code is as expected
             if ((result >= rx_length) && (rx_data[1] == (uint8_t)FUNCTION_CODE::SET_FOCUS_POS))
             {
-                get_focus_position();
-                result = 1;
+                result = get_focus_position();
             }
             else
             {
@@ -410,8 +383,7 @@ namespace FLS
             // check for the right number of received bytes and that the returned code is as expected
             if ((result >= rx_length) && (rx_data[1] == (uint8_t)FUNCTION_CODE::SET_ZOOM_POS))
             {
-                get_zoom_position();
-                result = 1;
+                result = get_zoom_position();
             }
             else
             {
@@ -488,8 +460,7 @@ namespace FLS
             // check for the right number of received bytes and that the returned code is as expected
             if ((result >= rx_length) && (rx_data[1] == (uint8_t)FUNCTION_CODE::SET_IRIS_POS))
             {
-                get_iris_position();
-                result = 1;
+                result = get_iris_position();
             }
             else
             {
@@ -743,6 +714,24 @@ namespace FLS
             return result;
         }   // end of get_switch
         
+        //-----------------------------------------------------------------------------
+        /**
+        @brief Enable/Disable the auto iris.
+
+        This function enables/disables the auto iris functionality.
+
+        @param[in] value : value to set the iris: true -> enable, false -> disable.
+        @return int32_t result of setting the auto iris parameter.
+
+        @sa c10_protocol
+        */
+        int32_t enable_auto_iris(bool value)
+        {
+            uint8_t v = (uint8_t)(value ? SWITCH2::AUTO_IRIS : SWITCH2::REMOTE_IRIS);
+            int32_t result = set_switch(2, v);
+            return result;
+        }
+
         //-----------------------------------------------------------------------------
         /**
         @brief Set the video delay parameter.
