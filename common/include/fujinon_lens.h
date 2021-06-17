@@ -12,6 +12,7 @@
 #endif
 
 #include <cstdint>
+#include <cmath>
 #include <iostream>
 #include <vector>
 
@@ -531,7 +532,7 @@ namespace FLS
             uint8_t rx_length = 3;
 
             // make sure that the input value is within the valid range for the lens
-            value = max(min(value, 0x64), 0x0A);
+            value = std::max(std::min(value, (uint8_t)0x64), (uint8_t)0x0A);
 
             c10_protocol tx((uint8_t)FUNCTION_CODE::SET_AUTO_IRIS, value);
             result = txrx_data(tx.to_vector(), rx_data, rx_length);
@@ -750,7 +751,7 @@ namespace FLS
             uint8_t rx_length = 3;
 
             // make sure that the input value is within the valid range for the lens
-            value = max(min(value, 0x80), 0x00);
+            value = std::max(std::min(value, (uint8_t)0x80), (uint8_t)0x00);
 
             c10_protocol tx((uint8_t)FUNCTION_CODE::SET_VIDEO_DELAY, value);
             result = txrx_data(tx.to_vector(), rx_data, rx_length);
@@ -953,7 +954,7 @@ namespace FLS
                 expo = (int8_t)(value[0] >> 4);
                 expo = (int8_t)((expo & 0x08) ? expo | 0xF0 : expo);
             }
-            return (float)(mant * std::powf(10.0, expo));
+            return (float)(mant * powf(10.0, expo));
         }
 
         //-----------------------------------------------------------------------------
@@ -964,7 +965,7 @@ namespace FLS
             int8_t expo = (int8_t)(value >> 12);
             expo = (int8_t)((expo & 0x08) ? expo | 0xF0 : expo);
 
-            return (float)(mant * std::powf(10.0, expo));
+            return (float)(mant * powf(10.0, expo));
         }
 
 

@@ -2,6 +2,7 @@
 #define _STINGRAY_PROTOCOL_H_
 
 #include <cstdint>
+#include <cmath>
 #include <ctime>
 #include <vector>
 
@@ -325,7 +326,7 @@ private:
     template <typename T>
     inline T check_limits(T value, T lower, T upper)
     {
-        return max(min(value, upper), lower);
+        return std::max(std::min(value, upper), lower);
 
     }   // end of check_limits
 
