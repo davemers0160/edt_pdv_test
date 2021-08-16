@@ -26,7 +26,7 @@ int main()
 {
     uint32_t idx;
     std::vector<bool> use_layer = { true, true };
-    std::vector<bool> invert_layer = {true, false};
+    std::vector<bool> invert_layer = {false, false};
     
     std::vector<cv::Mat> layers;
     std::vector<std::string> img_pathes = { "d:/data/lwir_0001a.png","d:/data/mwir_0001a.png" };
