@@ -9,7 +9,7 @@
 #include <opencv2/xfeatures2d.hpp>
 #include <opencv2/calib3d.hpp>
 
-const int MAX_FEATURES = 500;
+const int MAX_FEATURES = 300;
 const float GOOD_MATCH_PERCENT = 0.10f;
 
 // ----------------------------------------------------------------------------
@@ -21,13 +21,14 @@ void find_transformation_matrix(cv::Mat& img1, cv::Mat& img2, cv::Mat& h, cv::Ma
     cv::Mat descriptors1, descriptors2;
 
     // Detect ORB features and compute descriptors.
-    cv::Ptr<cv::Feature2D> orb = cv::ORB::create(MAX_FEATURES, 1.1, 6, 25, 0, 4,cv::ORB::HARRIS_SCORE, 25);
+    cv::Ptr<cv::Feature2D> orb = cv::ORB::create(MAX_FEATURES, 1.2, 8, 25, 0, 4, cv::ORB::HARRIS_SCORE, 25);
     orb->detectAndCompute(img1, cv::Mat(), kp1, descriptors1);
     orb->detectAndCompute(img2, cv::Mat(), kp2, descriptors2);
 
     // Match features.
     std::vector<cv::DMatch> matches;
-    cv::Ptr<cv::DescriptorMatcher> matcher = cv::DescriptorMatcher::create("BruteForce-Hamming");
+    //cv::Ptr<cv::DescriptorMatcher> matcher = cv::DescriptorMatcher::create("BruteForce-Hamming");
+    cv::Ptr<cv::DescriptorMatcher> matcher = cv::DescriptorMatcher::create(cv::DescriptorMatcher::MatcherType::BRUTEFORCE_HAMMING);
     matcher->match(descriptors1, descriptors2, matches, cv::Mat());
 
     // Sort matches by score

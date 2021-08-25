@@ -29,7 +29,7 @@ int main()
     std::vector<bool> invert_layer = {false, false};
     
     std::vector<cv::Mat> layers;
-    std::vector<std::string> img_pathes = { "d:/data/lwir_0001a.png","d:/data/mwir_0001a.png" };
+    std::vector<std::string> img_pathes = { "e:/data/lwir_0001a.png","e:/data/mwir_0001b.png" };
 
     std::vector<double> layer_weight = { 0.5, 0.5 };
     
@@ -80,13 +80,14 @@ int main()
     }
 
     // display results
-    
+    cv::imshow("test", fused_img);
+    cv::waitKey(0);
     
     bp = 1;
 
     cv::destroyAllWindows();
 
-    std::cout << "Ending..." << std::endl;
+    std::cout << "Press Enter to close..." << std::endl;
     std::cin.ignore();
     
     return 0;
