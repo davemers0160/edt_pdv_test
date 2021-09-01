@@ -13,6 +13,14 @@ const int MAX_FEATURES = 300;
 const float GOOD_MATCH_PERCENT = 0.10f;
 
 // ----------------------------------------------------------------------------
+typedef struct mouse_points
+{
+    int id;
+    std::vector<cv::Point2f> points;
+} mouse_points;
+
+
+// ----------------------------------------------------------------------------
 void find_transformation_matrix(cv::Mat& img1, cv::Mat& img2, cv::Mat& h, cv::Mat &img_matches)
 {
 
@@ -85,13 +93,13 @@ cv::Mat get_gradient(cv::Mat &src)
 
 
 // ----------------------------------------------------------------------------
-void generate_checkerboard(uint32_t block_w, uint32_t block_h, uint32_t img_w, uint32_t img_h, cv::Mat &checker_board)
+void generate_checkerboard(uint32_t block_w, uint32_t block_h, uint32_t img_w, uint32_t img_h, cv::Mat& checker_board)
 {
     uint32_t idx = 0, jdx = 0;
 
     cv::Mat white = cv::Mat(block_w, block_h, CV_8UC1, cv::Scalar::all(255));
 
-    checker_board = cv::Mat(img_w, img_h, CV_8UC1, cv::Scalar::all(0));
+    checker_board = cv::Mat(img_h + block_h, img_w + block_w, CV_8UC1, cv::Scalar::all(0));
 
     bool color_row = false;
     bool color_column = false;
@@ -112,9 +120,22 @@ void generate_checkerboard(uint32_t block_w, uint32_t block_h, uint32_t img_w, u
     }
 
     // need to add cropping of image
+    cv::Rect roi(0, 0, img_w, img_h);
+    checker_board = checker_board(roi);
+}
 
+// ----------------------------------------------------------------------------
+void cv_mouse_click(int cb_event, int x, int y, int flags, void* param) 
+{
+    if (cb_event == cv::EVENT_LBUTTONDOWN)
+    {
+        std::vector<cv::Point2f>* point = (std::vector<cv::Point2f>*)param;
 
+        point->push_back(cv::Point2f(x, y));
 
+        std::cout << "Point(" << x << ", " << y << ")" << std::endl;
+    }
 
 }
+
 #endif	// _FUSER_HEADER_H
