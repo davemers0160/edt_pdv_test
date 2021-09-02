@@ -81,22 +81,7 @@ int main()
         cv::imshow(window_name1, layers[0]);
         cv::imshow(window_name2, layers[1]);
 
-        //if (alignment_points1.size() > 0)
-        //{
-        //    for (idx = 0; idx < alignment_points1.size(); ++idx)
-        //    {
-        //        std::cout << "Point1[" << idx << "]: " << alignment_points1[idx].x << ", " << alignment_points1[idx].y << std::endl;
-        //    }
-        //}
-
-        //if (alignment_points2.size() > 0)
-        //{
-        //    for (idx = 0; idx < alignment_points2.size(); ++idx)
-        //    {
-        //        std::cout << "Point2[" << idx << "]: " << alignment_points2[idx].x << ", " << alignment_points2[idx].y << std::endl;
-        //    }
-        //}
-
+        // check to see that the number of points in each image is the same and that there are at least 4 points
         if ((alignment_points1.size() == alignment_points2.size()) && (alignment_points1.size() > 3))
         {
             // Find homography
@@ -112,11 +97,26 @@ int main()
 
         key = cv::waitKey(20);
 
+        // do stuff with the user input
         switch (key)
         {
+        // delete the last pair of points
         case 'd':
-            alignment_points1.pop_back();
-            alignment_points2.pop_back();
+
+            if (alignment_points1.size() == alignment_points2.size())
+            {
+                alignment_points1.pop_back();
+                alignment_points2.pop_back();
+            }
+            else if (alignment_points1.size() > alignment_points2.size())
+            {
+                alignment_points1.pop_back();
+            }
+            else
+            {
+                alignment_points2.pop_back();
+            }
+
             break;
 
 
