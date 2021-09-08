@@ -189,7 +189,7 @@ int main()
     // apply scale and inversion to images
     /*cv::Mat fused_img = cv::Mat(layers[0].rows, layers[0].cols, CV_32FC1, cv::Scalar::all(0.0));*/
     //fused_img = fused_img + layer_weight[0] * (invert_layer[0] ? (1.0 - layers[0]) : layers[0]);
-
+/*
     for (idx = 1; idx < layers.size(); ++idx)
     {
         layers[idx].convertTo(layers[idx], CV_32FC1, 1.0 / 255.0, 0.0);
