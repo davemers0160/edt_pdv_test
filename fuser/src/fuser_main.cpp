@@ -19,8 +19,42 @@
 // #include "ms_tracker_lib.h"
 
 //
+// ----------------------------------------------------------------------------
+typedef struct ms_image
+{
+    double* image;
+    unsigned int img_w;
+    unsigned int img_h;
+
+    bool use_img = true;
+    bool invert_img = false;
 
 
+
+    double weight = 0.5;
+
+} ms_image;
+
+// ----------------------------------------------------------------------------
+void image_fuser(unsigned int num_images, ms_image*& img, double* fused_data, unsigned int img_w, unsigned int img_h)
+{
+    unsigned int idx;
+
+    // assign the fused data pointer to an opencv container
+    cv::Mat fused_img = cv::Mat(img_h, img_w, CV_64FC1, fused_data);
+
+    for (idx = 0; idx < num_images; ++idx)
+    {
+        if (img[idx].use_img)
+        {
+            cv::Mat tmp_img = cv::Mat(img[idx].img_h, img[idx].img_w, CV_64FC1, img[idx].image);
+
+            fused_img = fused_img + img[idx].weight * (img[idx].invert_img ? (1.0 - tmp_img) : tmp_img);
+        }
+
+    }
+
+}   // end of image_fuser
 
 
 // ----------------------------------------------------------------------------
@@ -166,6 +200,9 @@ int main()
             fused_img = fused_img + layer_weight[idx] * (invert_layer[idx] ? (1.0 - layers[idx]) : layers[idx]);
 
     }
+*/
+    unsigned int img_w = 512, img_h = 512;
+    cv::Mat fused_img = cv::Mat::zeros(img_h, img_w, CV_64FC1);
 
     //layers[1] = im1Reg.clone();
 
