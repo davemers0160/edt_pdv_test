@@ -16,20 +16,24 @@
 // library internal global/state variables:
 
 //----------------------------------------------------------------------------------
-void image_fuser(unsigned int num_images, ms_image *&img, double *fused_img, unsigned int img_w, unsigned int img_h)
+void image_fuser(unsigned int num_images, ms_image* img, double* fused_data64_t, unsigned char* fused_data8_t, unsigned int img_w, unsigned int img_h)
 {
     unsigned int idx;
-    
-    // apply scale and inversion to images
-    
-    cv::Mat img = cv::Mat(*img_h, *img_w, CV_64FC1, fused_img);
-    
+
+    // assign the fused data pointer to an opencv container
+    cv::Mat fused_img = cv::Mat(img_h, img_w, CV_64FC1, fused_data64_t);
+    cv::Mat fused_img8_t = cv::Mat(img_h, img_w, CV_8UC1, fused_data8_t);
+    cv::Mat tmp_img;
+
     for (idx = 0; idx < num_images; ++idx)
     {
-        if (img[idx]->use_image)
-            img = img + img[idx]->weight * (img[idx]->invert ? (1.0 - img[idx]->image) : img[idx]->image);
-
+        if (img[idx].use_img)
+        {
+            tmp_img = cv::Mat(img[idx].img_h, img[idx].img_w, CV_64FC1, img[idx].image);
+            fused_img = fused_img + img[idx].weight * (img[idx].invert_img ? (1.0 - tmp_img) : tmp_img);
+        }
     }
-    
-}   // end of image_fuser
 
+    fused_img.convertTo(fused_img8_t, CV_8UC1, 255.0, 0.0);
+
+}   // end of image_fuser
