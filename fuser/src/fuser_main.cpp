@@ -35,13 +35,26 @@ typedef struct ms_image
 
 } ms_image;
 
+ms_image init_ms_image(double* image, unsigned int img_w, unsigned int img_h, bool use_img, bool invert_img, double weight)
+{
+    ms_image tmp;
+    tmp.image = image;
+    tmp.img_w = img_w;
+    tmp.img_h = img_h;
+    tmp.use_img = use_img;
+    tmp.invert_img = invert_img;
+    tmp.weight = weight;
+    return tmp;
+}
+
 // ----------------------------------------------------------------------------
-void image_fuser(unsigned int num_images, ms_image*& img, double* fused_data, unsigned int img_w, unsigned int img_h)
+void image_fuser(unsigned int num_images, ms_image*& img, double* fused_data64_t, unsigned char* fused_data8_t, unsigned int img_w, unsigned int img_h)
 {
     unsigned int idx;
 
     // assign the fused data pointer to an opencv container
-    cv::Mat fused_img = cv::Mat(img_h, img_w, CV_64FC1, fused_data);
+    cv::Mat fused_img = cv::Mat(img_h, img_w, CV_64FC1, fused_data64_t);
+    cv::Mat fused_img8_t = cv::Mat(img_h, img_w, CV_8UC1, fused_data8_t);
 
     for (idx = 0; idx < num_images; ++idx)
     {
@@ -53,6 +66,8 @@ void image_fuser(unsigned int num_images, ms_image*& img, double* fused_data, un
         }
 
     }
+
+    fused_img.convertTo(fused_img8_t, CV_8UC1, 255.0, 0.0);
 
 }   // end of image_fuser
 
@@ -95,12 +110,14 @@ int main()
         layers.push_back(tmp);
     }
     
-    cv::Mat fused_img = cv::Mat(layers[0].rows, layers[0].cols, CV_32FC1, cv::Scalar::all(0.0));
-    fused_img = fused_img + layer_weight[0] * (invert_layer[0] ? (1.0 - layers[0]) : layers[0]);
+    
+    //cv::Mat fused_img = cv::Mat(layers[0].rows, layers[0].cols, CV_32FC1, cv::Scalar::all(0.0));
+    //fused_img = fused_img + layer_weight[0] * (invert_layer[0] ? (1.0 - layers[0]) : layers[0]);
 
-    cv::Mat checker_board;
+    cv::Mat checker_board, cb1, cb2;
     generate_checkerboard(32, 32, layers[1].cols, layers[1].rows, checker_board);
 
+    /*
     layers.push_back(checker_board);
 
     // setup the mouse callback to get the points
@@ -153,14 +170,9 @@ int main()
 
             break;
 
-
-
-
-
-
         }
     }
-
+    */
 
 
     // read in the layer weights
@@ -202,7 +214,41 @@ int main()
     }
 */
     unsigned int img_w = 512, img_h = 512;
+
+    generate_checkerboard(32, 32, img_w, img_h, cb1);
+    generate_checkerboard(64, 64, img_w, img_h, cb2);
+
+    cb1.convertTo(cb1, CV_64FC1, 1.0 / 255.0, 0.0);
+    cb2.convertTo(cb2, CV_64FC1, 1.0 / 255.0, 0.0);
+
     cv::Mat fused_img = cv::Mat::zeros(img_h, img_w, CV_64FC1);
+    cv::Mat fused_img8_t = cv::Mat::zeros(img_h, img_w, CV_8UC1);
+
+    ms_image tmp1 = init_ms_image(cb1.ptr<double>(0), img_w, img_h, true, false, 0.75);
+    ms_image tmp2 = init_ms_image(cb2.ptr<double>(0), img_w, img_h, true, false, 0.25);
+
+
+    //ms_image tmp1;
+    //tmp1.image = cb1.ptr<double>(0);
+    //tmp1.img_w = img_w;
+    //tmp1.img_h = img_h;
+    //tmp1.use_img = true;
+    //tmp1.invert_img = false;
+    //tmp1.weight = 0.75;
+
+    //ms_image tmp2;
+    //tmp2.image = cb2.ptr<double>(0);
+    //tmp2.img_w = img_w;
+    //tmp2.img_h = img_h;
+    //tmp2.use_img = true;
+    //tmp2.invert_img = false;
+    //tmp2.weight = 0.25;
+
+
+    std::vector<ms_image> tmp_ms = { tmp1, tmp2 };
+    auto t2 = tmp_ms.data();
+
+    image_fuser(tmp_ms.size(), t2, fused_img.ptr<double>(0), fused_img8_t.ptr<uint8_t>(0), img_w, img_h);
 
     //layers[1] = im1Reg.clone();
 
@@ -213,6 +259,13 @@ int main()
     //        fused_img = fused_img + layer_weight[idx] * (invert_layer[idx] ? (1.0 - layers[idx]) : layers[idx]);
 
     //}
+
+    //fused_img.convertTo(fused_img, CV_8UC3, 255.0, 0.0);
+
+    //cv::Mat t3 = cv::Mat::zeros(img_h, img_w, CV_8UC3);
+    //fused_img.convertTo(fused_img, CV_8UC3, 255.0, 0.0);
+
+    //cv::cvtColor(fused_img*255, fused_img, cv::COLOR_GRAY2RGB);
 
     // display results
     cv::imshow(window_name1, fused_img);

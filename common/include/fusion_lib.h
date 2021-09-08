@@ -15,7 +15,7 @@
 
 #endif
 
-// ----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 typedef struct ms_image
 {
     double *image;
@@ -29,8 +29,21 @@ typedef struct ms_image
     
 } ms_image;
 
+//-----------------------------------------------------------------------------
+ms_image init_ms_image(double* image, unsigned int img_w, unsigned int img_h, bool use_img, bool invert_img, double weight)
+{
+    ms_image tmp;
+    tmp.image = image;
+    tmp.img_w = img_w;
+    tmp.img_h = img_h;
+    tmp.use_img = use_img;
+    tmp.invert_img = invert_img;
+    tmp.weight = weight;
+    return tmp;
+}
 
-// ----------------------------------------------------------------------------------------
+
+//-----------------------------------------------------------------------------
 #ifdef __cplusplus
 extern "C" {
 #endif
