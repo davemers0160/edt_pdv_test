@@ -96,9 +96,11 @@ message(" ")
 
 include_directories(${project_includes})
 add_executable(${exe_name} ${SOURCES})
-target_link_libraries(${exe_name} ${project_libs})
+
 
 if(WIN32)
+    target_link_libraries(${exe_name} ${project_libs})
+    
     message("MSVC Version: " ${MSVC_VERSION})
     # uncomment for MSVC and cmake greater than 3.6.0
     set(default_build_type "Release")
@@ -106,6 +108,8 @@ if(WIN32)
         target_compile_options(${exe_name} PRIVATE "/MP")
         set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${exe_name})
     endif()
+else()
+    target_link_libraries(${exe_name} ${project_libs} ${CMAKE_DL_LIBS})
 
 endif()
 

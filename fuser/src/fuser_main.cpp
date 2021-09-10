@@ -23,32 +23,22 @@ typedef void (*image_fuser)(unsigned int num_images, ms_image* img, double* fuse
 int main()
 {
     uint32_t idx;
-    //std::vector<bool> use_layer = { true, true, false};
-    //std::vector<bool> invert_layer = {false, false, false};
+    std::vector<bool> use_img = { true, true, true};
+    std::vector<bool> invert_img = {false, false, false};
+    std::vector<double> weights = { 0.5, 0.3, 0.2 };   
     
     //std::vector<cv::Mat> layers;
     //std::vector<std::string> img_pathes = { "e:/data/lwir_0001a.png","e:/data/mwir_0001b.png" };
 
-    //std::vector<double> layer_weight = { 0.5, 0.5, 0.1 };
-
-    //std::vector<cv::Point2f> alignment_points1;
-    //std::vector<cv::Point2f> alignment_points2;
-
     std::string lib_filename;
 
-    // create the registration matrix to try and register the two images 
-    //cv::Mat h;
-    //cv::Mat tmp_reg;
     cv::Mat cb1, cb2, cb3;
-
-    std::string window_name1 = "Base Image";
-    //std::string window_name2 = "Second Image";
-
-
+    std::vector<cv::Mat> cb(3);
+    std::vector<std::string> win_names(3);
+    std::vector<ms_image> tmp_ms(3);
+    
+    std::string window_name1 = "Fused Image";
     cv::namedWindow(window_name1);// , cv::WINDOW_NORMAL | cv::WINDOW_KEEPRATIO);
-    //cv::namedWindow(window_name2);// , cv::WINDOW_NORMAL | cv::WINDOW_KEEPRATIO);
-    //cv::namedWindow("fused");
-
 
     // load in the library
 #if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
@@ -63,6 +53,7 @@ int main()
     image_fuser lib_image_fuser = (image_fuser)GetProcAddress(obj_det_lib, "image_fuser");
 
 #else
+    lib_filename = "../../fusion_lib/build/libms_fuser.so";
     void* obj_det_lib = dlopen(lib_filename.c_str(), RTLD_NOW);
 
     if (obj_det_lib == NULL)
@@ -175,23 +166,27 @@ int main()
 */
     unsigned int img_w = 512, img_h = 512;
 
-    generate_checkerboard(32, 32, img_w, img_h, cb1);
-    generate_checkerboard(64, 64, img_w, img_h, cb2);
-    generate_checkerboard(16, 16, img_w, img_h, cb3);
+    generate_checkerboard(16, 16, img_w, img_h, cb[0]);
+    generate_checkerboard(32, 32, img_w, img_h, cb[1]);
+    generate_checkerboard(64, 64, img_w, img_h, cb[2]);
 
-    cb1.convertTo(cb1, CV_64FC1, 1.0 / 255.0, 0.0);
-    cb2.convertTo(cb2, CV_64FC1, 1.0 / 255.0, 0.0);
-    cb3.convertTo(cb3, CV_64FC1, 1.0 / 255.0, 0.0);
-
+    for (idx=0; idx<cb.size(); ++idx)
+    {
+        cb[idx].convertTo(cb[idx], CV_64FC1, 1.0 / 255.0, 0.0);
+        win_names[idx] = "checkerboard " + std::to_string(idx);
+        
+        cv::namedWindow(win_names[idx]);
+        cv::imshow(win_names[idx], cb[idx]);
+        cv::waitKey(10);
+        
+        tmp_ms[idx] = init_ms_image(cb[idx].ptr<double>(0), img_w, img_h, use_img[idx], invert_img[idx], weights[idx]);
+    }
+    
+    // create the containers for the fused images
     cv::Mat fused_img = cv::Mat::zeros(img_h, img_w, CV_64FC1);
     cv::Mat fused_img8_t = cv::Mat::zeros(img_h, img_w, CV_8UC1);
 
-    ms_image tmp1 = init_ms_image(cb1.ptr<double>(0), img_w, img_h, true, false, 0.6);
-    ms_image tmp2 = init_ms_image(cb2.ptr<double>(0), img_w, img_h, true, false, 0.3);
-    ms_image tmp3 = init_ms_image(cb3.ptr<double>(0), img_w, img_h, true, false, 0.1);
-
-    std::vector<ms_image> tmp_ms = { tmp1, tmp2, tmp3 };
-
+    // run the image fuser lib
     lib_image_fuser(tmp_ms.size(), tmp_ms.data(), fused_img.ptr<double>(0), fused_img8_t.ptr<uint8_t>(0), img_w, img_h);
 
     // display results
