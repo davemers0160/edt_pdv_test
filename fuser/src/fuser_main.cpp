@@ -19,6 +19,43 @@
 
 typedef void (*image_fuser)(unsigned int num_images, ms_image* img, double* fused_data64_t, unsigned char* fused_data8_t, unsigned int img_w, unsigned int img_h);
 
+//----------------------------------------------------------------------------------
+void image_fuser2(unsigned int num_images, ms_image* img, double* fused_data64_t, unsigned char* fused_data8_t, unsigned int img_w, unsigned int img_h)
+{
+    unsigned int idx;
+
+    // assign the fused data pointer to an opencv container
+    cv::Mat fused_img = cv::Mat(img_h, img_w, CV_64FC1, fused_data64_t);
+    cv::Mat fused_img8_t = cv::Mat(img_h, img_w, CV_8UC1, fused_data8_t);
+    cv::Mat tmp_img;
+
+    for (idx = 0; idx < num_images; ++idx)
+    {
+        if (img[idx].use_img)
+        {
+            // get the pointer data into a cv::Mat container
+            tmp_img = cv::Mat(img[idx].img_h, img[idx].img_w, CV_64FC1, img[idx].image);
+
+            // center crop the image to fit the desired output image size
+            if ((img_w < img[idx].img_w) || (img_h < img[idx].img_h))
+            {
+                cv::Rect roi((img[idx].img_w - img_w) >> 1, (img[idx].img_h - img_h) >> 1, img_h, img_w);
+                tmp_img = tmp_img(roi);
+            }
+            //else
+            //{
+            //    // add the weighted image to the existing fused images
+            //    fused_img = fused_img + img[idx].weight * (img[idx].invert_img ? (1.0 - tmp_img) : tmp_img);
+            //}
+            // add the weighted image to the existing fused images
+            fused_img = fused_img + img[idx].weight * (img[idx].invert_img ? (1.0 - tmp_img) : tmp_img);
+        }
+    }   // end of for loop
+
+    fused_img.convertTo(fused_img8_t, CV_8UC1, 255.0, 0.0);
+
+}   // end of image_fuser
+
 // ----------------------------------------------------------------------------
 int main()
 {
@@ -182,12 +219,18 @@ int main()
         tmp_ms[idx] = init_ms_image(cb[idx].ptr<double>(0), img_w, img_h, use_img[idx], invert_img[idx], weights[idx]);
     }
     
+    img_w = img_h = 200;
+
     // create the containers for the fused images
     cv::Mat fused_img = cv::Mat::zeros(img_h, img_w, CV_64FC1);
     cv::Mat fused_img8_t = cv::Mat::zeros(img_h, img_w, CV_8UC1);
 
     // run the image fuser lib
     lib_image_fuser(tmp_ms.size(), tmp_ms.data(), fused_img.ptr<double>(0), fused_img8_t.ptr<uint8_t>(0), img_w, img_h);
+
+    bp = 2;
+
+    //image_fuser2(tmp_ms.size(), tmp_ms.data(), fused_img.ptr<double>(0), fused_img8_t.ptr<uint8_t>(0), img_w, img_h);
 
     // display results
     cv::imshow(window_name1, fused_img);
