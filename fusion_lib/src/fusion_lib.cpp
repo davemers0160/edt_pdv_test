@@ -12,10 +12,10 @@
 // Custom includes
 #include "fusion_lib.h"
 
-//----------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // library internal global/state variables:
 
-//----------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 void image_fuser(unsigned int num_images, ms_image* img, double* fused_data64_t, unsigned char* fused_data8_t, unsigned int img_w, unsigned int img_h)
 {
     unsigned int idx;
