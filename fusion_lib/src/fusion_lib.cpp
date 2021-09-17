@@ -19,6 +19,7 @@
 void image_fuser(unsigned int num_images, ms_image* img, double* fused_data64_t, unsigned char* fused_data8_t, unsigned int img_w, unsigned int img_h)
 {
     unsigned int idx;
+    double scale;
 
     // assign the fused data pointer to an opencv container
     cv::Mat fused_img = cv::Mat(img_h, img_w, CV_64FC1, fused_data64_t);
@@ -38,6 +39,10 @@ void image_fuser(unsigned int num_images, ms_image* img, double* fused_data64_t,
                 cv::Rect roi((img[idx].img_w - img_w) >> 1, (img[idx].img_h - img_h) >> 1, img_h, img_w);
                 tmp_img = tmp_img(roi);
             }
+
+            // check for needed scaling
+            if (img[idx].scale_img)
+                tmp_img = img[idx].scale * tmp_img;
 
             // add the weighted image to the existing fused images
             fused_img = fused_img + img[idx].weight * (img[idx].invert_img ? (1.0 - tmp_img) : tmp_img);

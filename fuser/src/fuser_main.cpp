@@ -16,6 +16,8 @@
 #include <opencv2/imgproc.hpp>
 
 #include "fuser.h"
+#include "ms_image_struct.h"
+
 
 typedef void (*image_fuser)(unsigned int num_images, ms_image* img, double* fused_data64_t, unsigned char* fused_data8_t, unsigned int img_w, unsigned int img_h);
 
@@ -42,11 +44,11 @@ void image_fuser2(unsigned int num_images, ms_image* img, double* fused_data64_t
                 cv::Rect roi((img[idx].img_w - img_w) >> 1, (img[idx].img_h - img_h) >> 1, img_h, img_w);
                 tmp_img = tmp_img(roi);
             }
-            //else
-            //{
-            //    // add the weighted image to the existing fused images
-            //    fused_img = fused_img + img[idx].weight * (img[idx].invert_img ? (1.0 - tmp_img) : tmp_img);
-            //}
+
+            // check for needed scaling
+            if (img[idx].scale_img)
+                tmp_img = img[idx].scale * tmp_img;
+
             // add the weighted image to the existing fused images
             fused_img = fused_img + img[idx].weight * (img[idx].invert_img ? (1.0 - tmp_img) : tmp_img);
         }
@@ -61,9 +63,11 @@ int main()
 {
     uint32_t idx;
     std::vector<bool> use_img = { true, true, true};
-    std::vector<bool> invert_img = {false, false, false};
-    std::vector<double> weights = { 0.5, 0.3, 0.2 };   
-    
+    std::vector<bool> invert_img = {true, false, false};
+    std::vector<double> weights = { 0.2, 0.3, 0.5 };
+    std::vector<double> scale = { 1.0 / 255.0, 1.0 / 255.0, 1.0 / 255.0 };
+    std::vector<bool> scale_img = { true, true, true };
+
     //std::vector<cv::Mat> layers;
     //std::vector<std::string> img_pathes = { "e:/data/lwir_0001a.png","e:/data/mwir_0001b.png" };
 
@@ -80,25 +84,25 @@ int main()
     // load in the library
 #if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
     lib_filename = "../../fusion_lib/build/Release/ms_fuser.dll";
-    HINSTANCE obj_det_lib = LoadLibrary(lib_filename.c_str());
+    HINSTANCE img_fusion_lib = LoadLibrary(lib_filename.c_str());
 
-    if (obj_det_lib == NULL)
+    if (img_fusion_lib == NULL)
     {
         throw std::runtime_error("error loading library");
     }
 
-    image_fuser lib_image_fuser = (image_fuser)GetProcAddress(obj_det_lib, "image_fuser");
+    image_fuser lib_image_fuser = (image_fuser)GetProcAddress(img_fusion_lib, "image_fuser");
 
 #else
     lib_filename = "../../fusion_lib/build/libms_fuser.so";
-    void* obj_det_lib = dlopen(lib_filename.c_str(), RTLD_NOW);
+    void* img_fusion_lib = dlopen(lib_filename.c_str(), RTLD_NOW);
 
-    if (obj_det_lib == NULL)
+    if (img_fusion_lib == NULL)
     {
         throw std::runtime_error("error loading library");
     }
 
-    image_fuser lib_image_fuser = (image_fuser)dlsym(obj_det_lib, "image_fuser");
+    image_fuser lib_image_fuser = (image_fuser)dlsym(img_fusion_lib, "image_fuser");
 
 #endif
 
@@ -209,17 +213,17 @@ int main()
 
     for (idx=0; idx<cb.size(); ++idx)
     {
-        cb[idx].convertTo(cb[idx], CV_64FC1, 1.0 / 255.0, 0.0);
+        cb[idx].convertTo(cb[idx], CV_64FC1, 1.0, 0.0);
         win_names[idx] = "checkerboard " + std::to_string(idx);
         
         cv::namedWindow(win_names[idx]);
         cv::imshow(win_names[idx], cb[idx]);
         cv::waitKey(10);
         
-        tmp_ms[idx] = init_ms_image(cb[idx].ptr<double>(0), img_w, img_h, use_img[idx], invert_img[idx], weights[idx]);
+        tmp_ms[idx] = init_ms_image(cb[idx].ptr<double>(0), img_w, img_h, use_img[idx], invert_img[idx], weights[idx], scale[idx], scale_img[idx]);
     }
     
-    img_w = img_h = 200;
+    //img_w = img_h = 200;
 
     // create the containers for the fused images
     cv::Mat fused_img = cv::Mat::zeros(img_h, img_w, CV_64FC1);
@@ -238,11 +242,18 @@ int main()
     
     bp = 1;
 
+    // close the library
+#if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
+    FreeLibrary(img_fusion_lib);
+#else
+    dlclose(img_fusion_lib);
+#endif
+
     cv::destroyAllWindows();
 
-    std::cout << "Press Enter to close..." << std::endl;
+    //std::cout << "Press Enter to close..." << std::endl;
 
-    std::cin.ignore();
+    //std::cin.ignore();
     
     return 0;
 }
