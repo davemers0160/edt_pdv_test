@@ -64,7 +64,7 @@ int main()
     uint32_t idx;
     std::vector<bool> use_img = { true, true, true};
     std::vector<bool> invert_img = {true, false, false};
-    std::vector<double> weights = { 0.2, 0.3, 0.5 };
+    std::vector<double> weights = { 0.5, 0.5, 0.5 };
     std::vector<double> scale = { 1.0 / 255.0, 1.0 / 255.0, 1.0 / 255.0 };
     std::vector<bool> scale_img = { true, true, true };
 
@@ -78,8 +78,17 @@ int main()
     std::vector<std::string> win_names(3);
     std::vector<ms_image> tmp_ms(3);
     
-    std::string window_name1 = "Fused Image";
+    std::string window_name1 = "Image 1";
     cv::namedWindow(window_name1);// , cv::WINDOW_NORMAL | cv::WINDOW_KEEPRATIO);
+    std::string window_name2 = "Image 2";
+    cv::namedWindow(window_name2);// , cv::WINDOW_NORMAL | cv::WINDOW_KEEPRATIO);
+
+    std::vector<cv::Point2f> alignment_points1;
+    std::vector<cv::Point2f> alignment_points2;
+
+    // create the registration matrix to try and register the two images 
+    cv::Mat h;
+    cv::Mat tmp_reg;
 
     // load in the library
 #if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
@@ -108,6 +117,12 @@ int main()
 
     int bp = 0;
 
+    unsigned int img_w = 512, img_h = 512;
+
+    generate_checkerboard(16, 16, img_w/2, img_h/2, cb[0]);
+    generate_checkerboard(32, 32, img_w, img_h, cb[1]);
+    generate_checkerboard(64, 64, img_w, img_h, cb[2]);
+
     // read in the image
     //layers.clear();
     //for (idx = 0; idx < img_pathes.size(); ++idx)
@@ -123,33 +138,33 @@ int main()
 
     //generate_checkerboard(32, 32, layers[1].cols, layers[1].rows, checker_board);
 
-    /*
-    layers.push_back(checker_board);
+    
+    //layers.push_back(checker_board);
 
     // setup the mouse callback to get the points
     cv::setMouseCallback(window_name1, cv_mouse_click, (void*)&alignment_points1);
     cv::setMouseCallback(window_name2, cv_mouse_click, (void*)&alignment_points2);
-
+    cv::Mat tmp_fused;
     char key = 0;
 
     while (key != 'q')
     {
 
-        cv::imshow(window_name1, layers[0]);
-        cv::imshow(window_name2, layers[1]);
+        cv::imshow(window_name1, cb[0]);
+        cv::imshow(window_name2, cb[1]);
 
         // check to see that the number of points in each image is the same and that there are at least 4 points
         if ((alignment_points1.size() == alignment_points2.size()) && (alignment_points1.size() > 3))
         {
             // Find homography
             h = cv::findHomography(alignment_points2, alignment_points1, cv::RANSAC);
-            cv::warpPerspective(layers[1], tmp_reg, h, layers[0].size());
-            cv::Mat tmp_fused = fused_img.clone();
+            cv::warpPerspective(cb[0], tmp_reg, h, cb[1].size());
+            //cv::Mat tmp_fused = fused_img.clone();
 
-            tmp_fused = tmp_fused + layer_weight[1] * (invert_layer[1] ? (1.0 - tmp_reg) : tmp_reg);
+            tmp_fused = weights[1] * (invert_img[1] ? (1.0 - tmp_reg) : tmp_reg) + weights[0]*cb[1];
 
 
-            imshow("fused", tmp_fused);
+            cv::imshow("fused", tmp_fused);
         }
 
         key = cv::waitKey(20);
@@ -178,7 +193,7 @@ int main()
 
         }
     }
-    */
+    
 
     //find_transformation_matrix(get_gradient(layers[1]), get_gradient(layers[0]), h, img_matches);
 
@@ -205,11 +220,7 @@ int main()
 
     }
 */
-    unsigned int img_w = 512, img_h = 512;
 
-    generate_checkerboard(16, 16, img_w, img_h, cb[0]);
-    generate_checkerboard(32, 32, img_w, img_h, cb[1]);
-    generate_checkerboard(64, 64, img_w, img_h, cb[2]);
 
     for (idx=0; idx<cb.size(); ++idx)
     {

@@ -5,6 +5,10 @@
 //#include <opencv2/imgcodecs.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
+#include <opencv2/features2d.hpp>
+//#include <opencv2/xfeatures2d.hpp>
+#include <opencv2/calib3d.hpp>
+
 
 ////-----------------------------------------------------------------------------
 //typedef struct ms_image
@@ -39,6 +43,14 @@
 //}
 
 // ----------------------------------------------------------------------------
+typedef struct mouse_points
+{
+    int id;
+    std::vector<cv::Point2f> points;
+} mouse_points;
+
+
+// ----------------------------------------------------------------------------
 void generate_checkerboard(uint32_t block_w, uint32_t block_h, uint32_t img_w, uint32_t img_h, cv::Mat& checker_board)
 {
     uint32_t idx = 0, jdx = 0;
@@ -70,5 +82,18 @@ void generate_checkerboard(uint32_t block_w, uint32_t block_h, uint32_t img_w, u
     checker_board = checker_board(roi);
 }
 
+// ----------------------------------------------------------------------------
+void cv_mouse_click(int cb_event, int x, int y, int flags, void* param)
+{
+    if (cb_event == cv::EVENT_LBUTTONDOWN)
+    {
+        std::vector<cv::Point2f>* point = (std::vector<cv::Point2f>*)param;
+
+        point->push_back(cv::Point2f(x, y));
+
+        std::cout << "Point(" << x << ", " << y << ")" << std::endl;
+    }
+
+}
 
 #endif	// _FUSER_HEADER_H
