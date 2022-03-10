@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <algorithm>
 #include <iostream>
+#include <atomic>
 
 #include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp>
@@ -20,6 +21,7 @@
 //#include "ms_image_struct.h"
 
 
+std::atomic<bool> homography_complete = false;
 
 // ----------------------------------------------------------------------------
 void cv_mouse_click(int cb_event, int x, int y, int flags, void* param)
@@ -32,7 +34,7 @@ void cv_mouse_click(int cb_event, int x, int y, int flags, void* param)
 
         std::cout << "Point(" << x << ", " << y << ")" << std::endl;
     }
-
+    homography_complete = false;
 }
 
 
@@ -43,7 +45,7 @@ void cv_mouse_click(int cb_event, int x, int y, int flags, void* param)
 
 
 // ----------------------------------------------------------------------------
-int main()
+int main(int argc, char** argv)
 {
     uint32_t idx;
     std::vector<bool> use_img = { true, true};
@@ -55,34 +57,41 @@ int main()
 
     std::string lib_filename;
 
-    cv::Mat cb1, cb2, cb3;
-    std::vector<cv::Mat> cb(3);
-    std::vector<std::string> win_names(3);
-    std::vector<image_struct> tmp_ms(3);
+    //cv::Mat cb1, cb2, cb3;
+    //std::vector<cv::Mat> cb(3);
+    //std::vector<std::string> win_names(3);
+    //std::vector<image_struct> tmp_ms(3);
     
     std::string window_name1 = "Reference Image";
-    cv::namedWindow(window_name1);// , cv::WINDOW_NORMAL | cv::WINDOW_KEEPRATIO);
+    cv::namedWindow(window_name1, cv::WINDOW_NORMAL | cv::WINDOW_KEEPRATIO);
     std::string window_name2 = "Image";
-    cv::namedWindow(window_name2);// , cv::WINDOW_NORMAL | cv::WINDOW_KEEPRATIO);
+    cv::namedWindow(window_name2, cv::WINDOW_NORMAL | cv::WINDOW_KEEPRATIO);
     std::string window_name3 = "Fused Image";
-    cv::namedWindow(window_name3);// , cv::WINDOW_NORMAL | cv::WINDOW_KEEPRATIO);
+    cv::namedWindow(window_name3, cv::WINDOW_NORMAL | cv::WINDOW_KEEPRATIO);
 
     std::vector<cv::Point2f> alignment_points1;
     std::vector<cv::Point2f> alignment_points2;
 
-    // create the registration matrix to try and register the two images 
-    cv::Mat h;
-    cv::Mat tmp_reg;
+    // create the h matrix and fill with default value that does no image warping/translation
+    //double h_data[] = { 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0 };
+    cv::Mat_<double> h(3, 3);// = cv::Mat(3, 3, CV_64FC1);
+    h << 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0;
+
+    if (argc < 3)
+    {
+        std::cout << "enter the files names" << std::endl;
+        std::cin.ignore();
+    }
 
     // load in the library
 #if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
     lib_filename = "../../fusion_lib/build/Release/ms_fuser.dll";
-    HINSTANCE img_fusion_lib = LoadLibrary(lib_filename.c_str());
+    //HINSTANCE img_fusion_lib = LoadLibrary(lib_filename.c_str());
 
-    if (img_fusion_lib == NULL)
-    {
-        throw std::runtime_error("error loading library");
-    }
+    //if (img_fusion_lib == NULL)
+    //{
+    //    throw std::runtime_error("error loading library");
+    //}
 
     //image_fuser lib_image_fuser = (image_fuser)GetProcAddress(img_fusion_lib, "image_fuser");
 
@@ -101,17 +110,19 @@ int main()
 
     int bp = 0;
 
+    std::string ref_img_filename = std::string(argv[1]);
+    std::string img_filename = std::string(argv[2]);
 
     // load in the images
-    cv::Mat ref_img = cv::imread("", cv::ImreadModes::IMREAD_GRAYSCALE);
+    cv::Mat ref_img = cv::imread(ref_img_filename, cv::ImreadModes::IMREAD_GRAYSCALE);
     ref_img.convertTo(ref_img, CV_64FC1, 1.0 / 255.0, 0.0);
-    cv::Mat img = cv::imread("", cv::ImreadModes::IMREAD_GRAYSCALE);
+    cv::Mat img = cv::imread(img_filename, cv::ImreadModes::IMREAD_GRAYSCALE);
     img.convertTo(img, CV_64FC1, 1.0 / 255.0, 0.0);
+
+    cv::Mat fused_img, tmp_img;
 
     unsigned int img_w = 512, img_h = 512;
     
-    cv::Mat fused_img;
-
     // setup the mouse callback to get the points
     cv::setMouseCallback(window_name1, cv_mouse_click, (void*)&alignment_points1);
     cv::setMouseCallback(window_name2, cv_mouse_click, (void*)&alignment_points2);
@@ -123,22 +134,22 @@ int main()
     {
 
         cv::imshow(window_name1, ref_img);
-        cv::imshow(window_name2, cb[1]);
+        cv::imshow(window_name2, img);
 
         // check to see that the number of points in each image is the same and that there are at least 4 points
-        if ((alignment_points1.size() == alignment_points2.size()) && (alignment_points1.size() > 3))
+        if (!homography_complete && (alignment_points1.size() == alignment_points2.size()) && (alignment_points1.size() > 3))
         {
-            cv::Mat tmp_img = img.clone();
 
             // Find homography
             h = cv::findHomography(alignment_points2, alignment_points1, cv::RANSAC);
-            cv::warpPerspective(ref_img, tmp_img, h, ref_img.size());
+            cv::warpPerspective(img, tmp_img, h, ref_img.size());
             //fused_img = ref_img.clone();
 
             fused_img = weights[0] * (invert_img[1] ? (1.0 - tmp_img) : tmp_img) + weights[1]* ref_img;
 
 
             cv::imshow(window_name3, fused_img);
+            homography_complete = true;
         }
 
         key = cv::waitKey(20);
@@ -149,19 +160,22 @@ int main()
         // delete the last pair of points
         case 'd':
 
-            if (alignment_points1.size() == alignment_points2.size())
+            if ((alignment_points1.size() == alignment_points2.size()) && (alignment_points1.size() > 0))
             {
                 alignment_points1.pop_back();
                 alignment_points2.pop_back();
             }
-            else if (alignment_points1.size() > alignment_points2.size())
+            else if ((alignment_points1.size() > alignment_points2.size()) && (alignment_points1.size() > 0))
             {
                 alignment_points1.pop_back();
             }
-            else
+            else if ((alignment_points2.size() > alignment_points1.size()) && (alignment_points2.size() > 0))
             {
                 alignment_points2.pop_back();
             }
+
+            homography_complete = false;
+
 
             break;
 
@@ -196,17 +210,17 @@ int main()
 */
 
 
-    for (idx=0; idx<cb.size(); ++idx)
-    {
-        cb[idx].convertTo(cb[idx], CV_64FC1, 1.0, 0.0);
-        win_names[idx] = "checkerboard " + std::to_string(idx);
-        
-        cv::namedWindow(win_names[idx]);
-        cv::imshow(win_names[idx], cb[idx]);
-        cv::waitKey(10);
-        
-        /*tmp_ms[idx] = init_ms_image(cb[idx].ptr<double>(0), img_w, img_h, use_img[idx], invert_img[idx], weights[idx], scale[idx], scale_img[idx]);*/
-    }
+    //for (idx=0; idx<cb.size(); ++idx)
+    //{
+    //    cb[idx].convertTo(cb[idx], CV_64FC1, 1.0, 0.0);
+    //    win_names[idx] = "checkerboard " + std::to_string(idx);
+    //    
+    //    cv::namedWindow(win_names[idx]);
+    //    cv::imshow(win_names[idx], cb[idx]);
+    //    cv::waitKey(10);
+    //    
+    //    /*tmp_ms[idx] = init_ms_image(cb[idx].ptr<double>(0), img_w, img_h, use_img[idx], invert_img[idx], weights[idx], scale[idx], scale_img[idx]);*/
+    //}
     
     //img_w = img_h = 200;
 
@@ -218,21 +232,28 @@ int main()
     //lib_image_fuser(tmp_ms.size(), tmp_ms.data(), fused_img.ptr<double>(0), fused_img8_t.ptr<uint8_t>(0), img_w, img_h);
 
     bp = 2;
+    std::cout << h << std::endl;
 
     //image_fuser2(tmp_ms.size(), tmp_ms.data(), fused_img.ptr<double>(0), fused_img8_t.ptr<uint8_t>(0), img_w, img_h);
 
+    cv::warpPerspective(img, tmp_img, h, ref_img.size());
+
+    fused_img = weights[0] * (invert_img[1] ? (1.0 - tmp_img) : tmp_img) + weights[1] * ref_img;
+
     // display results
-    cv::imshow(window_name1, fused_img);
+    cv::imshow(window_name3, fused_img);
     cv::waitKey(0);
     
+
+
     bp = 1;
 
     // close the library
-#if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
-    FreeLibrary(img_fusion_lib);
-#else
-    dlclose(img_fusion_lib);
-#endif
+//#if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
+//    FreeLibrary(img_fusion_lib);
+//#else
+//    dlclose(img_fusion_lib);
+//#endif
 
     cv::destroyAllWindows();
 

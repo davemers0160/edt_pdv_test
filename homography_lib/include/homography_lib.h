@@ -31,7 +31,7 @@ typedef struct image_struct
 } image_struct;
 
 //-----------------------------------------------------------------------------
-inline image_struct init_image_struct(double* image, unsigned int img_w, unsigned int img_h, bool use_img, bool invert_img, double weight, double scale, bool scale_img)
+inline image_struct init_image_struct(double* image, unsigned int img_w, unsigned int img_h)
 {
     image_struct tmp;
     tmp.image = image;
