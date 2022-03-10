@@ -131,11 +131,11 @@ int main(int argc, char** argv)
     int32_t stack_size = ref_img_stack.size();
     double min_val, max_val;
 
-    cv::minMaxLoc(ref_img_stack[20], &min_val, &max_val);
-    ref_img_stack[20].convertTo(ref_img, CV_64FC1, 1.0 / (max_val - min_val), -min_val);
+    cv::minMaxLoc(ref_img_stack[stack_size>>1], &min_val, &max_val);
+    ref_img_stack[20].convertTo(ref_img, CV_64FC1, 1.0 / (max_val - min_val), -min_val/ (max_val - min_val));
 
-    cv::minMaxLoc(img_stack[20], &min_val, &max_val);
-    img_stack[20].convertTo(img, CV_64FC1, 1.0 / (max_val - min_val), -min_val);
+    cv::minMaxLoc(img_stack[stack_size >> 1], &min_val, &max_val);
+    img_stack[20].convertTo(img, CV_64FC1, 1.0 / (max_val - min_val), -min_val/ (max_val - min_val));
 
 
 
