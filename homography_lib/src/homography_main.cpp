@@ -110,16 +110,35 @@ int main(int argc, char** argv)
 
     int bp = 0;
 
+    cv::Mat fused_img, tmp_img, ref_img, img;
+    std::vector<cv::Mat> ref_img_stack;
+    std::vector<cv::Mat> img_stack;
+
     std::string ref_img_filename = std::string(argv[1]);
     std::string img_filename = std::string(argv[2]);
 
     // load in the images
-    cv::Mat ref_img = cv::imread(ref_img_filename, cv::ImreadModes::IMREAD_GRAYSCALE);
-    ref_img.convertTo(ref_img, CV_64FC1, 1.0 / 255.0, 0.0);
-    cv::Mat img = cv::imread(img_filename, cv::ImreadModes::IMREAD_GRAYSCALE);
-    img.convertTo(img, CV_64FC1, 1.0 / 255.0, 0.0);
+    //cv::Mat ref_img = cv::imread(ref_img_filename, cv::ImreadModes::IMREAD_GRAYSCALE);
+    //ref_img.convertTo(ref_img, CV_64FC1, 1.0 / 255.0, 0.0);
+    //cv::Mat img = cv::imread(img_filename, cv::ImreadModes::IMREAD_GRAYSCALE);
+    //img.convertTo(img, CV_64FC1, 1.0 / 255.0, 0.0);
 
-    cv::Mat fused_img, tmp_img;
+
+    cv::imreadmulti(ref_img_filename, ref_img_stack, cv::ImreadModes::IMREAD_ANYDEPTH | cv::ImreadModes::IMREAD_GRAYSCALE);
+    cv::imreadmulti(img_filename, img_stack, cv::ImreadModes::IMREAD_ANYDEPTH | cv::ImreadModes::IMREAD_GRAYSCALE);
+
+
+    int32_t stack_size = ref_img_stack.size();
+    double min_val, max_val;
+
+    cv::minMaxLoc(ref_img_stack[20], &min_val, &max_val);
+    ref_img_stack[20].convertTo(ref_img, CV_64FC1, 1.0 / (max_val - min_val), -min_val);
+
+    cv::minMaxLoc(img_stack[20], &min_val, &max_val);
+    img_stack[20].convertTo(img, CV_64FC1, 1.0 / (max_val - min_val), -min_val);
+
+
+
 
     unsigned int img_w = 512, img_h = 512;
     
@@ -233,6 +252,11 @@ int main(int argc, char** argv)
 
     bp = 2;
     std::cout << h << std::endl;
+
+    // write Mat to file
+    cv::FileStorage fs("file.yml", cv::FileStorage::WRITE);
+    fs << "h_martrix" << h;
+
 
     //image_fuser2(tmp_ms.size(), tmp_ms.data(), fused_img.ptr<double>(0), fused_img8_t.ptr<uint8_t>(0), img_w, img_h);
 
