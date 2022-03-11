@@ -68,6 +68,7 @@ int main(int argc, char** argv)
     cv::namedWindow(window_name2, cv::WINDOW_NORMAL | cv::WINDOW_KEEPRATIO);
     std::string window_name3 = "Fused Image";
     cv::namedWindow(window_name3, cv::WINDOW_NORMAL | cv::WINDOW_KEEPRATIO);
+    std::string window_montage = "Montage Image";
 
     std::vector<cv::Point2f> alignment_points1;
     std::vector<cv::Point2f> alignment_points2;
@@ -196,14 +197,30 @@ int main(int argc, char** argv)
     //find_transformation_matrix(get_gradient(layers[1]), get_gradient(layers[0]), h, img_matches);
     //cv::drawMatches(layers[0], alignment_points1, layers[1], alignment_points2, matches, img_matches);
 
+    cv::destroyWindow(window_name1);
+    cv::destroyWindow(window_name2);
+    cv::destroyWindow(window_name3);
+
+    cv::namedWindow(window_montage, cv::WINDOW_NORMAL | cv::WINDOW_KEEPRATIO);
+
+    cv::Mat montage_img;
     for (idx = 0; idx < stack_size; ++idx)
     {
-        cv::warpPerspective(img_stack[idx], tmp_img, h, ref_img_stack[idx].size());
+        cv::minMaxLoc(ref_img_stack[idx], &min_val, &max_val);
+        ref_img_stack[idx].convertTo(ref_img, CV_64FC1, 1.0 / (max_val - min_val), -min_val / (max_val - min_val));
 
-        fused_img = weights[1] * (invert_img[1] ? (1.0 - tmp_img) : tmp_img) + weights[0] * ref_img_stack[idx];
+        cv::minMaxLoc(img_stack[idx], &min_val, &max_val);
+        img_stack[idx].convertTo(img, CV_64FC1, 1.0 / (max_val - min_val), -min_val / (max_val - min_val));
 
-        cv::imshow(window_name3, fused_img);
-        cv::waitKey(30);
+        cv::warpPerspective(img, tmp_img, h, ref_img.size());
+        cv::hconcat(ref_img, img, montage_img);
+
+        fused_img = weights[1] * (invert_img[1] ? (1.0 - tmp_img) : tmp_img) + weights[0] * ref_img;
+
+        cv::hconcat(montage_img, fused_img, montage_img);
+
+        cv::imshow(window_montage, montage_img);
+        cv::waitKey(100);
     }
 
     std::cout << h << std::endl;
