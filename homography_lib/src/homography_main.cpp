@@ -97,14 +97,14 @@ int main(int argc, char** argv)
 
 #else
     lib_filename = "../../fusion_lib/build/libms_fuser.so";
-    void* img_fusion_lib = dlopen(lib_filename.c_str(), RTLD_NOW);
+    //void* img_fusion_lib = dlopen(lib_filename.c_str(), RTLD_NOW);
 
-    if (img_fusion_lib == NULL)
-    {
-        throw std::runtime_error("error loading library");
-    }
+    //if (img_fusion_lib == NULL)
+    //{
+    //    throw std::runtime_error("error loading library");
+    //}
 
-    image_fuser lib_image_fuser = (image_fuser)dlsym(img_fusion_lib, "image_fuser");
+    //image_fuser lib_image_fuser = (image_fuser)dlsym(img_fusion_lib, "image_fuser");
 
 #endif
 
@@ -123,11 +123,8 @@ int main(int argc, char** argv)
     //cv::Mat img = cv::imread(img_filename, cv::ImreadModes::IMREAD_GRAYSCALE);
     //img.convertTo(img, CV_64FC1, 1.0 / 255.0, 0.0);
 
-
     cv::imreadmulti(ref_img_filename, ref_img_stack, cv::ImreadModes::IMREAD_ANYDEPTH | cv::ImreadModes::IMREAD_GRAYSCALE);
     cv::imreadmulti(img_filename, img_stack, cv::ImreadModes::IMREAD_ANYDEPTH | cv::ImreadModes::IMREAD_GRAYSCALE);
-
-
     int32_t stack_size = ref_img_stack.size();
     double min_val, max_val;
 
@@ -136,9 +133,6 @@ int main(int argc, char** argv)
 
     cv::minMaxLoc(img_stack[stack_size >> 1], &min_val, &max_val);
     img_stack[stack_size >> 1].convertTo(img, CV_64FC1, 1.0 / (max_val - min_val), -min_val/ (max_val - min_val));
-
-
-
 
     unsigned int img_w = 512, img_h = 512;
     
@@ -164,7 +158,7 @@ int main(int argc, char** argv)
             cv::warpPerspective(img, tmp_img, h, ref_img.size());
             //fused_img = ref_img.clone();
 
-            fused_img = weights[0] * (invert_img[1] ? (1.0 - tmp_img) : tmp_img) + weights[1]* ref_img;
+            fused_img = weights[1] * (invert_img[1] ? (1.0 - tmp_img) : tmp_img) + weights[0]* ref_img;
 
 
             cv::imshow(window_name3, fused_img);
@@ -195,80 +189,39 @@ int main(int argc, char** argv)
 
             homography_complete = false;
 
-
             break;
-
         }
     }
     
-
     //find_transformation_matrix(get_gradient(layers[1]), get_gradient(layers[0]), h, img_matches);
-
     //cv::drawMatches(layers[0], alignment_points1, layers[1], alignment_points2, matches, img_matches);
 
-    // Find homography
-    //h = cv::findHomography(alignment_points2, alignment_points1, cv::RANSAC);
-
-    // apply registration to images
-    //std::vector<cv::Mat> register_img;
-    //layers[0].convertTo(layers[0], CV_32FC1, 1.0 / 255.0, 0.0);
-    // apply scale and inversion to images
-    /*cv::Mat fused_img = cv::Mat(layers[0].rows, layers[0].cols, CV_32FC1, cv::Scalar::all(0.0));*/
-    //fused_img = fused_img + layer_weight[0] * (invert_layer[0] ? (1.0 - layers[0]) : layers[0]);
-/*
-    for (idx = 1; idx < layers.size(); ++idx)
+    for (idx = 0; idx < stack_size; ++idx)
     {
-        layers[idx].convertTo(layers[idx], CV_32FC1, 1.0 / 255.0, 0.0);
-        cv::warpPerspective(layers[idx], tmp_reg, h, layers[0].size());
-        layers[idx] = tmp_reg.clone();
+        cv::warpPerspective(img_stack[idx], tmp_img, h, ref_img_stack[idx].size());
 
-        if (use_layer[idx])
-            fused_img = fused_img + layer_weight[idx] * (invert_layer[idx] ? (1.0 - layers[idx]) : layers[idx]);
+        fused_img = weights[1] * (invert_img[1] ? (1.0 - tmp_img) : tmp_img) + weights[0] * ref_img_stack[idx];
 
+        cv::imshow(window_name3, fused_img);
+        cv::waitKey(30);
     }
-*/
 
-
-    //for (idx=0; idx<cb.size(); ++idx)
-    //{
-    //    cb[idx].convertTo(cb[idx], CV_64FC1, 1.0, 0.0);
-    //    win_names[idx] = "checkerboard " + std::to_string(idx);
-    //    
-    //    cv::namedWindow(win_names[idx]);
-    //    cv::imshow(win_names[idx], cb[idx]);
-    //    cv::waitKey(10);
-    //    
-    //    /*tmp_ms[idx] = init_ms_image(cb[idx].ptr<double>(0), img_w, img_h, use_img[idx], invert_img[idx], weights[idx], scale[idx], scale_img[idx]);*/
-    //}
-    
-    //img_w = img_h = 200;
-
-    // create the containers for the fused images
-    //cv::Mat fused_img = cv::Mat::zeros(img_h, img_w, CV_64FC1);
-    //cv::Mat fused_img8_t = cv::Mat::zeros(img_h, img_w, CV_8UC1);
-
-    // run the image fuser lib
-    //lib_image_fuser(tmp_ms.size(), tmp_ms.data(), fused_img.ptr<double>(0), fused_img8_t.ptr<uint8_t>(0), img_w, img_h);
-
-    bp = 2;
     std::cout << h << std::endl;
 
     // write Mat to file
     cv::FileStorage fs("file.yml", cv::FileStorage::WRITE);
     fs << "h_martrix" << h;
 
+    //cv::warpPerspective(img, tmp_img, h, ref_img.size());
 
-    //image_fuser2(tmp_ms.size(), tmp_ms.data(), fused_img.ptr<double>(0), fused_img8_t.ptr<uint8_t>(0), img_w, img_h);
-
-    cv::warpPerspective(img, tmp_img, h, ref_img.size());
-
-    fused_img = weights[0] * (invert_img[1] ? (1.0 - tmp_img) : tmp_img) + weights[1] * ref_img;
+    //fused_img = weights[0] * (invert_img[1] ? (1.0 - tmp_img) : tmp_img) + weights[1] * ref_img;
 
     // display results
-    cv::imshow(window_name3, fused_img);
-    cv::waitKey(0);
+    //cv::imshow(window_name3, fused_img);
+    //cv::waitKey(0);
     
-
+    std::cout << "complete" << std::endl;
+    std::cin.ignore();
 
     bp = 1;
 
