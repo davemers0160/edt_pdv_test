@@ -18,6 +18,7 @@
 #include <opencv2/calib3d.hpp>
 
 #include "homography_lib.h"
+#include "img_registration.h"
 //#include "ms_image_struct.h"
 
 
@@ -37,7 +38,26 @@ void cv_mouse_click(int cb_event, int x, int y, int flags, void* param)
     homography_complete = false;
 }
 
+cv::Point2f initial_point, final_point;
 
+// ----------------------------------------------------------------------------
+void cv_mouse_measure_distance(int cb_event, int x, int y, int flags, void* param)
+{
+    if (cb_event == cv::EVENT_LBUTTONDOWN)
+    {
+        //std::vector<cv::Point2f>* point = (std::vector<cv::Point2f>*)param;
+
+        initial_point = cv::Point2f(x, y);
+        //point->push_back(cv::Point2f(x, y));
+
+        //std::cout << "Point(" << x << ", " << y << ")" << std::endl;
+    }
+    else if (cb_event == cv::EVENT_LBUTTONUP)
+    {
+        final_point = cv::Point2f(x, y);
+        std::cout << "distance: x = " << (final_point.x - initial_point.x) << ", y = " << (final_point.y - initial_point.y)  << std::endl;
+    }
+}
 
 
 
@@ -49,8 +69,8 @@ int main(int argc, char** argv)
 {
     uint32_t idx;
     std::vector<bool> use_img = { true, true};
-    std::vector<bool> invert_img = { false, false};
-    std::vector<double> weights = { 0.5, 0.5};
+    std::vector<bool> invert_img = { false, true};
+    std::vector<double> weights = { 0.3, 0.7};
     std::vector<double> scale = { 1.0 / 255.0, 1.0 / 255.0};
     std::vector<bool> scale_img = { true, true };
 
@@ -76,7 +96,7 @@ int main(int argc, char** argv)
     // create the h matrix and fill with default value that does no image warping/translation
     //double h_data[] = { 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0 };
     cv::Mat_<double> h(3, 3);// = cv::Mat(3, 3, CV_64FC1);
-    h << 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0;
+    h << 1.15, 0.0, -12.0, 0.0, 1.15, -32.0, 0.0, 0.0, 1.0;
 
     if (argc < 3)
     {
@@ -111,7 +131,7 @@ int main(int argc, char** argv)
 
     int bp = 0;
 
-    cv::Mat fused_img, tmp_img, ref_img, img;
+    cv::Mat fused_img, tmp_img, ref_img, img, ref_img2, img2;
     std::vector<cv::Mat> ref_img_stack;
     std::vector<cv::Mat> img_stack;
 
@@ -129,20 +149,39 @@ int main(int argc, char** argv)
     int32_t stack_size = ref_img_stack.size();
     double min_val, max_val;
 
-    cv::minMaxLoc(ref_img_stack[stack_size>>1], &min_val, &max_val);
-    ref_img_stack[stack_size >> 1].convertTo(ref_img, CV_64FC1, 1.0 / (max_val - min_val), -min_val/ (max_val - min_val));
 
-    cv::minMaxLoc(img_stack[stack_size >> 1], &min_val, &max_val);
-    img_stack[stack_size >> 1].convertTo(img, CV_64FC1, 1.0 / (max_val - min_val), -min_val/ (max_val - min_val));
+
+    int index = 70;
+
+    cv::minMaxLoc(ref_img_stack[index], &min_val, &max_val);
+    ref_img_stack[index].convertTo(ref_img, CV_64FC1, 1.0 / (max_val - min_val), -min_val/ (max_val - min_val));
+
+    cv::minMaxLoc(img_stack[index], &min_val, &max_val);
+    img_stack[index].convertTo(img, CV_64FC1, 1.0 / (max_val - min_val), -min_val/ (max_val - min_val));
 
     unsigned int img_w = 512, img_h = 512;
-    
+
+
+    cv::Mat ref_img_grad = get_gradient(ref_img);
+    cv::Mat img_grad = get_gradient(img);
+
+    //cv::adaptiveThreshold(ref_img, ref_img, 255, cv::ADAPTIVE_THRESH_MEAN_C, cv::THRESH_BINARY, 5, 0);
+    //cv::adaptiveThreshold(img, img, 255, cv::ADAPTIVE_THRESH_MEAN_C, cv::THRESH_BINARY, 5, 0);
+
+    auto ref_mean = cv::mean(ref_img_grad)[0];
+    auto img_mean = cv::mean(img_grad)[0];
+    cv::threshold(ref_img_grad, ref_img2, 100, 255, cv::THRESH_BINARY);
+    cv::threshold(img_grad, img2, 100, 255, cv::THRESH_BINARY);
+
     // setup the mouse callback to get the points
     cv::setMouseCallback(window_name1, cv_mouse_click, (void*)&alignment_points1);
     cv::setMouseCallback(window_name2, cv_mouse_click, (void*)&alignment_points2);
+    cv::setMouseCallback(window_name3, cv_mouse_measure_distance);
 
     //cv::Mat tmp_fused;
     char key = 0;
+
+    cv::Mat img_matches;
 
     while (key != 'q')
     {
@@ -165,6 +204,12 @@ int main(int argc, char** argv)
             cv::imshow(window_name3, fused_img);
             homography_complete = true;
         }
+
+        //find_transformation_matrix(ref_img2, img2, h, img_matches);
+        cv::warpPerspective(img, tmp_img, h, ref_img.size());
+        fused_img = weights[1] * (invert_img[1] ? (1.0 - tmp_img) : tmp_img) + weights[0] * ref_img;
+
+        cv::imshow(window_name3, fused_img);
 
         key = cv::waitKey(20);
 

@@ -6,7 +6,7 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/features2d.hpp>
-#include <opencv2/xfeatures2d.hpp>
+//#include <opencv2/xfeatures2d.hpp>
 #include <opencv2/calib3d.hpp>
 
 const int MAX_FEATURES = 300;
@@ -24,14 +24,26 @@ typedef struct mouse_points
 void find_transformation_matrix(cv::Mat& img1, cv::Mat& img2, cv::Mat& h, cv::Mat &img_matches)
 {
 
+    cv::Mat tmp1, tmp2;
+
+    //img1.convertTo(tmp1, CV_8UC3, 255);
+    //img2.convertTo(tmp2, CV_8UC3, 255);
+
+    tmp1 = img1.clone();
+    tmp2 = img2.clone();
+
+    cv::cvtColor(tmp1, tmp1, cv::COLOR_GRAY2RGB);
+    cv::cvtColor(tmp2, tmp2, cv::COLOR_GRAY2RGB);
+
+
     // Variables to store keypoints and descriptors
     std::vector<cv::KeyPoint> kp1, kp2;
     cv::Mat descriptors1, descriptors2;
 
     // Detect ORB features and compute descriptors.
     cv::Ptr<cv::Feature2D> orb = cv::ORB::create(MAX_FEATURES, 1.2, 8, 25, 0, 4, cv::ORB::HARRIS_SCORE, 25);
-    orb->detectAndCompute(img1, cv::Mat(), kp1, descriptors1);
-    orb->detectAndCompute(img2, cv::Mat(), kp2, descriptors2);
+    orb->detectAndCompute(tmp1, cv::Mat(), kp1, descriptors1);
+    orb->detectAndCompute(tmp2, cv::Mat(), kp2, descriptors2);
 
     // Match features.
     std::vector<cv::DMatch> matches;
@@ -47,7 +59,7 @@ void find_transformation_matrix(cv::Mat& img1, cv::Mat& img2, cv::Mat& h, cv::Ma
     matches.erase(matches.begin() + numGoodMatches, matches.end());
 
     // Draw top matches
-    cv::drawMatches(img1, kp1, img2, kp2, matches, img_matches);
+    cv::drawMatches(tmp1, kp1, tmp2, kp2, matches, img_matches);
     //imwrite("matches.jpg", imMatches);
 
     // Extract location of good matches
@@ -74,14 +86,22 @@ cv::Mat get_gradient(cv::Mat &src)
 
     int scale = 1;
     int delta = 0;
-    int ddepth = CV_32FC1; ;
+    int ddepth = src.type();
+
+    double min_val, max_val;
+
 
     // Calculate the x and y gradients using Sobel operator
     cv::Sobel(src, grad_x, ddepth, 1, 0, 3, scale, delta, cv::BORDER_DEFAULT);
-    cv::convertScaleAbs(grad_x, abs_grad_x);
+
+    cv::minMaxLoc(grad_x, &min_val, &max_val);
+
+    cv::convertScaleAbs(grad_x, abs_grad_x, 255/ max_val);
 
     cv::Sobel(src, grad_y, ddepth, 0, 1, 3, scale, delta, cv::BORDER_DEFAULT);
-    cv::convertScaleAbs(grad_y, abs_grad_y);
+    cv::minMaxLoc(grad_y, &min_val, &max_val);
+
+    cv::convertScaleAbs(grad_y, abs_grad_y, 255/ max_val);
 
     // Combine the two gradients
     cv::Mat grad;
@@ -125,17 +145,17 @@ void generate_checkerboard(uint32_t block_w, uint32_t block_h, uint32_t img_w, u
 }
 
 // ----------------------------------------------------------------------------
-void cv_mouse_click(int cb_event, int x, int y, int flags, void* param) 
-{
-    if (cb_event == cv::EVENT_LBUTTONDOWN)
-    {
-        std::vector<cv::Point2f>* point = (std::vector<cv::Point2f>*)param;
-
-        point->push_back(cv::Point2f(x, y));
-
-        std::cout << "Point(" << x << ", " << y << ")" << std::endl;
-    }
-
-}
+//void cv_mouse_click(int cb_event, int x, int y, int flags, void* param) 
+//{
+//    if (cb_event == cv::EVENT_LBUTTONDOWN)
+//    {
+//        std::vector<cv::Point2f>* point = (std::vector<cv::Point2f>*)param;
+//
+//        point->push_back(cv::Point2f(x, y));
+//
+//        std::cout << "Point(" << x << ", " << y << ")" << std::endl;
+//    }
+//
+//}
 
 #endif	// _IMAGE_REGISTRATION_H
