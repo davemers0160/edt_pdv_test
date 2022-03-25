@@ -10,7 +10,7 @@
 #include <opencv2/calib3d.hpp>
 
 const int MAX_FEATURES = 300;
-const float GOOD_MATCH_PERCENT = 0.10f;
+const float GOOD_MATCH_PERCENT = 0.50f;
 
 // ----------------------------------------------------------------------------
 typedef struct mouse_points

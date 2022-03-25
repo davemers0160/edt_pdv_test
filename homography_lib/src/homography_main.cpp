@@ -23,6 +23,9 @@
 
 
 std::atomic<bool> homography_complete = false;
+cv::Point2f initial_point, final_point;
+
+const int32_t xy_offset = 128;
 
 // ----------------------------------------------------------------------------
 void cv_mouse_click(int cb_event, int x, int y, int flags, void* param)
@@ -37,8 +40,6 @@ void cv_mouse_click(int cb_event, int x, int y, int flags, void* param)
     }
     homography_complete = false;
 }
-
-cv::Point2f initial_point, final_point;
 
 // ----------------------------------------------------------------------------
 void cv_mouse_measure_distance(int cb_event, int x, int y, int flags, void* param)
@@ -59,9 +60,33 @@ void cv_mouse_measure_distance(int cb_event, int x, int y, int flags, void* para
     }
 }
 
+// ----------------------------------------------------------------------------
+void x_trackbar_callback(int value, void* user_data)
+{
+    cv::Mat h = *(cv::Mat*)user_data;
 
+    h.at<double>(0, 2) = (double)(value - xy_offset);
+}
 
+// ----------------------------------------------------------------------------
+void y_trackbar_callback(int value, void* user_data)
+{
+    cv::Mat h = *(cv::Mat*)user_data;
 
+    h.at<double>(1, 2) = (double)(value - xy_offset);
+}
+
+// ----------------------------------------------------------------------------
+void scale_trackbar_callback(int value, void* user_data)
+{
+    cv::Mat h = *(cv::Mat*)user_data;
+
+    double scale = (value) / 50.0;
+
+    h.at<double>(0, 0) = scale;
+    h.at<double>(1, 1) = scale;
+
+}
 
 
 // ----------------------------------------------------------------------------
@@ -69,11 +94,14 @@ int main(int argc, char** argv)
 {
     uint32_t idx;
     std::vector<bool> use_img = { true, true};
-    std::vector<bool> invert_img = { false, true};
+    std::vector<bool> invert_img = { false, false};
     std::vector<double> weights = { 0.3, 0.7};
     std::vector<double> scale = { 1.0 / 255.0, 1.0 / 255.0};
     std::vector<bool> scale_img = { true, true };
 
+    int32_t x_position = xy_offset;
+    int32_t y_position = xy_offset;
+    int32_t scale_position = 50;
 
     std::string lib_filename;
 
@@ -96,7 +124,13 @@ int main(int argc, char** argv)
     // create the h matrix and fill with default value that does no image warping/translation
     //double h_data[] = { 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0 };
     cv::Mat_<double> h(3, 3);// = cv::Mat(3, 3, CV_64FC1);
-    h << 1.15, 0.0, -12.0, 0.0, 1.15, -32.0, 0.0, 0.0, 1.0;
+    h << 1.0, 0.0, 0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0;
+
+    // create trackbars for x, y and scale
+    cv::createTrackbar("X", window_name2, &x_position, xy_offset*2, x_trackbar_callback, &h);
+    cv::createTrackbar("Y", window_name2, &y_position, xy_offset*2, y_trackbar_callback, &h);
+    cv::createTrackbar("Scale", window_name2, &scale_position, 100, scale_trackbar_callback, &h);
+
 
     if (argc < 3)
     {
@@ -150,8 +184,7 @@ int main(int argc, char** argv)
     double min_val, max_val;
 
 
-
-    int index = 70;
+    int32_t index = (int32_t)floor(stack_size*.75);
 
     cv::minMaxLoc(ref_img_stack[index], &min_val, &max_val);
     ref_img_stack[index].convertTo(ref_img, CV_64FC1, 1.0 / (max_val - min_val), -min_val/ (max_val - min_val));
@@ -170,8 +203,8 @@ int main(int argc, char** argv)
 
     auto ref_mean = cv::mean(ref_img_grad)[0];
     auto img_mean = cv::mean(img_grad)[0];
-    cv::threshold(ref_img_grad, ref_img2, 100, 255, cv::THRESH_BINARY);
-    cv::threshold(img_grad, img2, 100, 255, cv::THRESH_BINARY);
+    cv::threshold(ref_img_grad, ref_img2, 80, 255, cv::THRESH_BINARY);
+    cv::threshold(img_grad, img2, 50, 255, cv::THRESH_BINARY);
 
     // setup the mouse callback to get the points
     cv::setMouseCallback(window_name1, cv_mouse_click, (void*)&alignment_points1);
@@ -182,6 +215,9 @@ int main(int argc, char** argv)
     char key = 0;
 
     cv::Mat img_matches;
+
+    cv::Mat h2;
+    //find_transformation_matrix(ref_img2, img2, h, img_matches);
 
     while (key != 'q')
     {
@@ -249,6 +285,8 @@ int main(int argc, char** argv)
     cv::namedWindow(window_montage, cv::WINDOW_NORMAL | cv::WINDOW_KEEPRATIO);
 
     cv::Mat montage_img;
+    std::vector<cv::Mat> montage_vec;
+
     for (idx = 0; idx < stack_size; ++idx)
     {
         cv::minMaxLoc(ref_img_stack[idx], &min_val, &max_val);
@@ -265,6 +303,7 @@ int main(int argc, char** argv)
         cv::hconcat(montage_img, fused_img, montage_img);
 
         cv::imshow(window_montage, montage_img);
+        montage_vec.push_back(montage_img);
         cv::waitKey(100);
     }
 
@@ -281,7 +320,11 @@ int main(int argc, char** argv)
     // display results
     //cv::imshow(window_name3, fused_img);
     //cv::waitKey(0);
-    
+
+    // try saving a tiff stack
+    std::string save_file = "C:/Projects/data/test/test.tiff";
+    cv::imwrite(save_file, montage_vec);
+
     std::cout << "complete" << std::endl;
     std::cin.ignore();
 
