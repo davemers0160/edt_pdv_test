@@ -104,11 +104,6 @@ int main(int argc, char** argv)
     int32_t scale_position = 50;
 
     std::string lib_filename;
-
-    //cv::Mat cb1, cb2, cb3;
-    //std::vector<cv::Mat> cb(3);
-    //std::vector<std::string> win_names(3);
-    //std::vector<image_struct> tmp_ms(3);
     
     std::string window_name1 = "Reference Image";
     cv::namedWindow(window_name1, cv::WINDOW_NORMAL | cv::WINDOW_KEEPRATIO);
@@ -194,6 +189,9 @@ int main(int argc, char** argv)
 
     unsigned int img_w = 512, img_h = 512;
 
+
+    cv::transpose(ref_img, ref_img);
+    cv::transpose(img, img);
 
     cv::Mat ref_img_grad = get_gradient(ref_img);
     cv::Mat img_grad = get_gradient(img);
@@ -294,6 +292,9 @@ int main(int argc, char** argv)
 
         cv::minMaxLoc(img_stack[idx], &min_val, &max_val);
         img_stack[idx].convertTo(img, CV_64FC1, 1.0 / (max_val - min_val), -min_val / (max_val - min_val));
+
+        cv::transpose(ref_img, ref_img);
+        cv::transpose(img, img);
 
         cv::warpPerspective(img, tmp_img, h, ref_img.size());
         cv::hconcat(ref_img, img, montage_img);
