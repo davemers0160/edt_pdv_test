@@ -1,6 +1,9 @@
 #ifndef _IMAGE_REGISTRATION_H
 #define _IMAGE_REGISTRATION_H
 
+#include <cstdint>
+#include <limits>
+
 #include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/highgui.hpp>
@@ -19,9 +22,41 @@ typedef struct mouse_points
     std::vector<cv::Point2f> points;
 } mouse_points;
 
+// ----------------------------------------------------------------------------
+inline void get_rect(std::vector<cv::Point> &p, cv::Rect &r)
+{
+    uint64_t idx, jdx;
+    uint64_t min_x = ULLONG_MAX, min_y = ULLONG_MAX;
+    uint64_t max_x = 0, max_y = 0;
+
+    for (idx = 0; idx < p.size(); ++idx)
+    {
+        min_x = std::min(min_x, (uint64_t)p[idx].x);
+        min_y = std::min(min_y, (uint64_t)p[idx].y);
+        max_x = std::max(max_x, (uint64_t)p[idx].x);
+        max_y = std::max(max_y, (uint64_t)p[idx].y);
+
+    }
+
+    r = cv::Rect(min_x, min_y, max_x - min_x + 1, max_y - min_y + 1);
+}
 
 // ----------------------------------------------------------------------------
-void find_transformation_matrix(cv::Mat& img1, cv::Mat& img2, cv::Mat& h, cv::Mat &img_matches)
+inline std::vector<cv::Point2f> get_rect_corners(cv::Rect& r)
+{
+    std::vector<cv::Point2f> p;
+
+    // start at the top left and go counter-clockwise
+    p.push_back(cv::Point2f(r.x, r.y));
+    p.push_back(cv::Point2f(r.x, r.y+r.height));
+    p.push_back(cv::Point2f(r.x+r.width, r.y+r.height));
+    p.push_back(cv::Point2f(r.x+r.width, r.y));
+
+    return p;
+}
+
+// ----------------------------------------------------------------------------
+void find_transformation_matrix(cv::Mat& img1, cv::Mat& img2, cv::Mat& h, cv::Mat& img_matches)
 {
 
     cv::Mat tmp1, tmp2;
@@ -32,9 +67,23 @@ void find_transformation_matrix(cv::Mat& img1, cv::Mat& img2, cv::Mat& h, cv::Ma
     tmp1 = img1.clone();
     tmp2 = img2.clone();
 
-    cv::cvtColor(tmp1, tmp1, cv::COLOR_GRAY2RGB);
-    cv::cvtColor(tmp2, tmp2, cv::COLOR_GRAY2RGB);
+    if (tmp1.type() == CV_64FC1)
+    {
+        tmp1.convertTo(tmp1, CV_8UC1, 255);
+    }
+    else if (tmp1.type() != CV_8UC3)
+    {
+        cv::cvtColor(tmp1, tmp1, cv::COLOR_GRAY2RGB);
+    }
 
+    if (tmp2.type() == CV_64FC1)
+    {
+        tmp2.convertTo(tmp2, CV_8UC1, 255);
+    }
+    else if(tmp2.type() != CV_8UC3)
+    {
+        cv::cvtColor(tmp2, tmp2, cv::COLOR_GRAY2RGB);
+    }
 
     // Variables to store keypoints and descriptors
     std::vector<cv::KeyPoint> kp1, kp2;
@@ -48,7 +97,7 @@ void find_transformation_matrix(cv::Mat& img1, cv::Mat& img2, cv::Mat& h, cv::Ma
     // Match features.
     std::vector<cv::DMatch> matches;
     //cv::Ptr<cv::DescriptorMatcher> matcher = cv::DescriptorMatcher::create("BruteForce-Hamming");
-    cv::Ptr<cv::DescriptorMatcher> matcher = cv::DescriptorMatcher::create(cv::DescriptorMatcher::MatcherType::BRUTEFORCE_HAMMING);
+    cv::Ptr<cv::DescriptorMatcher> matcher = cv::DescriptorMatcher::create(cv::DescriptorMatcher::MatcherType::BRUTEFORCE_SL2); //BRUTEFORCE_SL2 , BRUTEFORCE_HAMMING
     matcher->match(descriptors1, descriptors2, matches, cv::Mat());
 
     // Sort matches by score
@@ -86,10 +135,14 @@ cv::Mat get_gradient(cv::Mat &src)
 
     int scale = 1;
     int delta = 0;
-    int ddepth = src.type();
+    int ddepth = CV_64F;
 
     double min_val, max_val;
 
+    if (src.channels() > 1)
+    {
+        cv::cvtColor(src, src, cv::COLOR_RGB2GRAY);
+    }
 
     // Calculate the x and y gradients using Sobel operator
     cv::Sobel(src, grad_x, ddepth, 1, 0, 3, scale, delta, cv::BORDER_DEFAULT);
@@ -109,6 +162,40 @@ cv::Mat get_gradient(cv::Mat &src)
 
     return grad;
 
+}
+
+// ----------------------------------------------------------------------------
+cv::Rect get_bounding_box(cv::Mat& img, cv::Mat &converted_img,  bool invert)
+{
+
+    double min_val, max_val;
+    std::vector<std::vector<cv::Point> > img_contours;
+    std::vector<cv::Vec4i> img_hr;
+    cv::Mat img_pyr, img_grad, img2;
+    cv::Rect img_rect;
+
+    cv::minMaxLoc(img, &min_val, &max_val);
+    img.convertTo(converted_img, CV_64FC1, 1.0 / (max_val - min_val), -min_val / (max_val - min_val));
+
+    if (invert)
+        converted_img = 1.0 - converted_img;
+
+    cv::transpose(converted_img, converted_img);
+
+    converted_img.convertTo(img_pyr, CV_8UC1, 255);
+
+    cv::cvtColor(img_pyr, img_pyr, cv::COLOR_GRAY2RGB);
+    cv::pyrMeanShiftFiltering(img_pyr, img_pyr, 5, 10);
+
+    img_grad = get_gradient(img_pyr);
+
+    cv::threshold(img_grad, img2, 60, 0, cv::THRESH_TOZERO);
+
+    cv::findContours(img2, img_contours, img_hr, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+
+    get_rect(img_contours[0], img_rect);
+
+    return img_rect;
 }
 
 
