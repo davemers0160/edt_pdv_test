@@ -94,7 +94,7 @@ int main(int argc, char** argv)
 {
     uint32_t idx;
     std::vector<bool> use_img = { true, true};
-    std::vector<bool> invert_img = { false, false};
+    std::vector<bool> invert_img = { false, true};
     std::vector<double> weights = { 0.3, 0.7};
     std::vector<double> scale = { 1.0 / 255.0, 1.0 / 255.0};
     std::vector<bool> scale_img = { true, true };
@@ -163,6 +163,9 @@ int main(int argc, char** argv)
     cv::Mat fused_img, tmp_img, ref_img, img, ref_img2, img2;
     std::vector<cv::Mat> ref_img_stack;
     std::vector<cv::Mat> img_stack;
+    cv::Mat img_matches;
+    cv::Rect ref_rect, img_rect;
+
 
     std::string ref_img_filename = std::string(argv[1]);
     std::string img_filename = std::string(argv[2]);
@@ -172,50 +175,103 @@ int main(int argc, char** argv)
     //ref_img.convertTo(ref_img, CV_64FC1, 1.0 / 255.0, 0.0);
     //cv::Mat img = cv::imread(img_filename, cv::ImreadModes::IMREAD_GRAYSCALE);
     //img.convertTo(img, CV_64FC1, 1.0 / 255.0, 0.0);
+    // 
+    // setup the mouse callback to get the points
+    cv::setMouseCallback(window_name1, cv_mouse_click, (void*)&alignment_points1);
+    cv::setMouseCallback(window_name2, cv_mouse_click, (void*)&alignment_points2);
+    cv::setMouseCallback(window_name3, cv_mouse_measure_distance);
 
     cv::imreadmulti(ref_img_filename, ref_img_stack, cv::ImreadModes::IMREAD_ANYDEPTH | cv::ImreadModes::IMREAD_GRAYSCALE);
     cv::imreadmulti(img_filename, img_stack, cv::ImreadModes::IMREAD_ANYDEPTH | cv::ImreadModes::IMREAD_GRAYSCALE);
     int32_t stack_size = ref_img_stack.size();
     double min_val, max_val;
 
+    char key = 0;
 
     int32_t index = (int32_t)floor(stack_size*.75);
 
-    cv::minMaxLoc(ref_img_stack[index], &min_val, &max_val);
-    ref_img_stack[index].convertTo(ref_img, CV_64FC1, 1.0 / (max_val - min_val), -min_val/ (max_val - min_val));
+    //cv::minMaxLoc(ref_img_stack[index], &min_val, &max_val);
+    //ref_img_stack[index].convertTo(ref_img, CV_64FC1, 1.0 / (max_val - min_val), -min_val/ (max_val - min_val));
 
-    cv::minMaxLoc(img_stack[index], &min_val, &max_val);
-    img_stack[index].convertTo(img, CV_64FC1, 1.0 / (max_val - min_val), -min_val/ (max_val - min_val));
+    //cv::minMaxLoc(img_stack[index], &min_val, &max_val);
+    //img_stack[index].convertTo(img, CV_64FC1, 1.0 / (max_val - min_val), -min_val/ (max_val - min_val));
 
-    unsigned int img_w = 512, img_h = 512;
+    //if (invert_img[1])
+    //    img = 1.0 - img;
 
+    //cv::transpose(ref_img, ref_img);
+    //cv::transpose(img, img);
 
-    cv::transpose(ref_img, ref_img);
-    cv::transpose(img, img);
+    //cv::Mat ref_img_grad = get_gradient(ref_img);
+    //cv::Mat img_grad = get_gradient(img);
 
-    cv::Mat ref_img_grad = get_gradient(ref_img);
-    cv::Mat img_grad = get_gradient(img);
 
     //cv::adaptiveThreshold(ref_img, ref_img, 255, cv::ADAPTIVE_THRESH_MEAN_C, cv::THRESH_BINARY, 5, 0);
     //cv::adaptiveThreshold(img, img, 255, cv::ADAPTIVE_THRESH_MEAN_C, cv::THRESH_BINARY, 5, 0);
 
-    auto ref_mean = cv::mean(ref_img_grad)[0];
-    auto img_mean = cv::mean(img_grad)[0];
-    cv::threshold(ref_img_grad, ref_img2, 80, 255, cv::THRESH_BINARY);
-    cv::threshold(img_grad, img2, 50, 255, cv::THRESH_BINARY);
+    //auto ref_mean = cv::mean(ref_img_grad)[0];
+    //auto img_mean = cv::mean(img_grad)[0];
 
-    // setup the mouse callback to get the points
-    cv::setMouseCallback(window_name1, cv_mouse_click, (void*)&alignment_points1);
-    cv::setMouseCallback(window_name2, cv_mouse_click, (void*)&alignment_points2);
-    cv::setMouseCallback(window_name3, cv_mouse_measure_distance);
+    //cv::threshold(ref_img_grad, ref_img2, 80, 0, cv::THRESH_TOZERO);
+    //cv::threshold(img_grad, img2, 60, 0, cv::THRESH_TOZERO);
+
 
     //cv::Mat tmp_fused;
-    char key = 0;
 
-    cv::Mat img_matches;
 
-    cv::Mat h2;
-    //find_transformation_matrix(ref_img2, img2, h, img_matches);
+
+    //cv::Mat img_pyr, ref_pyr;
+    //ref_img.convertTo(ref_pyr, CV_8UC1, 255);
+    //img.convertTo(img_pyr, CV_8UC1, 255);
+
+    //cv::cvtColor(ref_pyr, ref_pyr, cv::COLOR_GRAY2RGB);
+    //cv::cvtColor(img_pyr, img_pyr, cv::COLOR_GRAY2RGB);
+    //cv::pyrMeanShiftFiltering(ref_pyr, ref_pyr, 5, 10);
+    //cv::pyrMeanShiftFiltering(img_pyr, img_pyr, 5, 10);
+
+    //ref_img_grad = get_gradient(ref_pyr);
+    //img_grad = get_gradient(img_pyr);
+
+    //cv::threshold(ref_img_grad, ref_img2, 80, 0, cv::THRESH_TOZERO);
+    //cv::threshold(img_grad, img2, 60, 0, cv::THRESH_TOZERO);
+
+    //std::vector<std::vector<cv::Point> > ref_contours, img_cont;
+    //std::vector<cv::Vec4i> ref_h, img_hr;
+    //cv::findContours(ref_img2, ref_contours, ref_h, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+    //cv::findContours(img2, img_cont, img_hr, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+
+
+    //get_rect(ref_contours[0], ref_rect);
+    //get_rect(img_cont[0], img_rect);
+
+
+
+
+    ref_rect = get_bounding_box(ref_img_stack[0], ref_img, invert_img[0]);
+    img_rect = get_bounding_box(img_stack[0], img, invert_img[1]);
+
+    // Find homography
+    h = cv::findHomography(get_rect_corners(img_rect), get_rect_corners(ref_rect), cv::RANSAC);
+    
+
+    cv::Mat ref_draw = cv::Mat::zeros(ref_img.size(), CV_8UC3);
+    //for (size_t i = 0; i < ref_contours.size(); i++)
+    //{
+    //    cv::Scalar color = cv::Scalar(255,255,255);
+    //    cv::drawContours(ref_draw, ref_contours, (int)i, color, 1, cv::LINE_8, ref_h, 0);
+    //}
+    cv::rectangle(ref_draw, ref_rect, cv::Scalar::all(255), 1, 8, 0);
+
+    cv::Mat img_draw = cv::Mat::zeros(img.size(), CV_8UC3);
+    //for (size_t i = 0; i < img_cont.size(); i++)
+    //{
+    //    cv::Scalar color = cv::Scalar(255,255,255);
+    //    cv::drawContours(img_draw, img_cont, (int)i, color, 1, cv::LINE_8, img_hr, 0);
+    //}
+    cv::rectangle(img_draw, img_rect, cv::Scalar::all(255), 1, 8, 0);
+
+    //cv::Mat h2;
+    //find_transformation_matrix(ref_draw, img_draw, h, img_matches);
 
     while (key != 'q')
     {
@@ -287,14 +343,21 @@ int main(int argc, char** argv)
 
     for (idx = 0; idx < stack_size; ++idx)
     {
-        cv::minMaxLoc(ref_img_stack[idx], &min_val, &max_val);
-        ref_img_stack[idx].convertTo(ref_img, CV_64FC1, 1.0 / (max_val - min_val), -min_val / (max_val - min_val));
 
-        cv::minMaxLoc(img_stack[idx], &min_val, &max_val);
-        img_stack[idx].convertTo(img, CV_64FC1, 1.0 / (max_val - min_val), -min_val / (max_val - min_val));
+        ref_rect = get_bounding_box(ref_img_stack[idx], ref_img, invert_img[0]);
+        img_rect = get_bounding_box(img_stack[idx], img, invert_img[1]);
 
-        cv::transpose(ref_img, ref_img);
-        cv::transpose(img, img);
+        // Find homography
+        h = cv::findHomography(get_rect_corners(img_rect), get_rect_corners(ref_rect), cv::RANSAC);
+
+        //cv::minMaxLoc(ref_img_stack[idx], &min_val, &max_val);
+        //ref_img_stack[idx].convertTo(ref_img, CV_64FC1, 1.0 / (max_val - min_val), -min_val / (max_val - min_val));
+
+        //cv::minMaxLoc(img_stack[idx], &min_val, &max_val);
+        //img_stack[idx].convertTo(img, CV_64FC1, 1.0 / (max_val - min_val), -min_val / (max_val - min_val));
+
+        //cv::transpose(ref_img, ref_img);
+        //cv::transpose(img, img);
 
         cv::warpPerspective(img, tmp_img, h, ref_img.size());
         cv::hconcat(ref_img, img, montage_img);
@@ -324,7 +387,7 @@ int main(int argc, char** argv)
 
     // try saving a tiff stack
     std::string save_file = "C:/Projects/data/test/test.tiff";
-    cv::imwrite(save_file, montage_vec);
+    //cv::imwrite(save_file, montage_vec);
 
     std::cout << "complete" << std::endl;
     std::cin.ignore();
