@@ -94,7 +94,7 @@ int main(int argc, char** argv)
 {
     uint32_t idx;
     std::vector<bool> use_img = { true, true};
-    std::vector<bool> invert_img = { false, true};
+    std::vector<bool> invert_img = { false, false};
     std::vector<double> weights = { 0.3, 0.7};
     std::vector<double> scale = { 1.0 / 255.0, 1.0 / 255.0};
     std::vector<bool> scale_img = { true, true };
@@ -247,8 +247,8 @@ int main(int argc, char** argv)
 
 
 
-    ref_rect = get_bounding_box(ref_img_stack[0], ref_img, invert_img[0]);
-    img_rect = get_bounding_box(img_stack[0], img, invert_img[1]);
+    ref_rect = get_bounding_box(ref_img_stack[0], ref_img, 80, invert_img[0]);
+    img_rect = get_bounding_box(img_stack[0], img, 60, invert_img[1]);
 
     // Find homography
     h = cv::findHomography(get_rect_corners(img_rect), get_rect_corners(ref_rect), cv::RANSAC);
@@ -339,13 +339,16 @@ int main(int argc, char** argv)
     cv::namedWindow(window_montage, cv::WINDOW_NORMAL | cv::WINDOW_KEEPRATIO);
 
     cv::Mat montage_img;
-    std::vector<cv::Mat> montage_vec;
+    std::vector<cv::Mat> montage_vec(stack_size);
 
     for (idx = 0; idx < stack_size; ++idx)
     {
 
-        ref_rect = get_bounding_box(ref_img_stack[idx], ref_img, invert_img[0]);
-        img_rect = get_bounding_box(img_stack[idx], img, invert_img[1]);
+        ref_rect = get_bounding_box(ref_img_stack[idx], ref_img, 80, invert_img[0]);
+        img_rect = get_bounding_box(img_stack[idx], img, 60, invert_img[1]);
+
+        cv::rectangle(ref_img, ref_rect, cv::Scalar::all(255), 1, 8, 0);
+        cv::rectangle(img, img_rect, cv::Scalar::all(255), 1, 8, 0);
 
         // Find homography
         h = cv::findHomography(get_rect_corners(img_rect), get_rect_corners(ref_rect), cv::RANSAC);
@@ -367,8 +370,9 @@ int main(int argc, char** argv)
         cv::hconcat(montage_img, fused_img, montage_img);
 
         cv::imshow(window_montage, montage_img);
-        montage_vec.push_back(montage_img);
-        cv::waitKey(100);
+        //montage_vec.push_back(montage_img);
+        montage_vec[idx] = montage_img;
+        cv::waitKey(0);
     }
 
     std::cout << h << std::endl;

@@ -198,6 +198,45 @@ cv::Rect get_bounding_box(cv::Mat& img, cv::Mat &converted_img,  bool invert)
     return img_rect;
 }
 
+// ----------------------------------------------------------------------------
+cv::Rect get_bounding_box(cv::Mat& img, cv::Mat& converted_img, double threshold, bool invert)
+{
+
+    double min_val, max_val;
+    std::vector<std::vector<cv::Point> > img_contours;
+    std::vector<cv::Vec4i> img_hr;
+    cv::Mat img_pyr, img_grad, img2;
+    cv::Rect img_rect;
+
+    cv::minMaxLoc(img, &min_val, &max_val);
+    //img.convertTo(converted_img, CV_64FC1, 1.0 / (max_val - min_val), -min_val / (max_val - min_val));
+    img.convertTo(converted_img, CV_8UC1, 255.0 / (max_val - min_val), -(255.0*min_val)/ (max_val - min_val));
+
+    if (invert)
+        converted_img = 255 - converted_img;
+
+    cv::transpose(converted_img, converted_img);
+
+    cv::threshold(converted_img, img2, threshold, 0, cv::THRESH_TOZERO);
+
+    //converted_img.convertTo(img_pyr, CV_8UC1, 255);
+
+    //cv::cvtColor(img_pyr, img_pyr, cv::COLOR_GRAY2RGB);
+    //cv::pyrMeanShiftFiltering(img_pyr, img_pyr, 5, 10);
+
+    //img_grad = get_gradient(img_pyr);
+
+    //cv::threshold(img_grad, img2, 60, 0, cv::THRESH_TOZERO);
+
+    cv::findContours(img2, img_contours, img_hr, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+
+    if (img_contours.size() > 0)
+        get_rect(img_contours[0], img_rect);
+    else
+        img_rect = cv::Rect(0, 0, img.cols >> 1, img.rows >> 1);
+
+    return img_rect;
+}
 
 // ----------------------------------------------------------------------------
 void generate_checkerboard(uint32_t block_w, uint32_t block_h, uint32_t img_w, uint32_t img_h, cv::Mat& checker_board)
