@@ -94,7 +94,7 @@ int main(int argc, char** argv)
 {
     uint32_t idx;
     std::vector<bool> use_img = { true, true};
-    std::vector<bool> invert_img = { false, false};
+    std::vector<bool> invert_img = { false, true};
     std::vector<double> weights = { 0.3, 0.7};
     std::vector<double> scale = { 1.0 / 255.0, 1.0 / 255.0};
     std::vector<bool> scale_img = { true, true };
@@ -345,7 +345,8 @@ int main(int argc, char** argv)
     {
 
         ref_rect = get_bounding_box(ref_img_stack[idx], ref_img, 80, invert_img[0]);
-        img_rect = get_bounding_box(img_stack[idx], img, 60, invert_img[1]);
+        //img_rect = get_bounding_box(img_stack[idx], img, 90, invert_img[1]);
+        img_rect = get_bounding_box(img_stack[idx], img, invert_img[1]);
 
         cv::rectangle(ref_img, ref_rect, cv::Scalar::all(255), 1, 8, 0);
         cv::rectangle(img, img_rect, cv::Scalar::all(255), 1, 8, 0);
@@ -365,7 +366,8 @@ int main(int argc, char** argv)
         cv::warpPerspective(img, tmp_img, h, ref_img.size());
         cv::hconcat(ref_img, img, montage_img);
 
-        fused_img = weights[1] * (invert_img[1] ? (1.0 - tmp_img) : tmp_img) + weights[0] * ref_img;
+        //fused_img = weights[1] * (invert_img[1] ? (1.0 - tmp_img) : tmp_img) + weights[0] * ref_img;
+        fused_img =  weights[0] * ref_img + weights[1] * tmp_img;
 
         cv::hconcat(montage_img, fused_img, montage_img);
 
@@ -390,7 +392,7 @@ int main(int argc, char** argv)
     //cv::waitKey(0);
 
     // try saving a tiff stack
-    std::string save_file = "C:/Projects/data/test/test.tiff";
+     std::string save_file = "C:/Projects/data/test/test.tiff";
     //cv::imwrite(save_file, montage_vec);
 
     std::cout << "complete" << std::endl;

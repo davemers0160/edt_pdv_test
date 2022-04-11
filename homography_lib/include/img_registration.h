@@ -15,12 +15,20 @@
 const int MAX_FEATURES = 300;
 const float GOOD_MATCH_PERCENT = 0.50f;
 
+cv::Mat SE = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3));
+
 // ----------------------------------------------------------------------------
 typedef struct mouse_points
 {
     int id;
     std::vector<cv::Point2f> points;
 } mouse_points;
+
+template <typename T>
+static inline bool max_vector_size(const std::vector<T>& lhs, const std::vector<T>& rhs)
+{
+    return lhs.size() < rhs.size();
+}
 
 // ----------------------------------------------------------------------------
 inline void get_rect(std::vector<cv::Point> &p, cv::Rect &r)
@@ -182,9 +190,9 @@ cv::Rect get_bounding_box(cv::Mat& img, cv::Mat &converted_img,  bool invert)
 
     cv::transpose(converted_img, converted_img);
 
-    converted_img.convertTo(img_pyr, CV_8UC1, 255);
+    converted_img.convertTo(converted_img, CV_8UC1, 255);
 
-    cv::cvtColor(img_pyr, img_pyr, cv::COLOR_GRAY2RGB);
+    cv::cvtColor(converted_img, img_pyr, cv::COLOR_GRAY2RGB);
     cv::pyrMeanShiftFiltering(img_pyr, img_pyr, 5, 10);
 
     img_grad = get_gradient(img_pyr);
@@ -219,6 +227,7 @@ cv::Rect get_bounding_box(cv::Mat& img, cv::Mat& converted_img, double threshold
 
     cv::threshold(converted_img, img2, threshold, 0, cv::THRESH_TOZERO);
 
+    cv::morphologyEx(img2, img2, cv::MORPH_CLOSE, SE);
     //converted_img.convertTo(img_pyr, CV_8UC1, 255);
 
     //cv::cvtColor(img_pyr, img_pyr, cv::COLOR_GRAY2RGB);
@@ -231,7 +240,8 @@ cv::Rect get_bounding_box(cv::Mat& img, cv::Mat& converted_img, double threshold
     cv::findContours(img2, img_contours, img_hr, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
 
     if (img_contours.size() > 0)
-        get_rect(img_contours[0], img_rect);
+        get_rect(*std::max_element(img_contours.begin(), img_contours.end(), max_vector_size<cv::Point>), img_rect);
+        //get_rect(img_contours[0], img_rect);
     else
         img_rect = cv::Rect(0, 0, img.cols >> 1, img.rows >> 1);
 
