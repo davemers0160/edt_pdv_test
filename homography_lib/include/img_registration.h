@@ -15,7 +15,12 @@
 const int MAX_FEATURES = 300;
 const float GOOD_MATCH_PERCENT = 0.50f;
 
-cv::Mat SE = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3));
+cv::Mat SE3_rect = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3));
+cv::Mat SE5_rect = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(5, 5));
+
+double sma_length = 3.0;
+double sma_width = 0.0;
+double sma_height = 0.0;
 
 // ----------------------------------------------------------------------------
 typedef struct mouse_points
@@ -227,7 +232,7 @@ cv::Rect get_bounding_box(cv::Mat& img, cv::Mat& converted_img, double threshold
 
     cv::threshold(converted_img, img2, threshold, 0, cv::THRESH_TOZERO);
 
-    cv::morphologyEx(img2, img2, cv::MORPH_CLOSE, SE);
+    cv::morphologyEx(img2, img2, cv::MORPH_CLOSE, SE3_rect);
     //converted_img.convertTo(img_pyr, CV_8UC1, 255);
 
     //cv::cvtColor(img_pyr, img_pyr, cv::COLOR_GRAY2RGB);
@@ -248,37 +253,106 @@ cv::Rect get_bounding_box(cv::Mat& img, cv::Mat& converted_img, double threshold
     return img_rect;
 }
 
+
 // ----------------------------------------------------------------------------
-void generate_checkerboard(uint32_t block_w, uint32_t block_h, uint32_t img_w, uint32_t img_h, cv::Mat& checker_board)
+cv::Rect get_bounding_box2(cv::Mat& img, cv::Mat& converted_img, double threshold, bool invert)
 {
-    uint32_t idx = 0, jdx = 0;
 
-    cv::Mat white = cv::Mat(block_w, block_h, CV_8UC1, cv::Scalar::all(255));
+    double min_val, max_val;
+    std::vector<std::vector<cv::Point> > img_contours;
+    std::vector<cv::Vec4i> img_hr;
+    cv::Mat img_pyr, img_grad, img2, img_blur, img_blur_abs;
+    cv::Rect img_rect;
+    double alpha = 0.4;
 
-    checker_board = cv::Mat(img_h + block_h, img_w + block_w, CV_8UC1, cv::Scalar::all(0));
+    cv::minMaxLoc(img, &min_val, &max_val);
+    //img.convertTo(converted_img, CV_64FC1, 1.0 / (max_val - min_val), -min_val / (max_val - min_val));
+    img.convertTo(converted_img, CV_8UC1, 255.0 / (max_val - min_val), -(255.0 * min_val) / (max_val - min_val));
 
-    bool color_row = false;
-    bool color_column = false;
+    if (invert)
+        converted_img = 255 - converted_img;
 
-    for (idx = 0; idx < img_h; idx += block_h)
-    {
-        color_row = !color_row;
-        color_column = color_row;
+    cv::transpose(converted_img, converted_img);
 
-        for (jdx = 0; jdx < img_w; jdx += block_w)
-        {
-            if (!color_column)
-                white.copyTo(checker_board(cv::Rect(jdx, idx, block_w, block_h)));
+    auto img_mean = cv::mean(converted_img)[0];
 
-            color_column = !color_column;
-        }
+    // img_blur = imgaussfilt(img, 1.5);
+    cv::GaussianBlur(converted_img, img_blur, cv::Size(0, 0), 1.0, 1.0, cv::BORDER_REFLECT_101);
 
-    }
+    // img_blur_diff = img_blur - img_mean; img_blur_abs = abs(img_blur_diff);
+    cv::absdiff(img_blur, img_mean, img_blur_abs);
 
-    // need to add cropping of image
-    cv::Rect roi(0, 0, img_w, img_h);
-    checker_board = checker_board(roi);
+
+    cv::threshold(img_blur_abs, img2, threshold, 0, cv::THRESH_TOZERO);
+
+    // img_blur_abs_t_close = imclose(imtophat(imopen(img_blur_abs_t, se3), se5), se5);
+    cv::morphologyEx(img2, img2, cv::MORPH_DILATE, SE3_rect);
+    cv::morphologyEx(img2, img2, cv::MORPH_TOPHAT, SE5_rect);
+    cv::morphologyEx(img2, img2, cv::MORPH_CLOSE, SE5_rect);
+
+    //converted_img.convertTo(img_pyr, CV_8UC1, 255);
+
+    //cv::cvtColor(img_pyr, img_pyr, cv::COLOR_GRAY2RGB);
+    //cv::pyrMeanShiftFiltering(img_pyr, img_pyr, 5, 10);
+
+    //img_grad = get_gradient(img_pyr);
+
+    //cv::threshold(img_grad, img2, 60, 0, cv::THRESH_TOZERO);
+
+    cv::findContours(img2, img_contours, img_hr, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+
+    if (img_contours.size() > 0)
+        get_rect(*std::max_element(img_contours.begin(), img_contours.end(), max_vector_size<cv::Point>), img_rect);
+    //get_rect(img_contours[0], img_rect);
+    else
+        img_rect = cv::Rect(0, 0, img.cols >> 1, img.rows >> 1);
+
+    // New average = old average * (n-1)/n + new value /n
+    sma_width = floor(img_rect.width * alpha + (1.0 - alpha) * sma_width);
+    sma_height = floor(img_rect.height * alpha + (1.0 - alpha) * sma_height);
+
+    img_rect.width = sma_width;
+    img_rect.height = sma_height;
+
+    return img_rect;
 }
+
+
+
+
+
+
+// ----------------------------------------------------------------------------
+//void generate_checkerboard(uint32_t block_w, uint32_t block_h, uint32_t img_w, uint32_t img_h, cv::Mat& checker_board)
+//{
+//    uint32_t idx = 0, jdx = 0;
+//
+//    cv::Mat white = cv::Mat(block_w, block_h, CV_8UC1, cv::Scalar::all(255));
+//
+//    checker_board = cv::Mat(img_h + block_h, img_w + block_w, CV_8UC1, cv::Scalar::all(0));
+//
+//    bool color_row = false;
+//    bool color_column = false;
+//
+//    for (idx = 0; idx < img_h; idx += block_h)
+//    {
+//        color_row = !color_row;
+//        color_column = color_row;
+//
+//        for (jdx = 0; jdx < img_w; jdx += block_w)
+//        {
+//            if (!color_column)
+//                white.copyTo(checker_board(cv::Rect(jdx, idx, block_w, block_h)));
+//
+//            color_column = !color_column;
+//        }
+//
+//    }
+//
+//    // need to add cropping of image
+//    cv::Rect roi(0, 0, img_w, img_h);
+//    checker_board = checker_board(roi);
+//}
 
 // ----------------------------------------------------------------------------
 //void cv_mouse_click(int cb_event, int x, int y, int flags, void* param) 
