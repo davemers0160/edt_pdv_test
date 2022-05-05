@@ -28,7 +28,7 @@ public:
     // ----------------------------------------------------------------------------
     inline cv::Rect get_bounding_box(cv::Mat& img, cv::Mat& converted_img, bool invert)
     {
-
+        uint32_t idx;
         double min_val, max_val;
         std::vector<std::vector<cv::Point> > img_contours;
         std::vector<cv::Vec4i> img_hr;
@@ -65,12 +65,27 @@ public:
         // find the contours of the remaining shapes
         cv::findContours(img2, img_contours, img_hr, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
 
-        // check the number of contours found and assume the largest is the one we want
-        if (img_contours.size() > 0)
+        // check the number of contours found and figure out which one to use
+        if (img_contours.size() == 1)
+        {
+            get_rect(img_contours[0], img_rect);
+        }
+        else if (img_contours.size() > 1)
+        {
+            // TODO: find the rect with the highest IOU, if IOU doesn't meet a certain threshold then use previous_rect
+            // TODO: figure out how to dampen a rapid change in rect size, look at IOU and scaling to slowly move towards the current rect
+            // TODO: look at exponential weighted moving average or some other FIFO like thing with weights.  3-tap FIR
             get_rect(*std::max_element(img_contours.begin(), img_contours.end(), max_vector_size<cv::Point>), img_rect);
-        //get_rect(img_contours[0], img_rect);
+
+            for (idx = 0; idx < img_contours.size(); ++idx)
+            {
+
+            }
+        }
         else
+        {
             img_rect = previous_rect;
+        }
 
         // do some bounding box conditioning  
         // New average = old average * (n-1)/n + new value /n
@@ -155,6 +170,17 @@ private:
 
         return p;
     }   // end of get_rect_corners
+
+    // ----------------------------------------------------------------------------
+    inline double calc_iou(cv::Rect &r1, cv::Rect &r2)
+    {
+
+        int64_t intersection = (r1 & r2).area();
+        int64_t rect_union = (r1 | r2).area() + 1e-12;
+
+        return ((rect_union == 0) ? 0.0 : intersection / (double)rect_union);
+
+    }   // end of calc_iou
 
 };
 
