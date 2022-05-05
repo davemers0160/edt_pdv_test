@@ -105,12 +105,12 @@ int main(int argc, char** argv)
 
     std::string lib_filename;
     
-    std::string window_name1 = "Reference Image";
-    cv::namedWindow(window_name1, cv::WINDOW_NORMAL | cv::WINDOW_KEEPRATIO);
-    std::string window_name2 = "Image";
-    cv::namedWindow(window_name2, cv::WINDOW_NORMAL | cv::WINDOW_KEEPRATIO);
-    std::string window_name3 = "Fused Image";
-    cv::namedWindow(window_name3, cv::WINDOW_NORMAL | cv::WINDOW_KEEPRATIO);
+    //std::string window_name1 = "Reference Image";
+    //cv::namedWindow(window_name1, cv::WINDOW_NORMAL | cv::WINDOW_KEEPRATIO);
+    //std::string window_name2 = "Image";
+    //cv::namedWindow(window_name2, cv::WINDOW_NORMAL | cv::WINDOW_KEEPRATIO);
+    //std::string window_name3 = "Fused Image";
+    //cv::namedWindow(window_name3, cv::WINDOW_NORMAL | cv::WINDOW_KEEPRATIO);
     std::string window_montage = "Montage Image";
 
     std::vector<cv::Point2f> alignment_points1;
@@ -122,9 +122,9 @@ int main(int argc, char** argv)
     h << 1.0, 0.0, 0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0;
 
     // create trackbars for x, y and scale
-    cv::createTrackbar("X", window_name2, &x_position, xy_offset*2, x_trackbar_callback, &h);
-    cv::createTrackbar("Y", window_name2, &y_position, xy_offset*2, y_trackbar_callback, &h);
-    cv::createTrackbar("Scale", window_name2, &scale_position, 100, scale_trackbar_callback, &h);
+    //cv::createTrackbar("X", window_name2, &x_position, xy_offset*2, x_trackbar_callback, &h);
+    //cv::createTrackbar("Y", window_name2, &y_position, xy_offset*2, y_trackbar_callback, &h);
+    //cv::createTrackbar("Scale", window_name2, &scale_position, 100, scale_trackbar_callback, &h);
 
 
     if (argc < 3)
@@ -166,20 +166,13 @@ int main(int argc, char** argv)
     cv::Mat img_matches;
     cv::Rect ref_rect, img_rect;
 
-
     std::string ref_img_filename = std::string(argv[1]);
     std::string img_filename = std::string(argv[2]);
 
-    // load in the images
-    //cv::Mat ref_img = cv::imread(ref_img_filename, cv::ImreadModes::IMREAD_GRAYSCALE);
-    //ref_img.convertTo(ref_img, CV_64FC1, 1.0 / 255.0, 0.0);
-    //cv::Mat img = cv::imread(img_filename, cv::ImreadModes::IMREAD_GRAYSCALE);
-    //img.convertTo(img, CV_64FC1, 1.0 / 255.0, 0.0);
-    // 
     // setup the mouse callback to get the points
-    cv::setMouseCallback(window_name1, cv_mouse_click, (void*)&alignment_points1);
-    cv::setMouseCallback(window_name2, cv_mouse_click, (void*)&alignment_points2);
-    cv::setMouseCallback(window_name3, cv_mouse_measure_distance);
+    //cv::setMouseCallback(window_name1, cv_mouse_click, (void*)&alignment_points1);
+    //cv::setMouseCallback(window_name2, cv_mouse_click, (void*)&alignment_points2);
+    //cv::setMouseCallback(window_name3, cv_mouse_measure_distance);
 
     cv::imreadmulti(ref_img_filename, ref_img_stack, cv::ImreadModes::IMREAD_ANYDEPTH | cv::ImreadModes::IMREAD_GRAYSCALE);
     cv::imreadmulti(img_filename, img_stack, cv::ImreadModes::IMREAD_ANYDEPTH | cv::ImreadModes::IMREAD_GRAYSCALE);
@@ -336,9 +329,9 @@ int main(int argc, char** argv)
     //find_transformation_matrix(get_gradient(layers[1]), get_gradient(layers[0]), h, img_matches);
     //cv::drawMatches(layers[0], alignment_points1, layers[1], alignment_points2, matches, img_matches);
 
-    cv::destroyWindow(window_name1);
-    cv::destroyWindow(window_name2);
-    cv::destroyWindow(window_name3);
+    //cv::destroyWindow(window_name1);
+    //cv::destroyWindow(window_name2);
+    //cv::destroyWindow(window_name3);
 
     cv::namedWindow(window_montage, cv::WINDOW_NORMAL | cv::WINDOW_KEEPRATIO);
 
