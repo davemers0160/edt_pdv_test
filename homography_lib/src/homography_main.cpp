@@ -94,7 +94,7 @@ int main(int argc, char** argv)
 {
     uint32_t idx;
     std::vector<bool> use_img = { true, true};
-    std::vector<bool> invert_img = { false, true};
+    std::vector<bool> invert_img = { false, false};
     std::vector<double> weights = { 0.3, 0.7};
     std::vector<double> scale = { 1.0 / 255.0, 1.0 / 255.0};
     std::vector<bool> scale_img = { true, true };
@@ -401,11 +401,11 @@ int main(int argc, char** argv)
         }
     }
 
-    std::cout << h << std::endl;
+    std::cout << img_h.get_homography_matrix() << std::endl;
 
     // write Mat to file
     cv::FileStorage fs("file.yml", cv::FileStorage::WRITE);
-    fs << "h_martrix" << h;
+    fs << "h_martrix" << img_h.get_homography_matrix();
 
     //cv::warpPerspective(img, tmp_img, h, ref_img.size());
 
@@ -416,7 +416,7 @@ int main(int argc, char** argv)
     //cv::waitKey(0);
 
     // try saving a tiff stack
-     std::string save_file = "C:/Projects/data/test/test.tiff";
+    std::string save_file = "C:/Projects/data/test/test.tiff";
     //cv::imwrite(save_file, montage_vec);
 
     std::cout << "complete" << std::endl;

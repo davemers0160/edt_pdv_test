@@ -12,6 +12,63 @@
 #include <opencv2/calib3d.hpp>
 
 
+/*
+// ----------------------------------------------------------------------------
+//template<class T>
+class fifo_class 
+{
+
+public:
+
+    uint64_t fifo_size;
+
+    fifo_class() = default;
+
+    fifo_class(uint64_t fs) : fifo_size(fs)
+    {
+        buffer = new cv::Rect[fs];
+    }
+
+    
+
+    void put(cv::Rect &val)
+    {
+        buffer[write_index++] = val;
+        update_index();
+    }
+
+    cv::Rect get(void)
+    {
+        //T val = NULL;
+        //if (read_index < write_index)
+        //{
+        cv::Rect val = buffer[read_index % fifo_size];
+            update_index();
+
+            //// reset pointers to avoid overflow
+            //if (read_index > fifo_size) 
+            //{
+            //    write_index = write_index % fifo_size;
+            //    read_index = read_index % fifo_size;
+            //}
+        //}
+        return val;
+    }
+
+    //int count() { return (writePtr - readPtr); }
+
+private:
+    cv::Rect *buffer;
+    uint64_t write_index = 0;
+    uint64_t read_index = 0;
+
+    inline void update_index(void)
+    {
+        write_index = write_index % fifo_size;
+        read_index = read_index % fifo_size;
+    }
+};
+*/
 // ----------------------------------------------------------------------------
 class homography
 {
@@ -25,6 +82,8 @@ public:
     // ----------------------------------------------------------------------------
     cv::Rect get_rect(void) { return previous_rect; }
 
+    cv::Mat get_homography_matrix(void) { return h; }
+
     // ----------------------------------------------------------------------------
     inline cv::Rect get_bounding_box(cv::Mat& img, cv::Mat& converted_img, bool invert)
     {
@@ -34,7 +93,11 @@ public:
         std::vector<cv::Vec4i> img_hr;
         cv::Mat img_pyr, img_grad, img2, img_blur, img_blur_abs;
         cv::Rect img_rect;
-        double alpha = 0.4;
+        double alpha = 0.6;
+        double max_iou = 0.0;
+        double tmp_iou;
+        uint64_t max_iou_index = 0;
+        double iou_threshold = 0.8;
 
         cv::minMaxLoc(img, &min_val, &max_val);
         //img.convertTo(converted_img, CV_64FC1, 1.0 / (max_val - min_val), -min_val / (max_val - min_val));
@@ -77,23 +140,38 @@ public:
             // TODO: look at exponential weighted moving average or some other FIFO like thing with weights.  3-tap FIR
             get_rect(*std::max_element(img_contours.begin(), img_contours.end(), max_vector_size<cv::Point>), img_rect);
 
-            for (idx = 0; idx < img_contours.size(); ++idx)
-            {
+            //for (idx = 0; idx < img_contours.size(); ++idx)
+            //{
+            //    tmp_iou = calc_iou(previous_rect, img_rect);
+            //    
+            //    if (tmp_iou > max_iou)
+            //    {
+            //        max_iou = tmp_iou;
+            //        max_iou_index = idx;
+            //    }
+            //}
 
-            }
+            //get_rect(img_contours[max_iou_index], img_rect);
         }
         else
         {
             img_rect = previous_rect;
         }
 
+        max_iou = calc_iou(previous_rect, img_rect);
+
+        if (max_iou < iou_threshold)
+        {
+            img_rect.width = floor(img_rect.width * alpha + (1.0 - alpha) * previous_rect.width);
+            img_rect.height = floor(img_rect.height * alpha + (1.0 - alpha) * previous_rect.height);
+        }
         // do some bounding box conditioning  
         // New average = old average * (n-1)/n + new value /n
-        sma_width = floor(img_rect.width * alpha + (1.0 - alpha) * sma_width);
-        sma_height = floor(img_rect.height * alpha + (1.0 - alpha) * sma_height);
+        //sma_width = floor(img_rect.width * alpha + (1.0 - alpha) * sma_width);
+        //sma_height = floor(img_rect.height * alpha + (1.0 - alpha) * sma_height);
 
-        img_rect.width = sma_width;
-        img_rect.height = sma_height;
+        //img_rect.width = sma_width;
+        //img_rect.height = sma_height;
 
         previous_rect = img_rect;
 
@@ -118,7 +196,7 @@ public:
 private:
 
     cv::Rect previous_rect;
-    cv::Rect current_rect;
+    //cv::Rect current_rect;
 
     cv::Mat SE3_rect = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3));
     cv::Mat SE5_rect = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(5, 5));
@@ -126,8 +204,14 @@ private:
     cv::Mat h;
 
     double sma_length = 3.0;
-    double sma_width = 0.0;
-    double sma_height = 0.0;
+    double sma_width = 20.0;
+    double sma_height = 20.0;
+
+    //uint64_t write_index = 0;
+
+    //static const uint64_t fifo_size = 5;
+
+    //std::array<cv::Rect, fifo_size> fifo;
 
 
     // ----------------------------------------------------------------------------
@@ -181,6 +265,16 @@ private:
         return ((rect_union == 0) ? 0.0 : intersection / (double)rect_union);
 
     }   // end of calc_iou
+
+
+    // ----------------------------------------------------------------------------
+    //void update_fifo(cv::Rect& val)
+    //{
+    //    fifo[write_index++] = val;
+    //    write_index = write_index % fifo_size;
+    //}
+
+
 
 };
 
