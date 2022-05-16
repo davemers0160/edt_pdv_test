@@ -75,8 +75,10 @@ class homography
 
 public:
 
-    double threshold;
+    double threshold = 75;
         
+    homography() = default;
+
     homography(double t_) : threshold(t_) {}
 
     // ----------------------------------------------------------------------------
