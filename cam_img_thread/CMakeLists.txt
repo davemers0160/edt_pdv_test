@@ -15,8 +15,8 @@
 
 cmake_minimum_required(VERSION 2.8.12)
 
-PROJECT(cam_img_project)
-set(exe_name "cam_img")
+PROJECT(onnx_project)
+set(exe_name "onnx_test")
 
 set(PLATFORM "$ENV{PLATFORM}" CACHE INTERNAL "Copied from environment variable")
 if("${PLATFORM}" STREQUAL "")
