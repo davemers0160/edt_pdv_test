@@ -17,10 +17,12 @@ typedef struct ms_image
     double scale = 1.0;
     bool scale_img = true;
 
+    double threshold = 75.0;
+
 } ms_image;
 
 //-----------------------------------------------------------------------------
-inline ms_image init_ms_image(double* image, unsigned int img_w, unsigned int img_h, bool use_img, bool invert_img, double weight, double scale, bool scale_img)
+inline ms_image init_ms_image(double* image, unsigned int img_w, unsigned int img_h, bool use_img, bool invert_img, double weight, double scale, bool scale_img, double threshold)
 {
     ms_image tmp;
     tmp.image = image;
@@ -31,6 +33,7 @@ inline ms_image init_ms_image(double* image, unsigned int img_w, unsigned int im
     tmp.weight = weight;
     tmp.scale = scale;
     tmp.scale_img = scale_img;
+    tmp.threshold = threshold;
     return tmp;
 }
 

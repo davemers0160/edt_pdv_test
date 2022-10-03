@@ -11,25 +11,32 @@
 #include <opencv2/features2d.hpp>
 #include <opencv2/calib3d.hpp>
 
+
 // ----------------------------------------------------------------------------
 class homography
 {
 
 public:
 
-    double threshold = 75;
+    double threshold = 75.0;
     double bb_iou_threshold = 0.8;
         
     homography() = default;
 
-    homography(double t_) : threshold(t_) {}
+    homography(double t_) : threshold(t_) 
+    {
+        h = cv::Mat::zeros(3, 3, CV_64FC1);
+        h.at<double>(0, 0) = 1.0;
+        h.at<double>(1, 1) = 1.0;
+        h.at<double>(2, 2) = 1.0;
+    }
 
     // ----------------------------------------------------------------------------
     cv::Rect get_rect(void) { return previous_rect; }
 
     cv::Mat get_homography_matrix(void) { return h; }
 
-    // ----------------------------------------------------------------------------
+    //-----------------------------------------------------------------------------
     inline cv::Rect get_bounding_box(cv::Mat& img, cv::Mat& converted_img, bool invert)
     {
         uint32_t idx;
