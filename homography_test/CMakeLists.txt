@@ -18,7 +18,7 @@
 
 cmake_minimum_required(VERSION 3.9)
 
-project(homography_lib VERSION 1.0 DESCRIPTION "Shared library for calculating a homography transformation between two images")
+project(homography_test VERSION 1.0 DESCRIPTION "Shared library for calculating a homography transformation between two images")
 set(CMAKE_CXX_STANDARD 11)
 
 set(LIB_NAME "homography")
