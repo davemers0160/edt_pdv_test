@@ -124,14 +124,8 @@ int main(int argc, char** argv)
     //std::vector<cv::Point2f> alignment_points2;
 
     // create the h matrix and fill with default value that does no image warping/translation
-    //double h_data[] = { 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0 };
     cv::Mat_<double> h(3, 3);// = cv::Mat(3, 3, CV_64FC1);
     h << 1.0, 0.0, 0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0;
-
-    // create trackbars for x, y and scale
-    //cv::createTrackbar("X", window_name2, &x_position, xy_offset*2, x_trackbar_callback, &h);
-    //cv::createTrackbar("Y", window_name2, &y_position, xy_offset*2, y_trackbar_callback, &h);
-    //cv::createTrackbar("Scale", window_name2, &scale_position, 100, scale_trackbar_callback, &h);
 
 
     if (argc < 4)
@@ -139,31 +133,6 @@ int main(int argc, char** argv)
         std::cout << "Enter the data directory, reference image, all other images" << std::endl;
         std::cin.ignore();
     }
-
-    // load in the library
-#if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
-    lib_filename = "../../fusion_lib/build/Release/ms_fuser.dll";
-    //HINSTANCE img_fusion_lib = LoadLibrary(lib_filename.c_str());
-
-    //if (img_fusion_lib == NULL)
-    //{
-    //    throw std::runtime_error("error loading library");
-    //}
-
-    //image_fuser lib_image_fuser = (image_fuser)GetProcAddress(img_fusion_lib, "image_fuser");
-
-#else
-    lib_filename = "../../fusion_lib/build/libms_fuser.so";
-    //void* img_fusion_lib = dlopen(lib_filename.c_str(), RTLD_NOW);
-
-    //if (img_fusion_lib == NULL)
-    //{
-    //    throw std::runtime_error("error loading library");
-    //}
-
-    //image_fuser lib_image_fuser = (image_fuser)dlsym(img_fusion_lib, "image_fuser");
-
-#endif
 
     int bp = 0;
 
@@ -178,14 +147,6 @@ int main(int argc, char** argv)
     std::string data_directory = std::string(argv[1]);
     std::string ref_img_filename = std::string(argv[2]);
 
-
-    //std::string img_filename = std::string(argv[3]);
-
-    // setup the mouse callback to get the points
-    //cv::setMouseCallback(window_name1, cv_mouse_click, (void*)&alignment_points1);
-    //cv::setMouseCallback(window_name2, cv_mouse_click, (void*)&alignment_points2);
-    //cv::setMouseCallback(window_name3, cv_mouse_measure_distance);
-
     cv::imreadmulti(data_directory + ref_img_filename, ref_img_stack, cv::ImreadModes::IMREAD_ANYDEPTH | cv::ImreadModes::IMREAD_GRAYSCALE);
     int32_t stack_size = ref_img_stack.size();
 
@@ -199,157 +160,6 @@ int main(int argc, char** argv)
         cv::imreadmulti(data_directory + std::string(argv[3+idx]), img_stack[idx], cv::ImreadModes::IMREAD_ANYDEPTH | cv::ImreadModes::IMREAD_GRAYSCALE);
         img_h[idx].threshold = img_threshold[idx];
     }
-
-    //int32_t index = (int32_t)floor(stack_size*.75);
-
-
-
-    //cv::minMaxLoc(ref_img_stack[index], &min_val, &max_val);
-    //ref_img_stack[index].convertTo(ref_img, CV_64FC1, 1.0 / (max_val - min_val), -min_val/ (max_val - min_val));
-
-    //cv::minMaxLoc(img_stack[index], &min_val, &max_val);
-    //img_stack[index].convertTo(img, CV_64FC1, 1.0 / (max_val - min_val), -min_val/ (max_val - min_val));
-
-    //if (invert_img[1])
-    //    img = 1.0 - img;
-
-    //cv::transpose(ref_img, ref_img);
-    //cv::transpose(img, img);
-
-    //cv::Mat ref_img_grad = get_gradient(ref_img);
-    //cv::Mat img_grad = get_gradient(img);
-
-
-    //cv::adaptiveThreshold(ref_img, ref_img, 255, cv::ADAPTIVE_THRESH_MEAN_C, cv::THRESH_BINARY, 5, 0);
-    //cv::adaptiveThreshold(img, img, 255, cv::ADAPTIVE_THRESH_MEAN_C, cv::THRESH_BINARY, 5, 0);
-
-    //auto ref_mean = cv::mean(ref_img_grad)[0];
-    //auto img_mean = cv::mean(img_grad)[0];
-
-    //cv::threshold(ref_img_grad, ref_img2, 80, 0, cv::THRESH_TOZERO);
-    //cv::threshold(img_grad, img2, 60, 0, cv::THRESH_TOZERO);
-
-
-    //cv::Mat tmp_fused;
-
-
-
-    //cv::Mat img_pyr, ref_pyr;
-    //ref_img.convertTo(ref_pyr, CV_8UC1, 255);
-    //img.convertTo(img_pyr, CV_8UC1, 255);
-
-    //cv::cvtColor(ref_pyr, ref_pyr, cv::COLOR_GRAY2RGB);
-    //cv::cvtColor(img_pyr, img_pyr, cv::COLOR_GRAY2RGB);
-    //cv::pyrMeanShiftFiltering(ref_pyr, ref_pyr, 5, 10);
-    //cv::pyrMeanShiftFiltering(img_pyr, img_pyr, 5, 10);
-
-    //ref_img_grad = get_gradient(ref_pyr);
-    //img_grad = get_gradient(img_pyr);
-
-    //cv::threshold(ref_img_grad, ref_img2, 80, 0, cv::THRESH_TOZERO);
-    //cv::threshold(img_grad, img2, 60, 0, cv::THRESH_TOZERO);
-
-    //std::vector<std::vector<cv::Point> > ref_contours, img_cont;
-    //std::vector<cv::Vec4i> ref_h, img_hr;
-    //cv::findContours(ref_img2, ref_contours, ref_h, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
-    //cv::findContours(img2, img_cont, img_hr, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
-
-
-    //get_rect(ref_contours[0], ref_rect);
-    //get_rect(img_cont[0], img_rect);
-
-
-
-
-    //ref_rect = get_bounding_box(ref_img_stack[0], ref_img, 80, invert_img[0]);
-    //img_rect = get_bounding_box(img_stack[0], img, 60, invert_img[1]);
-
-    //// Find homography
-    //h = cv::findHomography(get_rect_corners(img_rect), get_rect_corners(ref_rect), cv::RANSAC);
-    //
-
-    //cv::Mat ref_draw = cv::Mat::zeros(ref_img.size(), CV_8UC3);
-    //for (size_t i = 0; i < ref_contours.size(); i++)
-    //{
-    //    cv::Scalar color = cv::Scalar(255,255,255);
-    //    cv::drawContours(ref_draw, ref_contours, (int)i, color, 1, cv::LINE_8, ref_h, 0);
-    //}
-    //cv::rectangle(ref_draw, ref_rect, cv::Scalar::all(255), 1, 8, 0);
-
-    //cv::Mat img_draw = cv::Mat::zeros(img.size(), CV_8UC3);
-    //for (size_t i = 0; i < img_cont.size(); i++)
-    //{
-    //    cv::Scalar color = cv::Scalar(255,255,255);
-    //    cv::drawContours(img_draw, img_cont, (int)i, color, 1, cv::LINE_8, img_hr, 0);
-    //}
-    //cv::rectangle(img_draw, img_rect, cv::Scalar::all(255), 1, 8, 0);
-
-    //cv::Mat h2;
-    //find_transformation_matrix(ref_draw, img_draw, h, img_matches);
-
-    /*
-    while (key != 'q')
-    {
-
-        cv::imshow(window_name1, ref_img);
-        cv::imshow(window_name2, img);
-
-        // check to see that the number of points in each image is the same and that there are at least 4 points
-        if (!homography_complete && (alignment_points1.size() == alignment_points2.size()) && (alignment_points1.size() > 3))
-        {
-
-            // Find homography
-            h = cv::findHomography(alignment_points2, alignment_points1, cv::RANSAC);
-            cv::warpPerspective(img, tmp_img, h, ref_img.size());
-            //fused_img = ref_img.clone();
-
-            fused_img = weights[1] * (invert_img[1] ? (1.0 - tmp_img) : tmp_img) + weights[0]* ref_img;
-
-
-            cv::imshow(window_name3, fused_img);
-            homography_complete = true;
-        }
-
-        //find_transformation_matrix(ref_img2, img2, h, img_matches);
-        cv::warpPerspective(img, tmp_img, h, ref_img.size());
-        fused_img = weights[1] * (invert_img[1] ? (1.0 - tmp_img) : tmp_img) + weights[0] * ref_img;
-
-        cv::imshow(window_name3, fused_img);
-
-        key = cv::waitKey(20);
-
-        // do stuff with the user input
-        switch (key)
-        {
-        // delete the last pair of points
-        case 'd':
-
-            if ((alignment_points1.size() == alignment_points2.size()) && (alignment_points1.size() > 0))
-            {
-                alignment_points1.pop_back();
-                alignment_points2.pop_back();
-            }
-            else if ((alignment_points1.size() > alignment_points2.size()) && (alignment_points1.size() > 0))
-            {
-                alignment_points1.pop_back();
-            }
-            else if ((alignment_points2.size() > alignment_points1.size()) && (alignment_points2.size() > 0))
-            {
-                alignment_points2.pop_back();
-            }
-
-            homography_complete = false;
-
-            break;
-        }
-    }
-    */
-    //find_transformation_matrix(get_gradient(layers[1]), get_gradient(layers[0]), h, img_matches);
-    //cv::drawMatches(layers[0], alignment_points1, layers[1], alignment_points2, matches, img_matches);
-
-    //cv::destroyWindow(window_name1);
-    //cv::destroyWindow(window_name2);
-    //cv::destroyWindow(window_name3);
 
     cv::namedWindow(window_montage, cv::WINDOW_NORMAL | cv::WINDOW_KEEPRATIO);
 
@@ -398,9 +208,6 @@ int main(int argc, char** argv)
 
         cv::rectangle(ref_img, ref_h.get_rect(), cv::Scalar::all(255), 1, 8, 0);
         montage_img = ref_img.clone();
-
-
-
 
         for (jdx = 0; jdx < num_images; ++jdx)
         {
@@ -468,13 +275,6 @@ int main(int argc, char** argv)
     std::cin.ignore();
 
     bp = 1;
-
-    // close the library
-//#if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
-//    FreeLibrary(img_fusion_lib);
-//#else
-//    dlclose(img_fusion_lib);
-//#endif
 
     cv::destroyAllWindows();
 
