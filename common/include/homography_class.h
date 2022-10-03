@@ -11,64 +11,6 @@
 #include <opencv2/features2d.hpp>
 #include <opencv2/calib3d.hpp>
 
-
-/*
-// ----------------------------------------------------------------------------
-//template<class T>
-class fifo_class 
-{
-
-public:
-
-    uint64_t fifo_size;
-
-    fifo_class() = default;
-
-    fifo_class(uint64_t fs) : fifo_size(fs)
-    {
-        buffer = new cv::Rect[fs];
-    }
-
-    
-
-    void put(cv::Rect &val)
-    {
-        buffer[write_index++] = val;
-        update_index();
-    }
-
-    cv::Rect get(void)
-    {
-        //T val = NULL;
-        //if (read_index < write_index)
-        //{
-        cv::Rect val = buffer[read_index % fifo_size];
-            update_index();
-
-            //// reset pointers to avoid overflow
-            //if (read_index > fifo_size) 
-            //{
-            //    write_index = write_index % fifo_size;
-            //    read_index = read_index % fifo_size;
-            //}
-        //}
-        return val;
-    }
-
-    //int count() { return (writePtr - readPtr); }
-
-private:
-    cv::Rect *buffer;
-    uint64_t write_index = 0;
-    uint64_t read_index = 0;
-
-    inline void update_index(void)
-    {
-        write_index = write_index % fifo_size;
-        read_index = read_index % fifo_size;
-    }
-};
-*/
 // ----------------------------------------------------------------------------
 class homography
 {
@@ -76,6 +18,7 @@ class homography
 public:
 
     double threshold = 75;
+    double bb_iou_threshold = 0.8;
         
     homography() = default;
 
@@ -99,7 +42,6 @@ public:
         double max_iou = 0.0;
         double tmp_iou;
         uint64_t max_iou_index = 0;
-        double iou_threshold = 0.8;
 
         cv::minMaxLoc(img, &min_val, &max_val);
         //img.convertTo(converted_img, CV_64FC1, 1.0 / (max_val - min_val), -min_val / (max_val - min_val));
@@ -162,7 +104,7 @@ public:
 
         max_iou = calc_iou(previous_rect, img_rect);
 
-        if (max_iou < iou_threshold)
+        if (max_iou < bb_iou_threshold)
         {
             img_rect.width = floor(img_rect.width * alpha + (1.0 - alpha) * previous_rect.width);
             img_rect.height = floor(img_rect.height * alpha + (1.0 - alpha) * previous_rect.height);
@@ -208,12 +150,6 @@ private:
     double sma_length = 3.0;
     double sma_width = 20.0;
     double sma_height = 20.0;
-
-    //uint64_t write_index = 0;
-
-    //static const uint64_t fifo_size = 5;
-
-    //std::array<cv::Rect, fifo_size> fifo;
 
 
     // ----------------------------------------------------------------------------
@@ -267,16 +203,6 @@ private:
         return ((rect_union == 0) ? 0.0 : intersection / (double)rect_union);
 
     }   // end of calc_iou
-
-
-    // ----------------------------------------------------------------------------
-    //void update_fifo(cv::Rect& val)
-    //{
-    //    fifo[write_index++] = val;
-    //    write_index = write_index % fifo_size;
-    //}
-
-
 
 };
 
