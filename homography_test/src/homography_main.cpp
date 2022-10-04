@@ -18,10 +18,9 @@
 #include <opencv2/calib3d.hpp>
 #include <opencv2/videoio.hpp>
 
-#include "homography_lib.h"
-#include "img_registration.h"
-//#include "ms_image_struct.h"
-#include "homography_class.h"
+#include "homography_test.h"
+//#include "img_registration.h"
+//#include "homography_class.h"
 
 std::atomic<bool> homography_complete = false;
 cv::Point2f initial_point, final_point;
@@ -150,15 +149,50 @@ int main(int argc, char** argv)
     cv::imreadmulti(data_directory + ref_img_filename, ref_img_stack, cv::ImreadModes::IMREAD_ANYDEPTH | cv::ImreadModes::IMREAD_GRAYSCALE);
     int32_t stack_size = ref_img_stack.size();
 
-    homography ref_h(75);
+
+    // load in the library
+#if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
+    lib_filename = "../../homography_lib/build/Release/homography.dll";
+    HINSTANCE homography_lib = LoadLibrary(lib_filename.c_str());
+
+    if (homography_lib == NULL)
+    {
+        throw std::runtime_error("error loading homography_lib library");
+    }
+
+    lib_transform_single_image transform_single_image = (lib_transform_single_image)GetProcAddress(homography_lib, "transform_single_image");
+    lib_transform_multi_image transform_multi_image = (lib_transform_multi_image)GetProcAddress(homography_lib, "transform_multi_image");
+
+#else
+    lib_filename = "../../fusion_lib/build/libms_fuser.so";
+    void* homography_lib = dlopen(lib_filename.c_str(), RTLD_NOW);
+
+    if (homography_lib == NULL)
+    {
+        throw std::runtime_error("error loading homography_lib library");
+    }
+
+    lib_transform_single_image transform_single_image = (lib_transform_single_image)dlsym(homography_lib, "transform_single_image");
+    lib_transform_multi_image transform_multi_image = (lib_transform_multi_image)dlsym(homography_lib, "transform_multi_image");
+
+#endif
+
+
+
+
+
+
+
+
+    //homography ref_h(75);
 
     std::vector<std::vector<cv::Mat>> img_stack(num_images);
-    std::vector<homography> img_h(num_images);
+    //std::vector<homography> img_h(num_images);
 
     for (idx = 0; idx < num_images; ++idx)
     {
         cv::imreadmulti(data_directory + std::string(argv[3+idx]), img_stack[idx], cv::ImreadModes::IMREAD_ANYDEPTH | cv::ImreadModes::IMREAD_GRAYSCALE);
-        img_h[idx].threshold = img_threshold[idx];
+        //img_h[idx].threshold = img_threshold[idx];
     }
 
     cv::namedWindow(window_montage, cv::WINDOW_NORMAL | cv::WINDOW_KEEPRATIO);
@@ -180,62 +214,40 @@ int main(int argc, char** argv)
 
     for (idx = 0; idx < stack_size; ++idx)
     {
-        /*
-        ref_rect = get_bounding_box(ref_img_stack[idx], ref_img, 80, invert_img[0]);
-        img_rect = get_bounding_box2(img_stack[idx], img, 25, invert_img[1]);
 
-        cv::rectangle(ref_img, ref_rect, cv::Scalar::all(255), 1, 8, 0);
-        cv::rectangle(img, img_rect, cv::Scalar::all(255), 1, 8, 0);
-
-        // Find homography
-        h = cv::findHomography(get_rect_corners(img_rect), get_rect_corners(ref_rect), cv::RANSAC);
-
-        //cv::minMaxLoc(ref_img_stack[idx], &min_val, &max_val);
-        //ref_img_stack[idx].convertTo(ref_img, CV_64FC1, 1.0 / (max_val - min_val), -min_val / (max_val - min_val));
-
-        //cv::minMaxLoc(img_stack[idx], &min_val, &max_val);
-        //img_stack[idx].convertTo(img, CV_64FC1, 1.0 / (max_val - min_val), -min_val / (max_val - min_val));
-
-        //cv::transpose(ref_img, ref_img);
-        //cv::transpose(img, img);
-
-        cv::warpPerspective(img, tmp_img, h, ref_img.size());
-        */
 
         cv::transpose(ref_img_stack[idx], ref_img);
-        ref_h.get_bounding_box(ref_img, ref_img, invert_img[0]);
-        fused_img = weights[0] * ref_img;
 
-        cv::rectangle(ref_img, ref_h.get_rect(), cv::Scalar::all(255), 1, 8, 0);
-        montage_img = ref_img.clone();
+
+        //ref_h.get_bounding_box(ref_img, ref_img, invert_img[0]);
+        //fused_img = weights[0] * ref_img;
+
+        //cv::rectangle(ref_img, ref_h.get_rect(), cv::Scalar::all(255), 1, 8, 0);
+        //montage_img = ref_img.clone();
 
         for (jdx = 0; jdx < num_images; ++jdx)
         {
             cv::transpose(img_stack[jdx][idx], img);
 
-            img_h[jdx].get_bounding_box(img, img, invert_img[1]);
+            //img_h[jdx].get_bounding_box(img, img, invert_img[1]);
 
-            img_h[jdx].calc_homography_matrix(ref_h.get_rect());
+            //img_h[jdx].calc_homography_matrix(ref_h.get_rect());
 
-            img_h[jdx].transform_image(img, tmp_img, ref_img.size());
+            //img_h[jdx].transform_image(img, tmp_img, ref_img.size());
 
-            fused_img = fused_img + weights[1+jdx] * tmp_img;
-            
-            cv::rectangle(img, img_h[jdx].get_rect(), cv::Scalar::all(255), 1, 8, 0);
-            cv::hconcat(montage_img, img, montage_img);
+            //fused_img = fused_img + weights[1+jdx] * tmp_img;
+            //
+            //cv::rectangle(img, img_h[jdx].get_rect(), cv::Scalar::all(255), 1, 8, 0);
+            //cv::hconcat(montage_img, img, montage_img);
 
         }
 
-        //cv::hconcat(montage_img, img, montage_img);
-
-        //fused_img = weights[1] * (invert_img[1] ? (1.0 - tmp_img) : tmp_img) + weights[0] * ref_img;
-        //fused_img =  weights[0] * ref_img + weights[1] * tmp_img;
 
         cv::hconcat(montage_img, fused_img, montage_img);
 
         cv::imshow(window_montage, montage_img);
-        writer.write(montage_img);
-        //montage_vec.push_back(montage_img);
+        //writer.write(montage_img);
+
         montage_vec[idx] = montage_img;
         key = cv::waitKey(1);
         std::cout << "index: " << idx << std::endl;
