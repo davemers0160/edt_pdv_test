@@ -32,8 +32,8 @@ void transform_single_image(ms_image r_img,
     ms_image t_img,
     double* fused_data64_t,
     unsigned char* fused_data8_t,
-    unsigned int &img_w,
-    unsigned int &img_h
+    unsigned int *img_w,
+    unsigned int *img_h
 )
 {
     cv::Mat ref_img_c, img_c, tmp_img;
@@ -43,10 +43,10 @@ void transform_single_image(ms_image r_img,
     cv::Mat img = cv::Mat(t_img.img_h, t_img.img_w, CV_64FC1, t_img.image);
 
     // assign the fused data pointer to an opencv container
-    img_h = r_img.img_h;
-    img_w = r_img.img_w;
-    cv::Mat fused_img = cv::Mat(img_h, img_w, CV_64FC1, fused_data64_t);
-    cv::Mat fused_img8_t = cv::Mat(img_h, img_w, CV_8UC1, fused_data8_t);
+    *img_h = r_img.img_h;
+    *img_w = r_img.img_w;
+    cv::Mat fused_img = cv::Mat(*img_h, *img_w, CV_64FC1, fused_data64_t);
+    cv::Mat fused_img8_t = cv::Mat(*img_h, *img_w, CV_8UC1, fused_data8_t);
 
     // create a homography class for each image
     homography ref_h(r_img.threshold);
@@ -79,26 +79,28 @@ void transform_multi_image(uint32_t N,
     ms_image *t_img, 
     double* fused_data64_t, 
     unsigned char* fused_data8_t, 
-    unsigned int img_w, 
-    unsigned int img_h
+    unsigned int *img_w, 
+    unsigned int *img_h
 )
 {
     uint32_t idx;
 
-    cv::Mat tmp_img, tmp_img_c;
+    cv::Mat tmp_img, tmp_img_c, ref_img_c;
     std::vector<homography> t_img_h(N);
 
     // get the images into the opencv containers
     cv::Mat ref_img = cv::Mat(r_img.img_h, r_img.img_w, CV_64FC1, r_img.image);
 
     // assign the fused data pointer to an opencv container
-    img_h = r_img.img_h;
-    img_w = r_img.img_w;
-    cv::Mat fused_img = cv::Mat(img_h, img_w, CV_64FC1, fused_data64_t);
-    cv::Mat fused_img8_t = cv::Mat(img_h, img_w, CV_8UC1, fused_data8_t);
+    *img_h = r_img.img_h;
+    *img_w = r_img.img_w;
+    cv::Mat fused_img = cv::Mat(*img_h, *img_w, CV_64FC1, fused_data64_t);
+    cv::Mat fused_img8_t = cv::Mat(*img_h, *img_w, CV_8UC1, fused_data8_t);
 
     // create a homography class for the reference image
     homography ref_h(r_img.threshold);
+    ref_h.get_bounding_box(ref_img, ref_img_c, r_img.invert_img);
+    cv::rectangle(ref_img_c, ref_h.get_rect(), cv::Scalar::all(255), 1, 8, 0);
 
     fused_img = fused_img + r_img.weight * (r_img.invert_img ? (1.0 - ref_img) : ref_img);
 
@@ -116,6 +118,8 @@ void transform_multi_image(uint32_t N,
             t_img_h[idx].calc_homography_matrix(ref_h.get_rect());
 
             t_img_h[idx].transform_image(tmp_img, tmp_img, ref_img.size());
+
+            cv::rectangle(tmp_img_c, t_img_h[idx].get_rect(), cv::Scalar::all(255), 1, 8, 0);
 
             // check for needed scaling
             if (t_img[idx].scale_img)

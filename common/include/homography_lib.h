@@ -52,8 +52,8 @@ extern "C" {
         ms_image t_img,
         double* fused_data64_t,
         unsigned char* fused_data8_t,
-        unsigned int& img_w,
-        unsigned int& img_h
+        unsigned int* img_w,
+        unsigned int* img_h
     );
 #ifdef __cplusplus
 }
@@ -69,8 +69,8 @@ extern "C" {
         ms_image* t_img,
         double* fused_data64_t,
         unsigned char* fused_data8_t,
-        unsigned int img_w,
-        unsigned int img_h
+        unsigned int* img_w,
+        unsigned int* img_h
     );
 #ifdef __cplusplus
 }
