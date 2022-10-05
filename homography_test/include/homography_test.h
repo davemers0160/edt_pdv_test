@@ -33,8 +33,8 @@ typedef void (*lib_transform_single_image)(ms_image r_img,
     ms_image t_img,
     double* fused_data64_t,
     unsigned char* fused_data8_t,
-    unsigned int& img_w,
-    unsigned int& img_h
+    unsigned int* img_w,
+    unsigned int* img_h
 );
 
 typedef void (*lib_transform_multi_image)(uint32_t N,
@@ -42,8 +42,8 @@ typedef void (*lib_transform_multi_image)(uint32_t N,
     ms_image* t_img,
     double* fused_data64_t,
     unsigned char* fused_data8_t,
-    unsigned int img_w,
-    unsigned int img_h
+    unsigned int* img_w,
+    unsigned int* img_h
 );
 
 #endif  // HOMOGRAPHY_TEST_H

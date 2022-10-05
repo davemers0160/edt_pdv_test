@@ -89,7 +89,7 @@
 //}
 
 
-// ----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 int main(int argc, char** argv)
 {
     uint32_t idx, jdx;
@@ -123,6 +123,12 @@ int main(int argc, char** argv)
         std::cin.ignore();
     }
 
+
+    for (idx = 0; idx < argc; ++idx)
+    {
+        std::cout << std::string(argv[idx]) << std::endl;
+    }
+
     std::string window_montage = "Montage Image";
     cv::namedWindow(window_montage, cv::WINDOW_NORMAL | cv::WINDOW_KEEPRATIO);
     int bp = 0;
@@ -140,7 +146,8 @@ int main(int argc, char** argv)
 
     // load in the library
 #if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
-    lib_filename = "../../homography_lib/build/Release/homography.dll";
+    lib_filename = "../../homography_lib/build/Debug/homography.dll";
+    //lib_filename = "../../homography_lib/build/Release/homography.dll";
     HINSTANCE homography_lib = LoadLibrary(lib_filename.c_str());
 
     if (homography_lib == NULL)
@@ -182,42 +189,48 @@ int main(int argc, char** argv)
     cv::Mat montage_img;
     std::vector<cv::Mat> montage_vec(stack_size);
 
+    //-----------------------------------------------------------------------------
+    // start up a video writer to save videos
+    //cv::VideoWriter writer;
+    //int codec = cv::VideoWriter::fourcc('W','M','V','3');                    // select desired codec (must be available at runtime)
+    //double fps = 30.0;                                                          // framerate of the created video stream
+    //std::string video_filename = "C:/Projects/data/test/test.wmv";              // name of the output video file
+    //writer.open(video_filename, codec, fps, cv::Size(6 * ref_img_stack[0].cols, ref_img_stack[0].rows), false);
 
-    cv::VideoWriter writer;
-    int codec = cv::VideoWriter::fourcc('W','M','V','3');                    // select desired codec (must be available at runtime)
-    double fps = 30.0;                                                          // framerate of the created video stream
-    std::string video_filename = "C:/Projects/data/test/test.wmv";              // name of the output video file
-    writer.open(video_filename, codec, fps, cv::Size(6 * ref_img_stack[0].cols, ref_img_stack[0].rows), false);
-
-    if (!writer.isOpened()) 
-    {
-        std::cerr << "Could not open the output video file for write\n";
-        return -1;
-    }
+    //if (!writer.isOpened()) 
+    //{
+    //    std::cerr << "Could not open the output video file for write\n";
+    //    return -1;
+    //}
+    //-----------------------------------------------------------------------------
 
     cv::Mat fused_img;
     cv::Mat fused_img8_t;
-    unsigned int img_w, img_h;
+    cv::Mat ref_img8_t;
+    unsigned int img_w = 0, img_h = 0;
 
     for (idx = 0; idx < stack_size; ++idx)
     {
 
         cv::transpose(ref_img_stack[idx], ref_img);
         ref_img.convertTo(ref_img, CV_64FC1);
+        ref_img.convertTo(ref_img8_t, CV_8UC1);
         ref_ms_img = init_ms_image(ref_img.ptr<double>(0), ref_img.cols, ref_img.rows, true, false, 0.2, 1.0, false, 75);
 
         fused_img = cv::Mat::zeros(ref_img.rows, ref_img.cols, CV_64FC1);
         fused_img8_t = cv::Mat::zeros(ref_img.rows, ref_img.cols, CV_8UC1);
 
+        montage_img = ref_img8_t.clone();
+
         for (jdx = 0; jdx < num_images; ++jdx)
         {
-            cv::transpose(img_stack[idx][jdx], img_stack[idx][jdx]);
-            img_stack[idx][jdx].convertTo(img_stack[idx][jdx], CV_64FC1);
-            tmp_ms[idx] = init_ms_image(img_stack[idx][jdx].ptr<double>(0), img_stack[idx][jdx].cols, img_stack[idx][jdx].rows, true, false, weights[idx], 1.0, false, img_threshold[idx]);
+            cv::transpose(img_stack[jdx][idx], img_stack[jdx][idx]);
+            img_stack[jdx][idx].convertTo(img_stack[jdx][idx], CV_64FC1);
+            tmp_ms[jdx] = init_ms_image(img_stack[jdx][idx].ptr<double>(0), img_stack[jdx][idx].cols, img_stack[jdx][idx].rows, true, false, weights[jdx], 1.0, false, img_threshold[jdx]);
 
         }
 
-        transform_multi_image(num_images, ref_ms_img, tmp_ms.data(), fused_img.ptr<double>(0), fused_img8_t.ptr<unsigned char>(0), img_w, img_h);
+        transform_multi_image(num_images, ref_ms_img, tmp_ms.data(), fused_img.ptr<double>(0), fused_img8_t.ptr<unsigned char>(0), &img_w, &img_h);
 
             //img_h[jdx].get_bounding_box(img, img, invert_img[1]);
 
@@ -231,13 +244,13 @@ int main(int argc, char** argv)
             //cv::hconcat(montage_img, img, montage_img);
 
 
-        cv::hconcat(montage_img, fused_img, montage_img);
+        cv::hconcat(montage_img, fused_img8_t, montage_img);
 
         cv::imshow(window_montage, montage_img);
         //writer.write(montage_img);
 
         montage_vec[idx] = montage_img;
-        key = cv::waitKey(1);
+        key = cv::waitKey(0);
         std::cout << "index: " << idx << std::endl;
 
         switch (key)
