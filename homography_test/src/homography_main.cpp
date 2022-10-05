@@ -22,71 +22,71 @@
 //#include "img_registration.h"
 //#include "homography_class.h"
 
-std::atomic<bool> homography_complete = false;
-cv::Point2f initial_point, final_point;
-
-const int32_t xy_offset = 128;
-
-// ----------------------------------------------------------------------------
-void cv_mouse_click(int cb_event, int x, int y, int flags, void* param)
-{
-    if (cb_event == cv::EVENT_LBUTTONDOWN)
-    {
-        std::vector<cv::Point2f>* point = (std::vector<cv::Point2f>*)param;
-
-        point->push_back(cv::Point2f(x, y));
-
-        std::cout << "Point(" << x << ", " << y << ")" << std::endl;
-    }
-    homography_complete = false;
-}
-
-// ----------------------------------------------------------------------------
-void cv_mouse_measure_distance(int cb_event, int x, int y, int flags, void* param)
-{
-    if (cb_event == cv::EVENT_LBUTTONDOWN)
-    {
-        //std::vector<cv::Point2f>* point = (std::vector<cv::Point2f>*)param;
-
-        initial_point = cv::Point2f(x, y);
-        //point->push_back(cv::Point2f(x, y));
-
-        //std::cout << "Point(" << x << ", " << y << ")" << std::endl;
-    }
-    else if (cb_event == cv::EVENT_LBUTTONUP)
-    {
-        final_point = cv::Point2f(x, y);
-        std::cout << "distance: x = " << (final_point.x - initial_point.x) << ", y = " << (final_point.y - initial_point.y)  << std::endl;
-    }
-}
-
-// ----------------------------------------------------------------------------
-void x_trackbar_callback(int value, void* user_data)
-{
-    cv::Mat h = *(cv::Mat*)user_data;
-
-    h.at<double>(0, 2) = (double)(value - xy_offset);
-}
-
-// ----------------------------------------------------------------------------
-void y_trackbar_callback(int value, void* user_data)
-{
-    cv::Mat h = *(cv::Mat*)user_data;
-
-    h.at<double>(1, 2) = (double)(value - xy_offset);
-}
-
-// ----------------------------------------------------------------------------
-void scale_trackbar_callback(int value, void* user_data)
-{
-    cv::Mat h = *(cv::Mat*)user_data;
-
-    double scale = (value) / 50.0;
-
-    h.at<double>(0, 0) = scale;
-    h.at<double>(1, 1) = scale;
-
-}
+//std::atomic<bool> homography_complete = false;
+//cv::Point2f initial_point, final_point;
+//
+//const int32_t xy_offset = 128;
+//
+//// ----------------------------------------------------------------------------
+//void cv_mouse_click(int cb_event, int x, int y, int flags, void* param)
+//{
+//    if (cb_event == cv::EVENT_LBUTTONDOWN)
+//    {
+//        std::vector<cv::Point2f>* point = (std::vector<cv::Point2f>*)param;
+//
+//        point->push_back(cv::Point2f(x, y));
+//
+//        std::cout << "Point(" << x << ", " << y << ")" << std::endl;
+//    }
+//    homography_complete = false;
+//}
+//
+//// ----------------------------------------------------------------------------
+//void cv_mouse_measure_distance(int cb_event, int x, int y, int flags, void* param)
+//{
+//    if (cb_event == cv::EVENT_LBUTTONDOWN)
+//    {
+//        //std::vector<cv::Point2f>* point = (std::vector<cv::Point2f>*)param;
+//
+//        initial_point = cv::Point2f(x, y);
+//        //point->push_back(cv::Point2f(x, y));
+//
+//        //std::cout << "Point(" << x << ", " << y << ")" << std::endl;
+//    }
+//    else if (cb_event == cv::EVENT_LBUTTONUP)
+//    {
+//        final_point = cv::Point2f(x, y);
+//        std::cout << "distance: x = " << (final_point.x - initial_point.x) << ", y = " << (final_point.y - initial_point.y)  << std::endl;
+//    }
+//}
+//
+//// ----------------------------------------------------------------------------
+//void x_trackbar_callback(int value, void* user_data)
+//{
+//    cv::Mat h = *(cv::Mat*)user_data;
+//
+//    h.at<double>(0, 2) = (double)(value - xy_offset);
+//}
+//
+//// ----------------------------------------------------------------------------
+//void y_trackbar_callback(int value, void* user_data)
+//{
+//    cv::Mat h = *(cv::Mat*)user_data;
+//
+//    h.at<double>(1, 2) = (double)(value - xy_offset);
+//}
+//
+//// ----------------------------------------------------------------------------
+//void scale_trackbar_callback(int value, void* user_data)
+//{
+//    cv::Mat h = *(cv::Mat*)user_data;
+//
+//    double scale = (value) / 50.0;
+//
+//    h.at<double>(0, 0) = scale;
+//    h.at<double>(1, 1) = scale;
+//
+//}
 
 
 // ----------------------------------------------------------------------------
@@ -105,27 +105,17 @@ int main(int argc, char** argv)
     uint32_t ref_threshold = 75;
     std::vector<uint32_t> img_threshold = { 25, 75, 20, 25 };
 
-    int32_t x_position = xy_offset;
-    int32_t y_position = xy_offset;
-    int32_t scale_position = 50;
+    std::vector<ms_image> tmp_ms;
+    ms_image ref_ms_img;
+
+    //int32_t x_position = xy_offset;
+    //int32_t y_position = xy_offset;
+    //int32_t scale_position = 50;
 
     std::string lib_filename;
     
-    //std::string window_name1 = "Reference Image";
-    //cv::namedWindow(window_name1, cv::WINDOW_NORMAL | cv::WINDOW_KEEPRATIO);
-    //std::string window_name2 = "Image";
-    //cv::namedWindow(window_name2, cv::WINDOW_NORMAL | cv::WINDOW_KEEPRATIO);
-    //std::string window_name3 = "Fused Image";
-    //cv::namedWindow(window_name3, cv::WINDOW_NORMAL | cv::WINDOW_KEEPRATIO);
-    std::string window_montage = "Montage Image";
-
     //std::vector<cv::Point2f> alignment_points1;
     //std::vector<cv::Point2f> alignment_points2;
-
-    // create the h matrix and fill with default value that does no image warping/translation
-    cv::Mat_<double> h(3, 3);// = cv::Mat(3, 3, CV_64FC1);
-    h << 1.0, 0.0, 0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0;
-
 
     if (argc < 4)
     {
@@ -133,9 +123,11 @@ int main(int argc, char** argv)
         std::cin.ignore();
     }
 
+    std::string window_montage = "Montage Image";
+    cv::namedWindow(window_montage, cv::WINDOW_NORMAL | cv::WINDOW_KEEPRATIO);
     int bp = 0;
 
-    cv::Mat fused_img, tmp_img, ref_img, img, ref_img2, img2;
+    cv::Mat tmp_img, ref_img, img, ref_img2, img2;
     std::vector<cv::Mat> ref_img_stack;
     //std::vector<std::vector<cv::Mat>> img_stack;
     cv::Mat img_matches;
@@ -145,10 +137,6 @@ int main(int argc, char** argv)
 
     std::string data_directory = std::string(argv[1]);
     std::string ref_img_filename = std::string(argv[2]);
-
-    cv::imreadmulti(data_directory + ref_img_filename, ref_img_stack, cv::ImreadModes::IMREAD_ANYDEPTH | cv::ImreadModes::IMREAD_GRAYSCALE);
-    int32_t stack_size = ref_img_stack.size();
-
 
     // load in the library
 #if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
@@ -177,28 +165,23 @@ int main(int argc, char** argv)
 
 #endif
 
-
-
-
-
-
-
-
-    //homography ref_h(75);
+    cv::imreadmulti(data_directory + ref_img_filename, ref_img_stack, cv::ImreadModes::IMREAD_ANYDEPTH | cv::ImreadModes::IMREAD_GRAYSCALE);
+    int32_t stack_size = ref_img_stack.size();
 
     std::vector<std::vector<cv::Mat>> img_stack(num_images);
-    //std::vector<homography> img_h(num_images);
+    tmp_ms.resize(num_images);
 
     for (idx = 0; idx < num_images; ++idx)
     {
         cv::imreadmulti(data_directory + std::string(argv[3+idx]), img_stack[idx], cv::ImreadModes::IMREAD_ANYDEPTH | cv::ImreadModes::IMREAD_GRAYSCALE);
-        //img_h[idx].threshold = img_threshold[idx];
-    }
 
-    cv::namedWindow(window_montage, cv::WINDOW_NORMAL | cv::WINDOW_KEEPRATIO);
+        //img_stack[idx][0].convertTo(img_stack[idx][0], CV_64FC1);
+        //tmp_ms[idx] = init_ms_image(img_stack[idx][0].ptr<double>(0), img_stack[idx][0].cols, img_stack[idx][0].rows, true, false, weights[idx], 1.0, false, img_threshold[idx]);
+    }
 
     cv::Mat montage_img;
     std::vector<cv::Mat> montage_vec(stack_size);
+
 
     cv::VideoWriter writer;
     int codec = cv::VideoWriter::fourcc('W','M','V','3');                    // select desired codec (must be available at runtime)
@@ -212,22 +195,29 @@ int main(int argc, char** argv)
         return -1;
     }
 
+    cv::Mat fused_img;
+    cv::Mat fused_img8_t;
+    unsigned int img_w, img_h;
+
     for (idx = 0; idx < stack_size; ++idx)
     {
 
-
         cv::transpose(ref_img_stack[idx], ref_img);
+        ref_img.convertTo(ref_img, CV_64FC1);
+        ref_ms_img = init_ms_image(ref_img.ptr<double>(0), ref_img.cols, ref_img.rows, true, false, 0.2, 1.0, false, 75);
 
-
-        //ref_h.get_bounding_box(ref_img, ref_img, invert_img[0]);
-        //fused_img = weights[0] * ref_img;
-
-        //cv::rectangle(ref_img, ref_h.get_rect(), cv::Scalar::all(255), 1, 8, 0);
-        //montage_img = ref_img.clone();
+        fused_img = cv::Mat::zeros(ref_img.rows, ref_img.cols, CV_64FC1);
+        fused_img8_t = cv::Mat::zeros(ref_img.rows, ref_img.cols, CV_8UC1);
 
         for (jdx = 0; jdx < num_images; ++jdx)
         {
-            cv::transpose(img_stack[jdx][idx], img);
+            cv::transpose(img_stack[idx][jdx], img_stack[idx][jdx]);
+            img_stack[idx][jdx].convertTo(img_stack[idx][jdx], CV_64FC1);
+            tmp_ms[idx] = init_ms_image(img_stack[idx][jdx].ptr<double>(0), img_stack[idx][jdx].cols, img_stack[idx][jdx].rows, true, false, weights[idx], 1.0, false, img_threshold[idx]);
+
+        }
+
+        transform_multi_image(num_images, ref_ms_img, tmp_ms.data(), fused_img.ptr<double>(0), fused_img8_t.ptr<unsigned char>(0), img_w, img_h);
 
             //img_h[jdx].get_bounding_box(img, img, invert_img[1]);
 
@@ -239,8 +229,6 @@ int main(int argc, char** argv)
             //
             //cv::rectangle(img, img_h[jdx].get_rect(), cv::Scalar::all(255), 1, 8, 0);
             //cv::hconcat(montage_img, img, montage_img);
-
-        }
 
 
         cv::hconcat(montage_img, fused_img, montage_img);
@@ -277,16 +265,16 @@ int main(int argc, char** argv)
     //cv::imshow(window_name3, fused_img);
     //cv::waitKey(0);
 
-    writer.release();
+    //writer.release();
 
-    // try saving a tiff stack
-    std::string save_file = "C:/Projects/data/test/test.tiff";
-    cv::imwrite(save_file, montage_vec);
+    //// try saving a tiff stack
+    //std::string save_file = "C:/Projects/data/test/test.tiff";
+    //cv::imwrite(save_file, montage_vec);
 
-    std::cout << "complete" << std::endl;
-    std::cin.ignore();
+    //std::cout << "complete" << std::endl;
+    //std::cin.ignore();
 
-    bp = 1;
+    //bp = 1;
 
     cv::destroyAllWindows();
 
