@@ -34,6 +34,17 @@ public:
     // ----------------------------------------------------------------------------
     cv::Rect get_rect(void) { return previous_rect; }
 
+    void set_rect(cv::Rect r)
+    {
+        previous_rect = r;
+    }
+
+    void set_rect(uint32_t x, uint32_t y, uint32_t w, uint32_t h)
+    {
+        previous_rect = cv::Rect(x, y, w, h);
+    }
+
+    // ----------------------------------------------------------------------------
     cv::Mat get_homography_matrix(void) { return h; }
 
     //-----------------------------------------------------------------------------

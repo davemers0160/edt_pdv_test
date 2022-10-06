@@ -20,6 +20,7 @@
 #endif
 
 #include "ms_image_struct.h"
+#include "target_rect.h"
 
 //-----------------------------------------------------------------------------
 //typedef struct image_struct
