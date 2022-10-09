@@ -27,23 +27,20 @@
 
 //-----------------------------------------------------------------------------
 // homography library specific functions
-//typedef void (*image_fuser)(unsigned int num_images, ms_image* img, double* fused_data64_t, unsigned char* fused_data8_t, unsigned int img_w, unsigned int img_h);
+
+typedef void (*lib_normalize_img)(unsigned int img_w, unsigned int img_h, double* img_t, double* norm_img_t);
 
 typedef void (*lib_transform_single_image)(ms_image r_img,
     ms_image t_img,
     double* fused_data64_t,
-    unsigned char* fused_data8_t,
-    unsigned int* img_w,
-    unsigned int* img_h
+    unsigned char* fused_data8
 );
 
 typedef void (*lib_transform_multi_image)(uint32_t N,
     ms_image r_img,
     ms_image* t_img,
     double* fused_data64_t,
-    unsigned char* fused_data8_t,
-    unsigned int* img_w,
-    unsigned int* img_h
+    unsigned char* fused_data8
 );
 
 #endif  // HOMOGRAPHY_TEST_H

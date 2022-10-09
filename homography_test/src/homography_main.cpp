@@ -155,6 +155,7 @@ int main(int argc, char** argv)
         throw std::runtime_error("error loading homography_lib library");
     }
 
+    lib_normalize_img normalize_img = (lib_normalize_img)GetProcAddress(homography_lib, "normalize_img");
     lib_transform_single_image transform_single_image = (lib_transform_single_image)GetProcAddress(homography_lib, "transform_single_image");
     lib_transform_multi_image transform_multi_image = (lib_transform_multi_image)GetProcAddress(homography_lib, "transform_multi_image");
 
@@ -167,6 +168,7 @@ int main(int argc, char** argv)
         throw std::runtime_error("error loading homography_lib library");
     }
 
+    lib_normalize_img normalize_img = (lib_normalize_img)dlsym(homography_lib, "normalize_img");
     lib_transform_single_image transform_single_image = (lib_transform_single_image)dlsym(homography_lib, "transform_single_image");
     lib_transform_multi_image transform_multi_image = (lib_transform_multi_image)dlsym(homography_lib, "transform_multi_image");
 
@@ -205,8 +207,8 @@ int main(int argc, char** argv)
     //-----------------------------------------------------------------------------
 
     cv::Mat fused_img;
-    cv::Mat fused_img8_t;
-    cv::Mat ref_img8_t;
+    cv::Mat fused_img8;
+    cv::Mat ref_img8;
     unsigned int img_w = 0, img_h = 0;
 
     for (idx = 0; idx < stack_size; ++idx)
@@ -214,43 +216,35 @@ int main(int argc, char** argv)
 
         cv::transpose(ref_img_stack[idx], ref_img);
         ref_img.convertTo(ref_img, CV_64FC1);
-        ref_img.convertTo(ref_img8_t, CV_8UC1);
+        normalize_img(ref_img.cols, ref_img.rows, ref_img.ptr<double>(0), ref_img.ptr<double>(0));
+        ref_img.convertTo(ref_img8, CV_8UC1, 255);
+
         ref_ms_img = init_ms_image(ref_img.ptr<double>(0), ref_img.cols, ref_img.rows, true, false, 0.2, 1.0, false, 75);
 
         fused_img = cv::Mat::zeros(ref_img.rows, ref_img.cols, CV_64FC1);
-        fused_img8_t = cv::Mat::zeros(ref_img.rows, ref_img.cols, CV_8UC1);
+        fused_img8 = cv::Mat::zeros(ref_img.rows, ref_img.cols, CV_8UC1);
 
-        montage_img = ref_img8_t.clone();
+        montage_img = ref_img8.clone();
 
         for (jdx = 0; jdx < num_images; ++jdx)
         {
             cv::transpose(img_stack[jdx][idx], img_stack[jdx][idx]);
             img_stack[jdx][idx].convertTo(img_stack[jdx][idx], CV_64FC1);
+            normalize_img(img_stack[jdx][idx].cols, img_stack[jdx][idx].rows, img_stack[jdx][idx].ptr<double>(0), img_stack[jdx][idx].ptr<double>(0));
+
             tmp_ms[jdx] = init_ms_image(img_stack[jdx][idx].ptr<double>(0), img_stack[jdx][idx].cols, img_stack[jdx][idx].rows, true, false, weights[jdx], 1.0, false, img_threshold[jdx]);
 
         }
 
-        transform_multi_image(num_images, ref_ms_img, tmp_ms.data(), fused_img.ptr<double>(0), fused_img8_t.ptr<unsigned char>(0), &img_w, &img_h);
+        transform_multi_image(num_images, ref_ms_img, tmp_ms.data(), fused_img.ptr<double>(0), fused_img8.ptr<unsigned char>(0));
 
-            //img_h[jdx].get_bounding_box(img, img, invert_img[1]);
-
-            //img_h[jdx].calc_homography_matrix(ref_h.get_rect());
-
-            //img_h[jdx].transform_image(img, tmp_img, ref_img.size());
-
-            //fused_img = fused_img + weights[1+jdx] * tmp_img;
-            //
-            //cv::rectangle(img, img_h[jdx].get_rect(), cv::Scalar::all(255), 1, 8, 0);
-            //cv::hconcat(montage_img, img, montage_img);
-
-
-        cv::hconcat(montage_img, fused_img8_t, montage_img);
+        cv::hconcat(montage_img, fused_img8, montage_img);
 
         cv::imshow(window_montage, montage_img);
         //writer.write(montage_img);
 
         montage_vec[idx] = montage_img;
-        key = cv::waitKey(0);
+        key = cv::waitKey(50);
         std::cout << "index: " << idx << std::endl;
 
         switch (key)
