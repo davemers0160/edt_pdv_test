@@ -25,10 +25,12 @@ public:
 
     homography(double t_) : threshold(t_) 
     {
-        h = cv::Mat::zeros(3, 3, CV_64FC1);
-        h.at<double>(0, 0) = 1.0;
-        h.at<double>(1, 1) = 1.0;
-        h.at<double>(2, 2) = 1.0;
+        h = cv::Mat::eye(3, 3, CV_64FC1);
+    }
+
+    homography(double t_, cv::Rect r) : threshold(t_), previous_rect(r)
+    {
+        h = cv::Mat::eye(3, 3, CV_64FC1);
     }
 
     // ----------------------------------------------------------------------------
@@ -215,10 +217,10 @@ private:
     inline double calc_iou(cv::Rect &r1, cv::Rect &r2)
     {
 
-        int64_t intersection = (r1 & r2).area();
-        int64_t rect_union = (r1 | r2).area() + 1e-12;
+        double intersection = (r1 & r2).area();
+        double rect_union = (r1 | r2).area();
 
-        return ((rect_union == 0) ? 0.0 : intersection / (double)rect_union);
+        return ((rect_union == 0) ? 0.0 : intersection / rect_union);
 
     }   // end of calc_iou
 
