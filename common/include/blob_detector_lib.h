@@ -67,7 +67,6 @@ extern "C" {
     //-----------------------------------------------------------------------------
     BLOB_DETECTOR_LIB void blob_detector(unsigned int img_w,
         unsigned int img_h, 
-        unsigned int img_c, 
         uint8_t* img_t, 
         double threshold,
         unsigned int *num_dets,

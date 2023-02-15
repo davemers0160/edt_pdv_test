@@ -41,7 +41,7 @@ struct detection_struct{
     unsigned int class_id;
 };
 
-void blob_detector(unsigned int img_w, unsigned int img_h, unsigned int img_c, unsigned char* img_t, double threshold, unsigned int *num_dets, struct detection_struct** dets);
+void blob_detector(unsigned int img_w, unsigned int img_h, unsigned char* img_t, double threshold, unsigned int *num_dets, struct detection_struct** dets);
 
 ''')
 # -----------------------------------------------------------------------------
@@ -62,7 +62,7 @@ else:
 
 # read and write global
 blob_det_lib = []
-img_w = img_h = img_c = num_dets = 0
+img_w = img_h = num_dets = 0
 dets = []
 
 def init_lib():
@@ -83,7 +83,6 @@ def init_lib():
     # instantiate the run_net function
     img_w = ffi.new('unsigned int *')
     img_h = ffi.new('unsigned int *')
-    img_c = ffi.new('unsigned int *')
     num_dets = ffi.new('unsigned int *')
     dets = ffi.new('struct detection_struct**')
 
@@ -101,7 +100,7 @@ def get_input():
     # load in an image
     image_path = os.path.dirname(image_name[0])
     # retval, color_img = cv.imread(image_name[0])
-    retval, color_img = cv.imreadmulti(image_name[0], flags=cv.IMREAD_ANYCOLOR | cv.IMREAD_ANYDEPTH)
+    retval, color_img = cv.imreadmulti(image_name[0], flags=cv.IMREAD_GRAYSCALE | cv.IMREAD_ANYDEPTH)
 
     return color_img
 
@@ -115,7 +114,7 @@ img_stack = get_input()
 
 stack_size = len(img_stack)
 
-threshold = 20.0
+threshold = 30.0
 cv.namedWindow("test", cv.WINDOW_KEEPRATIO)
 
 for img in img_stack:
@@ -131,7 +130,7 @@ for img in img_stack:
     # run the image on network and get the results
     # void blob_detector(unsigned int img_w, unsigned int img_h, unsigned int img_c, unsigned char* img_t, double threshold, unsigned int *num_dets, struct detection_struct** dets);
 
-    blob_det_lib.blob_detector(img_w, img_h, img_c, img.tobytes(), threshold, num_dets, dets)
+    blob_det_lib.blob_detector(img_w, img_h, img.tobytes(), threshold, num_dets, dets)
 
     for idx in range(num_dets[0]):
         cv.rectangle(img, (dets[0][idx].x, dets[0][idx].y), (dets[0][idx].x+dets[0][idx].w, dets[0][idx].y+dets[0][idx].h), (255), 2)

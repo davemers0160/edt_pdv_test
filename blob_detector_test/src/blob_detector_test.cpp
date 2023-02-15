@@ -70,7 +70,6 @@ typedef struct detection_struct
 
 typedef void (*lib_blob_detector)(unsigned int img_w,
     unsigned int img_h,
-    unsigned int img_c,
     uint8_t* img_t,
     double threshold,
     unsigned int* num_dets,
@@ -174,7 +173,6 @@ int main(int argc, char** argv)
 
         img_w = img.cols;
         img_h = img.rows;
-        img_c = img.channels();
 
         uint32_t img_d = img.depth();
 
@@ -185,7 +183,7 @@ int main(int argc, char** argv)
             img.convertTo(img, CV_8U);
         }
 
-        blob_detector(img_w, img_h, img_c, img.ptr<uint8_t>(0), threshold, &num_dets, dets);
+        blob_detector(img_w, img_h, img.ptr<uint8_t>(0), threshold, &num_dets, dets);
 
         for (jdx = 0; jdx < num_dets; ++jdx)
         {

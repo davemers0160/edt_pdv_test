@@ -50,7 +50,7 @@ inline double calc_iou(cv::Rect& r1, cv::Rect& r2)
 // ----------------------------------------------------------------------------
 inline void get_rect(std::vector<cv::Point>& p, cv::Rect& r)
 {
-    uint64_t idx, jdx;
+    uint64_t idx;
     uint64_t min_x = ULLONG_MAX, min_y = ULLONG_MAX;
     uint64_t max_x = 0, max_y = 0;
 
@@ -67,7 +67,7 @@ inline void get_rect(std::vector<cv::Point>& p, cv::Rect& r)
 }   // end of get_rect
 
 //-----------------------------------------------------------------------------
-void blob_detector(unsigned int img_w, unsigned int img_h, unsigned int img_c, uint8_t *img_t, double threshold, unsigned int *num_dets, detection_struct*& dets)
+void blob_detector(unsigned int img_w, unsigned int img_h, uint8_t *img_t, double threshold, unsigned int *num_dets, detection_struct*& dets)
 {
     uint32_t idx;
     double min_val, max_val;
@@ -78,26 +78,13 @@ void blob_detector(unsigned int img_w, unsigned int img_h, unsigned int img_c, u
     std::string label;
 
     double max_iou = 0.0;
-    double tmp_iou;
+    //double tmp_iou;
 
     cv::Mat img, converted_img;
     
-    // check channel count
-    if (img_c == 1)
-    {
-        img = cv::Mat(img_h, img_w, CV_8UC1, img_t);
-        converted_img = img.clone();
-    }
-    else if (img_c == 3)
-    {
-        img = cv::Mat(img_h, img_w, CV_8UC3, img_t);
-        cv::cvtColor(img, converted_img, CV_8UC1, cv::COLOR_RGB2GRAY);
-    }
-    else
-    {
-        std::cout << "Error, unsupported image channel number: " << img_c << std::endl;
-        return;
-    }
+    // place pointer into imag container
+    img = cv::Mat(img_h, img_w, CV_8UC1, img_t);
+    converted_img = img.clone();
 
     cv::minMaxLoc(converted_img, &min_val, &max_val);
     converted_img.convertTo(converted_img, CV_8UC1, 255.0 / (max_val - min_val), -(255.0 * min_val) / (max_val - min_val));
@@ -172,12 +159,12 @@ void blob_detector(unsigned int img_w, unsigned int img_h, unsigned int img_c, u
 
     previous_rect = img_rect[0];
 
-    *num_dets = img_rect.size();
+    *num_dets = (unsigned int)img_rect.size();
 
     // assigned image_rect data to detection_struct
-    dets = new detection_struct[img_rect.size()];
+    dets = new detection_struct[(*num_dets)];
 
-    for (idx = 0; idx < img_rect.size(); ++idx)
+    for (idx = 0; idx < (*num_dets); ++idx)
     {
         label = "blob";
         dets[idx] = detection_struct(img_rect[idx].x, img_rect[idx].y, img_rect[idx].width, img_rect[idx].height, label.c_str(), 0.99, 0);
