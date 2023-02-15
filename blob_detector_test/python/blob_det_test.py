@@ -81,8 +81,8 @@ def init_lib():
     #     detection_windows = detection_windows.append({"h": det_win[0][idx].h, "w": det_win[0][idx].w, "label": ffi.string(det_win[0][idx].label).decode("utf-8")}, ignore_index=True)
 
     # instantiate the run_net function
-    img_w = ffi.new('unsigned int *')
-    img_h = ffi.new('unsigned int *')
+    # img_w = ffi.new('unsigned int *')
+    # img_h = ffi.new('unsigned int *')
     num_dets = ffi.new('unsigned int *')
     dets = ffi.new('struct detection_struct**')
 
@@ -118,18 +118,18 @@ threshold = 30.0
 cv.namedWindow("test", cv.WINDOW_KEEPRATIO)
 
 for img in img_stack:
+
     img_h, img_w = img.shape
-    img_c = 1
-    # img_d = img.depth()
+
+    # convert image to grayscale if it is a multi-channel image
+    if(len(img.shape) == 3):
+        img = (img[:, :, 0] * 299/1000) + (img[:, :, 1] * 587/1000) + (img[:, :, 2] * 114/1000)
 
     # normalize image and convert to uint8
     img = np.uint8(255 * ((img - img.min())/(img.max() - img.min())))
 
-    # gray_img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
-
     # run the image on network and get the results
     # void blob_detector(unsigned int img_w, unsigned int img_h, unsigned int img_c, unsigned char* img_t, double threshold, unsigned int *num_dets, struct detection_struct** dets);
-
     blob_det_lib.blob_detector(img_w, img_h, img.tobytes(), threshold, num_dets, dets)
 
     for idx in range(num_dets[0]):
@@ -137,6 +137,9 @@ for img in img_stack:
 
     cv.imshow("test", img)
     cv.waitKey(50)
+
+
+cv.destroyAllWindows()
 
 bp = 1
 
