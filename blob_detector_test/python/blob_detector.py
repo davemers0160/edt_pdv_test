@@ -97,17 +97,17 @@ class BlobDetector(_VideoAsyncBoxDetector):
         #                                                                   use_display_name=True)
 
     def _get_detections_from_frame(self, frame):
-        # The input needs to be a tensor, convert it using `tf.convert_to_tensor`.
-        # input_tensor = tf.convert_to_tensor(frame.pixels)
-        # The model expects a batch of images, so add an axis with `tf.newaxis`.
-        # input_tensor = input_tensor[tf.newaxis, ...]
-        img_h, img_w = frame.pixels.shape
 
         # convert image to grayscale if it is a multi-channel image
-        if(len(frame.pixels.shape) == 3):
+        if(len(frame.pixels.shape) >= 3):
+            img_h, img_w, _ = frame.pixels.shape
             img = (frame.pixels[:, :, 0] * 299/1000) + (frame.pixels[:, :, 1] * 587/1000) + (frame.pixels[:, :, 2] * 114/1000)
         else:
+            img_h, img_w = frame.pixels.shape
             img = frame.pixels
+
+        # normalize image and convert to uint8
+        img = np.uint8(255 * ((img - img.min()) / (img.max() - img.min())))
 
         # Perform detection
         # output_dict = self._detect_fn(input_tensor)
@@ -130,15 +130,15 @@ class BlobDetector(_VideoAsyncBoxDetector):
 
         for idx in range(num_detections):
             metadata = {
-                "raw_box": np.array([dets[0][idx].x/img_w, dets[0][idx].y/img_h, (dets[0][idx].x+dets[0][idx].w)/img_w, (dets[0][idx].y+dets[0][idx].h)/img_h])   ##box,
+                "raw_box": np.array([dets[0][idx].x/img_w, dets[0][idx].y/img_h, (dets[0][idx].x+dets[0][idx].w)/img_w, (dets[0][idx].y+dets[0][idx].h)/img_h]).astype(np.float32),
                 "class": dict(id=dets[0][idx].class_id, name=self.ffi.string(dets[0][idx].label).decode("utf-8")),
                 "score": dets[0][idx].score
             }            
 
-            state_vector = StateVector([dets[0][idx].x,
-                                        dets[0][idx].y,
-                                        dets[0][idx].w,
-                                        dets[0][idx].h])
+            state_vector = StateVector(np.array([[dets[0][idx].x],
+                                        [dets[0][idx].y],
+                                        [dets[0][idx].w],
+                                        [dets[0][idx].h]]).astype(np.float64))
 
             detection = Detection(state_vector=state_vector,
                                   timestamp=frame.timestamp,
