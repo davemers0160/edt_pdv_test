@@ -107,23 +107,37 @@ def get_input():
 
 # the main entry point into the code
 # if __name__ == '__main__':
-
+VIDEO_PATH = "C:/Projects/data/VIS_rotated.avi"
 init_lib()
 
-img_stack = get_input()
+# img_stack = get_input()
 
-stack_size = len(img_stack)
+cap = cv.VideoCapture(VIDEO_PATH)
+
+# Check if camera opened successfully
+if (cap.isOpened()== False):
+  print("Error opening video stream or file")
+
+
+# stack_size = len(img_stack)
+stack_size = 20
 
 threshold = 30.0
 cv.namedWindow("test", cv.WINDOW_KEEPRATIO)
 
-for img in img_stack:
+# for img in img_stack:
+while (cap.isOpened()):
 
-    img_h, img_w = img.shape
+    ret, img = cap.read()
+    if ret == False:
+        break
 
     # convert image to grayscale if it is a multi-channel image
-    if(len(img.shape) == 3):
-        img = (img[:, :, 0] * 299/1000) + (img[:, :, 1] * 587/1000) + (img[:, :, 2] * 114/1000)
+    if(len(img.shape) >= 3):
+        img_h, img_w, _ = img.shape
+        img = (img[:, :, 2] * 299/1000) + (img[:, :, 1] * 587/1000) + (img[:, :, 0] * 114/1000)
+    else:
+        img_h, img_w = img.shape
 
     # normalize image and convert to uint8
     img = np.uint8(255 * ((img - img.min())/(img.max() - img.min())))

@@ -145,11 +145,21 @@ int main(int argc, char** argv)
 
 #endif
 
-    cv::imreadmulti(img_filename, img_stack, cv::ImreadModes::IMREAD_ANYDEPTH | cv::ImreadModes::IMREAD_GRAYSCALE);
-    int32_t stack_size = img_stack.size();
+    //cv::imreadmulti(img_filename, img_stack, cv::ImreadModes::IMREAD_ANYDEPTH | cv::ImreadModes::IMREAD_GRAYSCALE);
+    //int32_t stack_size = img_stack.size();
 
-    cv::Mat montage_img;
-    std::vector<cv::Mat> montage_vec(stack_size);
+    cv::VideoCapture cap(img_filename);
+    int32_t stack_size = 20;
+
+    // Check if camera opened successfully
+    if (!cap.isOpened()) {
+        std::cout << "Error opening video stream or file" << std::endl;
+        return -1;
+    }
+
+
+    //cv::Mat montage_img;
+    //std::vector<cv::Mat> montage_vec(stack_size);
 
     //-----------------------------------------------------------------------------
     // start up a video writer to save videos
@@ -169,7 +179,11 @@ int main(int argc, char** argv)
     for (idx = 0; idx < stack_size; ++idx)
     {
 
-        cv::transpose(img_stack[idx], img);
+        //cv::transpose(img_stack[idx], img);
+
+        cap >> img;
+        if (img.empty())
+            break;
 
         img_w = img.cols;
         img_h = img.rows;
@@ -181,6 +195,11 @@ int main(int argc, char** argv)
         if(img_d != CV_8U)
         { 
             img.convertTo(img, CV_8U);
+        }
+
+        if (img.channels() > 1)
+        {
+            cv::cvtColor(img, img, cv::COLOR_BGR2GRAY);
         }
 
         blob_detector(img_w, img_h, img.ptr<uint8_t>(0), threshold, &num_dets, dets);
