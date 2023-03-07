@@ -114,41 +114,43 @@ void blob_detector(unsigned int img_w, unsigned int img_h, uint8_t *img_t, doubl
     {
         img_rect.resize(1);
         get_rect(img_contours[0], img_rect[0]);
+        max_iou = calc_iou(previous_rect, img_rect[0]);
+
+        if (max_iou < bb_iou_threshold)
+        {
+            img_rect[0].width = floor(img_rect[0].width * alpha + (1.0 - alpha) * previous_rect.width);
+            img_rect[0].height = floor(img_rect[0].height * alpha + (1.0 - alpha) * previous_rect.height);
+        }
     }
     else if (img_contours.size() > 1)
     {
-        img_rect.resize(1); // img_rect.resize(img_contours.size())
+        img_rect.resize(img_contours.size());
 
         // TODO: find the rect with the highest IOU, if IOU doesn't meet a certain threshold then use previous_rect
         // TODO: figure out how to dampen a rapid change in rect size, look at IOU and scaling to slowly move towards the current rect
         // TODO: look at exponential weighted moving average or some other FIFO like thing with weights.  3-tap FIR
-        get_rect(*std::max_element(img_contours.begin(), img_contours.end(), max_vector_size<cv::Point>), img_rect[0]);
+        //get_rect(*std::max_element(img_contours.begin(), img_contours.end(), max_vector_size<cv::Point>), img_rect[0]);
 
-        //for (idx = 0; idx < img_contours.size(); ++idx)
-        //{
-        //    tmp_iou = calc_iou(previous_rect, img_rect);
-        //    
-        //    if (tmp_iou > max_iou)
-        //    {
-        //        max_iou = tmp_iou;
-        //        max_iou_index = idx;
-        //    }
-        //}
+        for (idx = 0; idx < img_contours.size(); ++idx)
+        {
+            get_rect(img_contours[idx], img_rect[idx]);
+            //max_iou = calc_iou(previous_rect, img_rect[idx]);
+            
+            //if (max_iou < bb_iou_threshold)
+            //{
+            //    img_rect[idx].width = floor(img_rect[idx].width * alpha + (1.0 - alpha) * previous_rect.width);
+            //    img_rect[idx].height = floor(img_rect[idx].height * alpha + (1.0 - alpha) * previous_rect.height);
+            //}
+        }
 
         //get_rect(img_contours[max_iou_index], img_rect);
     }
     else
     {
+        img_rect.resize(1);
         img_rect[0] = previous_rect;
     }
 
-    max_iou = calc_iou(previous_rect, img_rect[0]);
-
-    if (max_iou < bb_iou_threshold)
-    {
-        img_rect[0].width = floor(img_rect[0].width * alpha + (1.0 - alpha) * previous_rect.width);
-        img_rect[0].height = floor(img_rect[0].height * alpha + (1.0 - alpha) * previous_rect.height);
-    }
     // do some bounding box conditioning  
     // New average = old average * (n-1)/n + new value /n
     //sma_width = floor(img_rect.width * alpha + (1.0 - alpha) * sma_width);
