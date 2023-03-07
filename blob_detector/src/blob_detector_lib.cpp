@@ -80,6 +80,8 @@ void blob_detector(unsigned int img_w, unsigned int img_h, uint8_t *img_t, doubl
     double max_iou = 0.0;
     //double tmp_iou;
 
+    uint64_t min_area = 100;
+
     cv::Mat img, converted_img;
     
     // place pointer into imag container
@@ -125,6 +127,7 @@ void blob_detector(unsigned int img_w, unsigned int img_h, uint8_t *img_t, doubl
     else if (img_contours.size() > 1)
     {
         img_rect.resize(img_contours.size());
+        img_rect.clear();
 
         // TODO: find the rect with the highest IOU, if IOU doesn't meet a certain threshold then use previous_rect
         // TODO: figure out how to dampen a rapid change in rect size, look at IOU and scaling to slowly move towards the current rect
@@ -133,7 +136,14 @@ void blob_detector(unsigned int img_w, unsigned int img_h, uint8_t *img_t, doubl
 
         for (idx = 0; idx < img_contours.size(); ++idx)
         {
-            get_rect(img_contours[idx], img_rect[idx]);
+            cv::Rect tmp_rect;
+            get_rect(img_contours[idx], tmp_rect);
+
+            if (tmp_rect.area() > min_area)
+            {
+                img_rect.push_back(tmp_rect);
+            }
+
             //max_iou = calc_iou(previous_rect, img_rect[idx]);
             
             //if (max_iou < bb_iou_threshold)
