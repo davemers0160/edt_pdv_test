@@ -34,6 +34,8 @@ int main(int argc, char** argv)
     int32_t height = 0;
     int32_t channels = 0;
 
+    int32_t rx = 0, ry = 0, rw = 0, rh = 0;
+
     if (argc < 2)
     {
         std::cout << "Error, no video supplied. Enter the full path of the video file... Exiting" << std::endl;
@@ -62,7 +64,7 @@ int main(int argc, char** argv)
     // create the tracker
     create_tracker(tracker_type);
 
-    cv::namedWindow(window_name, cv::WINDOW_NORMAL);
+    cv::namedWindow(window_name, cv::WINDOW_NORMAL | cv::WINDOW_KEEPRATIO);
 
     target_rect new_target;
     
@@ -92,13 +94,14 @@ int main(int argc, char** argv)
     if (manual_detect)
     {
         // get a manual detect from the image
-        cv::Rect roi = cv::selectROI("Manual Target Select", img);
+        //cv::Rect roi = cv::selectROI("Manual Target Select", img);
+        select_roi(img.ptr<uint8_t>(0), width, height, channels, &rx, &ry, &rw, &rh);
 
         // 
-        new_target = target_rect(roi.x, roi.y, roi.width, roi.height, num2str(time(0), "%08x"));
+        new_target = target_rect(rx, ry, rw, rh, num2str(time(0), "%08x"));
 
         // 
-        cv::destroyWindow("Manual Target Select");
+        //cv::destroyWindow("Manual Target Select");
     }
 
     if (!new_target.is_empty())
@@ -157,7 +160,6 @@ int main(int argc, char** argv)
         }
         else if (k == 't')
         {
-            int rx = 0, ry = 0, rw = 0, rh = 0;
 
             // get a manual detect from the image
             //cv::Rect roi = cv::selectROI(window_name, imgs[idx]);
