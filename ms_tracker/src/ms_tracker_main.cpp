@@ -26,38 +26,40 @@ int main()
     
     uint32_t num_cams = 1;
 
-    bool manual_detect = false;
-
-    // opencv specific variables needed to run the examples 
-    //samples::addSamplesDataSearchPath("../../data/19Nov20");
-    //std::string ir_image_path = samples::findFile("InfraredImage2.tiff");
-    //std::string vis_image_path = samples::findFile("VisibleImage2.tiff");
-
-#if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
-    cv::samples::addSamplesDataSearchPath("../../../../data/movie_images");
-#else
-    cv::samples::addSamplesDataSearchPath("../../../../data/movie_images");
-#endif
-
-    std::string image_path = cv::samples::findFile("test.tiff");
-
-    // these are the images that would normally become from a separate thread
-    std::vector<cv::Mat> imgs;
+    bool manual_detect = true;
 
     std::string window_name = "Image";
-
-    // Get video 
-    bool valid_imgs = get_video(image_path, imgs);
-
+    cv::Mat img;
     int32_t width = 0;
     int32_t height = 0;
+    int32_t channels = 0;
+
+    if (argc < 2)
+    {
+        std::cout << "Error, no video supplied. Enter the full path of the video file... Exiting" << std::endl;
+        std::cin.ignore();
+        return - 1;
+    }
+
+    std::string mov_filename = std::string(argv[1]);
+
+    // Get video 
+    cv::VideoCapture cap(mov_filename);
 
     // Create camera objects for all cameras
-    //Camera cam("Camera Feed", imgs[0].rows, imgs[0].cols);
 
-    // tracker class
+    // Check if camera opened successfully
+    if (!cap.isOpened()) {
+        std::cout << "Error opening video stream or file... Exiting" << std::endl;
+        std::cin.ignore();
+        return -1;
+    }
+
+
+    // tracker class type
     int32_t tracker_type = tracker_types::MIL;
-    //ms_tracker tracker(tracker_type);
+
+    // create the tracker
     create_tracker(tracker_type);
 
     cv::namedWindow(window_name, cv::WINDOW_NORMAL);
@@ -65,40 +67,63 @@ int main()
     target_rect new_target;
     
     // ----------------------------------------------------------------------------
-    if (valid_imgs)
+
+    // get the first frame
+    cap >> img;
+    if (img.empty())
     {
-        width = imgs[0].cols;
-        height = imgs[0].rows;
+        std::cout << "Error, video stream or file is empty... Exiting" << std::endl;
+        std::cin.ignore();
+        return -1;
+    }
 
-        if (manual_detect)
-        {
-            // get a manual detect from the image
-            cv::Rect roi = cv::selectROI("Manual Target Select", imgs[0]);
+    width = img.cols;
+    height = img.rows;
+    channels = img.channels();
 
-            // 
-            new_target = target_rect(roi.x, roi.y, roi.width, roi.height, num2str(time(0), "%08x"));
+    // just in case we need to convert to grayscale
+    // if(channels > 1)
+    // {
+    //     cv::cvtColor(img, img, COLOR_BGR2GRAY);
+    //     channels = 1; 
+    // }
 
-            // 
-            cv::destroyWindow("Manual Target Select");
-        }
 
-        if (!new_target.is_empty())
-        {
-            //tracker.add_target(new_target);
-            //tracker.init(imgs[0], new_target);
-        
-            init_tracker(imgs[0].ptr<uint8_t>(0), height, width, 1, &new_target);
+    if (manual_detect)
+    {
+        // get a manual detect from the image
+        cv::Rect roi = cv::selectROI("Manual Target Select", img);
 
-            std::cout << "target:" << std::endl << new_target << std::endl;        
-        }
+        // 
+        new_target = target_rect(roi.x, roi.y, roi.width, roi.height, num2str(time(0), "%08x"));
+
+        // 
+        cv::destroyWindow("Manual Target Select");
+    }
+
+    if (!new_target.is_empty())
+    {
+        //tracker.add_target(new_target);
+        //tracker.init(imgs[0], new_target);
+    
+        init_tracker(imgs.ptr<uint8_t>(0), height, width, channels, &new_target);
+
+        std::cout << "target:" << std::endl << new_target << std::endl;        
     }
 
     // ----------------------------------------------------------------------------
     std::cout << "Press q to quit the program." << std::endl;
     
     // ----------------------------------------------------------------------------
-    for(uint64_t idx=1; idx< imgs.size(); ++idx)
+    while(1)
     {
+
+        // get the first frame
+        cap >> img;
+        if (img.empty())
+        {
+            break;
+        }
 
         // track
         if (tracker_status())
@@ -106,9 +131,9 @@ int main()
             //tracker.track_object(imgs[idx]);
             target_rect tgt;    // = tracker.get_target();
 
-            update_tracker(imgs[idx].ptr<uint8_t>(0), height, width, 1, &tgt);
+            update_tracker(img.ptr<uint8_t>(0), height, width, channels, &tgt);
             cv::Rect r(tgt.x, tgt.y, tgt.w, tgt.h);
-            cv::rectangle(imgs[idx], r, cv::Scalar(255), 2, 1);           
+            cv::rectangle(img, r, cv::Scalar(255), 2, 1);           
         }
         //// detect
         //else
@@ -122,7 +147,7 @@ int main()
         //    }
         //}
 
-        cv::imshow(window_name, imgs[idx]);
+        cv::imshow(window_name, img);
     
         // Wait for a keystroke in the window
         int k = cv::waitKey(50);
@@ -138,7 +163,7 @@ int main()
             //cv::Rect roi = cv::selectROI(window_name, imgs[idx]);
             //new_target = target(roi.x, roi.y, roi.width, roi.height, num2str(time(0), "%08x"));
             std::string win_name = "Select";
-            select_roi(imgs[idx].ptr<uint8_t>(0), width, height, 1, &rx, &ry, &rw, &rh);
+            select_roi(img.ptr<uint8_t>(0), width, height, channels, &rx, &ry, &rw, &rh);
             new_target = target_rect(rx, ry, rw, rh, num2str(time(0), "%08x"));
 
             if (!new_target.is_empty())
@@ -149,12 +174,12 @@ int main()
                     //tracker.init(imgs[idx], new_target);
 
                     create_tracker(tracker_type);
-                    init_tracker(imgs[idx].ptr<uint8_t>(0), height, width, 1, &new_target);
+                    init_tracker(img.ptr<uint8_t>(0), height, width, channels, &new_target);
                 }
                 else
                 { 
                     //tracker.init(imgs[idx], new_target);
-                    init_tracker(imgs[idx].ptr<uint8_t>(0), height, width, 1, &new_target);
+                    init_tracker(img.ptr<uint8_t>(0), height, width, channels, &new_target);
 
                 }
 
