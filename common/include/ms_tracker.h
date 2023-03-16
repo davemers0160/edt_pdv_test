@@ -16,6 +16,8 @@
 #include <opencv2/core.hpp>
 #include <opencv2/opencv.hpp>
 #include <opencv2/tracking.hpp>
+#include <opencv2/tracking/tracking_legacy.hpp>
+
 
 //#include "camera.h"
 #include "target_rect.h"
@@ -140,7 +142,7 @@ public:
         switch (tracker_type)
         {
         case BOOSTING:
-            tracker = cv::TrackerBoosting::create();
+            tracker = cv::legacy::TrackerBoosting::create();
             break;
         case MIL:
             tracker = cv::TrackerMIL::create();
@@ -149,16 +151,16 @@ public:
             tracker = cv::TrackerKCF::create();
             break;
         case TLD:
-            tracker = cv::TrackerTLD::create();
+            tracker = cv::legacy::TrackerTLD::create();
             break;
         case MEDIANFLOW:
-            tracker = cv::TrackerMedianFlow::create();
+            tracker = cv::legacy::TrackerMedianFlow::create();
             break;
         case GOTURN:
             tracker = cv::TrackerGOTURN::create();
             break;
         case MOSSE:
-            tracker = cv::TrackerMOSSE::create();
+            tracker = cv::legacy::TrackerMOSSE::create();
             break;
         case CSRT:
             tracker = cv::TrackerCSRT::create();
@@ -173,7 +175,8 @@ public:
     bool init(cv::Mat &img, target_rect &roi)
     {
         cv::Rect2d r(roi.x, roi.y, roi.w, roi.h);
-        tracking = tracker->init(img, r);
+        tracking = true;
+        tracker->init(img, r);
 
         roi = target_rect((int32_t)std::floor(r.x + 0.5), (int32_t)std::floor(r.y + 0.5), (int32_t)std::floor(r.width + 0.5), (int32_t)std::floor(r.height + 0.5));
 
@@ -192,7 +195,8 @@ public:
         else if(c == 3)
             img = cv::Mat(h, w, CV_8UC3, d, w * c* sizeof(*d));
 
-        tracking = tracker->init(img, r);
+        tracking = true;
+        tracker->init(img, r);
 
         roi.x = (int32_t)std::floor(r.x + 0.5);
         roi.y = (int32_t)std::floor(r.y + 0.5);
@@ -214,7 +218,8 @@ public:
         else if (c == 3)
             img = cv::Mat(h, w, CV_8UC3, d, w * c * sizeof(*d));
 
-        tracking = tracker->init(img, r);
+        tracking = true;
+        tracker->init(img, r);
 
         *rx = (int32_t)std::floor(r.x + 0.5);
         *ry = (int32_t)std::floor(r.y + 0.5);
@@ -228,7 +233,7 @@ public:
     // ----------------------------------------------------------------------------
     bool update(cv::Mat& img, target_rect& roi)
     {
-        cv::Rect2d r(roi.x, roi.y, roi.w, roi.h);
+        cv::Rect r(roi.x, roi.y, roi.w, roi.h);
         tracking = tracker->update(img, r);
 
         target_rect new_tgt = target_rect((int32_t)std::floor(r.x + 0.5), (int32_t)std::floor(r.y + 0.5), (int32_t)std::floor(r.width + 0.5), (int32_t)std::floor(r.height + 0.5));
@@ -246,7 +251,7 @@ public:
     bool update(uint8_t* d, int32_t h, int32_t w, int32_t c, target_rect& roi)
     {
         cv::Mat img;
-        cv::Rect2d r(roi.x, roi.y, roi.w, roi.h);
+        cv::Rect r(roi.x, roi.y, roi.w, roi.h);
 
         if (c == 1)
             img = cv::Mat(h, w, CV_8UC1, d, w * sizeof(*d));
@@ -268,7 +273,8 @@ public:
     bool update(uint8_t *d, int32_t h, int32_t w, int32_t c, int32_t *rx, int32_t *ry, int32_t *rw, int32_t *rh)
     {
         cv::Mat img;
-        cv::Rect2d r((double)(*rx), (double)(*ry), (double)(*rw), (double)(*rh));
+        //cv::Rect2d r((double)(*rx), (double)(*ry), (double)(*rw), (double)(*rh));
+        cv::Rect r((*rx), (*ry), (*rw), (*rh));
 
         if (c == 1)
             img = cv::Mat(h, w, CV_8UC1, d, w * sizeof(*d));
