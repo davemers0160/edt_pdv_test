@@ -30,13 +30,13 @@ These are the IDs that can be used to select various tracker types.
 */
 enum tracker_types
 {
-    BOOSTING,
+    //BOOSTING,
     MIL,
     KCF,
-    TLD,
-    MEDIANFLOW,
-    GOTURN,
-    MOSSE,
+    //TLD,
+    //MEDIANFLOW,
+    //GOTURN,
+    //MOSSE,
     CSRT
 };
 
@@ -141,27 +141,27 @@ public:
     {
         switch (tracker_type)
         {
-        case BOOSTING:
-            tracker = cv::legacy::TrackerBoosting::create();
-            break;
+        //case BOOSTING:
+        //    tracker = cv::legacy::TrackerBoosting::create();
+        //    break;
         case MIL:
             tracker = cv::TrackerMIL::create();
             break;
         case KCF:
             tracker = cv::TrackerKCF::create();
             break;
-        case TLD:
-            tracker = cv::legacy::TrackerTLD::create();
-            break;
-        case MEDIANFLOW:
-            tracker = cv::legacy::TrackerMedianFlow::create();
-            break;
-        case GOTURN:
-            tracker = cv::TrackerGOTURN::create();
-            break;
-        case MOSSE:
-            tracker = cv::legacy::TrackerMOSSE::create();
-            break;
+        //case TLD:
+        //    tracker = cv::legacy::TrackerTLD::create();
+        //    break;
+        //case MEDIANFLOW:
+        //    tracker = cv::legacy::TrackerMedianFlow::create();
+        //    break;
+        //case GOTURN:
+        //    tracker = cv::TrackerGOTURN::create();
+        //    break;
+        //case MOSSE:
+        //    tracker = cv::legacy::TrackerMOSSE::create();
+        //    break;
         case CSRT:
             tracker = cv::TrackerCSRT::create();
             break;

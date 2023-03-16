@@ -21,7 +21,7 @@
 // simple tracker to test out trackers on a single camera
 
 // ----------------------------------------------------------------------------
-int main()
+int main(int argc, char** argv)
 {
     
     uint32_t num_cams = 1;
@@ -56,7 +56,7 @@ int main()
     }
 
 
-    // tracker class type
+    // tracker type - currently available: MIL, KCF, CSRT
     int32_t tracker_type = tracker_types::MIL;
 
     // create the tracker
@@ -106,7 +106,7 @@ int main()
         //tracker.add_target(new_target);
         //tracker.init(imgs[0], new_target);
     
-        init_tracker(imgs.ptr<uint8_t>(0), height, width, channels, &new_target);
+        init_tracker(img.ptr<uint8_t>(0), height, width, channels, &new_target);
 
         std::cout << "target:" << std::endl << new_target << std::endl;        
     }
