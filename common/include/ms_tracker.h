@@ -16,6 +16,7 @@
 #include <opencv2/core.hpp>
 #include <opencv2/opencv.hpp>
 #include <opencv2/tracking.hpp>
+#include <opencv2/tracking/tracking.hpp>
 #include <opencv2/tracking/tracking_legacy.hpp>
 
 
@@ -184,15 +185,25 @@ public:
     // ----------------------------------------------------------------------------
     bool init(cv::Mat &img, target_rect &roi)
     {
-        cv::Rect2d r(roi.x, roi.y, roi.w, roi.h);
-        tracking = true;
+        //cv::Rect2d r(roi.x, roi.y, roi.w, roi.h);
+        cv::Rect r;
 
-        if (leg_tracker)
-            tracker->init(img, r);
+
+        if (legacy_tracker)
+        {
+            cv::Rect2d r2(roi.x, roi.y, roi.w, roi.h);
+            leg_tracker->init(img, r2);
+            r = r2;
+        }
         else
-            leg_tracker->init(img, r);
+        {
+            r = cv::Rect(roi.x, roi.y, roi.w, roi.h);
+            tracker->init(img, r);
+        }
 
         roi = target_rect((int32_t)std::floor(r.x + 0.5), (int32_t)std::floor(r.y + 0.5), (int32_t)std::floor(r.width + 0.5), (int32_t)std::floor(r.height + 0.5));
+        
+        tracking = true;
 
         return tracking;
 
@@ -202,26 +213,26 @@ public:
     bool init(uint8_t* d, int32_t h, int32_t w, int32_t c, target_rect& roi)
     {
         cv::Mat img;
-        cv::Rect2d r(roi.x, roi.y, roi.w, roi.h);
+        //cv::Rect2d r(roi.x, roi.y, roi.w, roi.h);
 
         if(c == 1)
             img = cv::Mat(h, w, CV_8UC1, d, w * sizeof(*d));
         else if(c == 3)
             img = cv::Mat(h, w, CV_8UC3, d, w * c* sizeof(*d));
 
-        tracking = true;
+        //tracking = true;
 
-        if (leg_tracker)
-            tracker->init(img, r);
-        else
-            leg_tracker->init(img, r);
+        //if (legacy_tracker)
+        //    leg_tracker->init(img, r);
+        //else
+        //    tracker->init(img, r);
 
-        roi.x = (int32_t)std::floor(r.x + 0.5);
-        roi.y = (int32_t)std::floor(r.y + 0.5);
-        roi.w = (int32_t)std::floor(r.width + 0.5);
-        roi.h = (int32_t)std::floor(r.height + 0.5);
+        //roi.x = (int32_t)std::floor(r.x + 0.5);
+        //roi.y = (int32_t)std::floor(r.y + 0.5);
+        //roi.w = (int32_t)std::floor(r.width + 0.5);
+        //roi.h = (int32_t)std::floor(r.height + 0.5);
 
-        return tracking;
+        return init(img, roi);
 
     }   // end of init
 
@@ -229,24 +240,28 @@ public:
     bool init(uint8_t* d, int32_t h, int32_t w, int32_t c, int32_t* rx, int32_t* ry, int32_t* rw, int32_t* rh)
     {
         cv::Mat img;
-        cv::Rect2d r((double)(*rx), (double)(*ry), (double)(*rw), (double)(*rh));
+        //cv::Rect2d r((double)(*rx), (double)(*ry), (double)(*rw), (double)(*rh));
 
         if (c == 1)
             img = cv::Mat(h, w, CV_8UC1, d, w * sizeof(*d));
         else if (c == 3)
             img = cv::Mat(h, w, CV_8UC3, d, w * c * sizeof(*d));
 
-        tracking = true;
+        //tracking = true;
 
-        if (legacy_tracker)
-            leg_tracker->init(img, r);
-        else
-            tracker->init(img, r);
+        //if (legacy_tracker)
+        //    leg_tracker->init(img, r);
+        //else
+        //    tracker->init(img, r);
 
-        *rx = (int32_t)std::floor(r.x + 0.5);
-        *ry = (int32_t)std::floor(r.y + 0.5);
-        *rw = (int32_t)std::floor(r.width + 0.5);
-        *rh = (int32_t)std::floor(r.height + 0.5);
+        target_rect roi(*rx, *ry, *rw, *rh);
+
+        tracking = init(img, roi);
+
+        *rx = (int32_t)std::floor(roi.x + 0.5);
+        *ry = (int32_t)std::floor(roi.y + 0.5);
+        *rw = (int32_t)std::floor(roi.w + 0.5);
+        *rh = (int32_t)std::floor(roi.h + 0.5);
 
         return tracking;
 

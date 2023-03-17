@@ -15,33 +15,33 @@
 
 //----------------------------------------------------------------------------------
 // library internal global/state variables:
-ms_tracker tracker;
+ms_tracker trckr;
 
 //----------------------------------------------------------------------------------
 void create_tracker(int tracker_type)
 {
-    tracker = ms_tracker(tracker_type);
+    trckr = ms_tracker(tracker_type);
 }
 
 //----------------------------------------------------------------------------------
 void init_tracker(unsigned char *img, int h, int w, int c, target_rect *target)
 {
 
-    tracker.add_target(*target);
-    tracker.init(img, h, w, c, *target);
+    trckr.add_target(*target);
+    trckr.init(img, h, w, c, *target);
 
 }
 
 //----------------------------------------------------------------------------------
 void update_tracker(unsigned char* img, int h, int w, int c, target_rect *target)
 {
-    tracker.track_object(img, h, w, c);
-    *target = tracker.get_target();
+    trckr.track_object(img, h, w, c);
+    *target = trckr.get_target();
 }
 
 
 //----------------------------------------------------------------------------------
 bool tracker_status(void)
 {
-    return tracker.tracking;
+    return trckr.tracking;
 }

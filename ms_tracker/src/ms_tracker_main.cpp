@@ -59,8 +59,14 @@ int main(int argc, char** argv)
     }
 
 
-    // tracker type - currently available: MIL, KCF, CSRT
-    int32_t tracker_type = tracker_types::MIL;
+    //----------------------------------------------------------------------------
+    // tracker type - used to select the tracker type
+    // available trackers: MIL, KCF, CSRT
+    // available legacy trackers: BOOSTING, TLD, MEDIANFLOW, MOSSE
+    int32_t tracker_type = tracker_types::TLD;
+
+    //----------------------------------------------------------------------------
+
 
     // create the tracker
     create_tracker(tracker_type);
@@ -69,7 +75,7 @@ int main(int argc, char** argv)
 
     target_rect new_target;
     
-    // ----------------------------------------------------------------------------
+    //----------------------------------------------------------------------------
 
     // get the first frame
     cap >> img;
@@ -99,7 +105,7 @@ int main(int argc, char** argv)
         select_roi(img.ptr<uint8_t>(0), width, height, channels, &rx, &ry, &rw, &rh);
 
         // 
-        new_target = target_rect(rx, ry, rw, rh, num2str(time(0), "%08x"));
+        new_target = target_rect(rx, ry, rw, rh, num2str(time(0), "%08x"), 1.0);
 
         // 
         //cv::destroyWindow("Manual Target Select");
@@ -197,7 +203,7 @@ int main(int argc, char** argv)
         
     cv::destroyAllWindows();
 
-    std::cout << "Ending..." << std::endl;
+    std::cout << "Press Enter to Close..." << std::endl;
     std::cin.ignore();
     
     return 0;

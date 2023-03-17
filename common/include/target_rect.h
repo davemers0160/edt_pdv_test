@@ -36,6 +36,8 @@ public:
         id = id_;
     }
 
+    target_rect(int32_t x_, int32_t y_, int32_t w_, int32_t h_, std::string id_, double c_) : x(x_), y(y_), w(w_), h(h_), id(id_), confidence(c_) {}
+
     ~target_rect() {}
 
     // ----------------------------------------------------------------------------
