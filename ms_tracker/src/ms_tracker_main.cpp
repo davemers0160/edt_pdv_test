@@ -53,6 +53,7 @@ int main(int argc, char** argv)
     // Check if camera opened successfully
     if (!cap.isOpened()) {
         std::cout << "Error opening video stream or file... Exiting" << std::endl;
+        std::cout << mov_filename << std::endl;
         std::cin.ignore();
         return -1;
     }

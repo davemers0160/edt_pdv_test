@@ -30,13 +30,13 @@ These are the IDs that can be used to select various tracker types.
 */
 enum tracker_types
 {
-    //BOOSTING,
+    BOOSTING,
     MIL,
     KCF,
-    //TLD,
-    //MEDIANFLOW,
+    TLD,
+    MEDIANFLOW,
     //GOTURN,
-    //MOSSE,
+    MOSSE,
     CSRT
 };
 
@@ -51,10 +51,11 @@ class ms_tracker
 {
 public:
 
-    //template <typename tracker_type>
-    //tracker_type tracker;
+    //template <typename cv_tracker_type>
+    //cv_tracker_type tracker;
 
     cv::Ptr<cv::Tracker> tracker;   /**<  */
+    cv::Ptr<cv::legacy::Tracker> leg_tracker;   /**<  */
 
 
     int32_t lost_track;             /**< how many frames camera has lost track */
@@ -65,6 +66,7 @@ public:
 
     //bool has_detection;
     bool tracking;
+    bool legacy_tracker;
 
     // ----------------------------------------------------------------------------
     ms_tracker() = default;
@@ -141,32 +143,40 @@ public:
     {
         switch (tracker_type)
         {
-        //case BOOSTING:
-        //    tracker = cv::legacy::TrackerBoosting::create();
-        //    break;
+        case BOOSTING:
+            leg_tracker = cv::legacy::TrackerBoosting::create();
+            legacy_tracker = true;
+            break;
         case MIL:
             tracker = cv::TrackerMIL::create();
+            legacy_tracker = false;
             break;
         case KCF:
             tracker = cv::TrackerKCF::create();
+            legacy_tracker = false;
             break;
-        //case TLD:
-        //    tracker = cv::legacy::TrackerTLD::create();
-        //    break;
-        //case MEDIANFLOW:
-        //    tracker = cv::legacy::TrackerMedianFlow::create();
-        //    break;
+        case TLD:
+            leg_tracker = cv::legacy::TrackerTLD::create();
+            legacy_tracker = true;
+            break;
+        case MEDIANFLOW:
+            leg_tracker = cv::legacy::TrackerMedianFlow::create();
+            legacy_tracker = true;
+            break;
         //case GOTURN:
         //    tracker = cv::TrackerGOTURN::create();
         //    break;
-        //case MOSSE:
-        //    tracker = cv::legacy::TrackerMOSSE::create();
-        //    break;
+        case MOSSE:
+            leg_tracker = cv::legacy::TrackerMOSSE::create();
+            legacy_tracker = true;
+            break;
         case CSRT:
             tracker = cv::TrackerCSRT::create();
+            legacy_tracker = false;
             break;
         default:
             tracker = cv::TrackerKCF::create();
+            legacy_tracker = false;
             break;
         }
     }   // end of create
@@ -176,7 +186,11 @@ public:
     {
         cv::Rect2d r(roi.x, roi.y, roi.w, roi.h);
         tracking = true;
-        tracker->init(img, r);
+
+        if (leg_tracker)
+            tracker->init(img, r);
+        else
+            leg_tracker->init(img, r);
 
         roi = target_rect((int32_t)std::floor(r.x + 0.5), (int32_t)std::floor(r.y + 0.5), (int32_t)std::floor(r.width + 0.5), (int32_t)std::floor(r.height + 0.5));
 
@@ -196,7 +210,11 @@ public:
             img = cv::Mat(h, w, CV_8UC3, d, w * c* sizeof(*d));
 
         tracking = true;
-        tracker->init(img, r);
+
+        if (leg_tracker)
+            tracker->init(img, r);
+        else
+            leg_tracker->init(img, r);
 
         roi.x = (int32_t)std::floor(r.x + 0.5);
         roi.y = (int32_t)std::floor(r.y + 0.5);
@@ -219,7 +237,11 @@ public:
             img = cv::Mat(h, w, CV_8UC3, d, w * c * sizeof(*d));
 
         tracking = true;
-        tracker->init(img, r);
+
+        if (legacy_tracker)
+            leg_tracker->init(img, r);
+        else
+            tracker->init(img, r);
 
         *rx = (int32_t)std::floor(r.x + 0.5);
         *ry = (int32_t)std::floor(r.y + 0.5);
@@ -234,7 +256,17 @@ public:
     bool update(cv::Mat& img, target_rect& roi)
     {
         cv::Rect r(roi.x, roi.y, roi.w, roi.h);
-        tracking = tracker->update(img, r);
+
+        if (legacy_tracker)
+        {
+            cv::Rect2d r2d;
+            tracking = leg_tracker->update(img, r2d);
+            r = r2d;
+        }
+        else
+        {
+            tracking = tracker->update(img, r);
+        }
 
         target_rect new_tgt = target_rect((int32_t)std::floor(r.x + 0.5), (int32_t)std::floor(r.y + 0.5), (int32_t)std::floor(r.width + 0.5), (int32_t)std::floor(r.height + 0.5));
 
@@ -258,7 +290,17 @@ public:
         else if (c == 3)
             img = cv::Mat(h, w, CV_8UC3, d, w * c * sizeof(*d));
 
-        tracking = tracker->update(img, r);
+        if (legacy_tracker)
+        {
+            cv::Rect2d r2d;
+            tracking = leg_tracker->update(img, r2d);
+            r = r2d;
+        }
+        else
+        {
+            tracking = tracker->update(img, r);
+        }
+
         target_rect new_tgt = target_rect((int32_t)r.x, (int32_t)r.y, (int32_t)r.width, (int32_t)r.height);
 
         if (roi.get_iou(new_tgt) >= min_matching_iou)
@@ -281,7 +323,16 @@ public:
         else if (c == 3)
             img = cv::Mat(h, w, CV_8UC3, d, w * c * sizeof(*d));
 
-        tracking = tracker->update(img, r);
+        if (legacy_tracker)
+        {
+            cv::Rect2d r2d;
+            tracking = leg_tracker->update(img, r2d);
+            r = r2d;
+        }
+        else
+        {
+            tracking = tracker->update(img, r);
+        }
 
         *rx = (int32_t)std::floor(r.x + 0.5);
         *ry = (int32_t)std::floor(r.y + 0.5);
